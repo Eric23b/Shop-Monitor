@@ -117,9 +117,12 @@ body{
     left: calc(100vw - 5rem);
     color: var(--inactive);
     font-size: larger;
+    background: transparent;
+    pointer-events: none;
 }
 #db-activity span{
     color: var(--inactive);
+    background: transparent;
 }
 
 div *{

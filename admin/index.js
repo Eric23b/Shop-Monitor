@@ -26,6 +26,8 @@ const supplyIssuesTableData = document.querySelector("#supply-issues-table");
 const supplyIssuesNote = document.querySelector("#supply-issues-note");
 
 const timeClockTabContainer = document.querySelector("#time-clock-container");
+const timeClockTabTableData = document.querySelector("#time-clock-issues-table");
+const timeClockTabNote = document.querySelector("#time-clock-issues-note");
 
 const otherIssuesTabContainer = document.querySelector("#other-issues-container");
 
@@ -52,10 +54,9 @@ if (serverURL.value && serverAuthorization.value) {
     try {
         loadPartIssues();
         loadSuppliesIssues();
-        // loadIssuesSelect();
+        loadTimeClockIssues();
     } catch (error) {
         console.log(error);
-        // showMessage(error);
     }
     showTab("part-issue");
 }
@@ -63,11 +64,10 @@ else {
     showTab("settings");
 }
 
-// partTabBtn.addEventListener('click', () => {showTab("part-issue")});
-
 
 // ---EVENT LISTENERS---
 
+// Tab click (add style and refresh data)
 tabHeader.addEventListener('click', (event) => {
     const buttons = document.querySelectorAll("#tab-header .tab-btn");
     buttons.forEach((button) => {
@@ -81,13 +81,12 @@ tabHeader.addEventListener('click', (event) => {
     showTab(containerID);
 });
 
-
-
+// Save serverURL on blur
 serverURL.addEventListener('blur', () => {
     setLocalStorageValue('serverURL', serverURL.value);
     settings.url = serverURL.value;
 });
-
+// Save serverAuthorization on blur
 serverAuthorization.addEventListener('blur', function () {
     setLocalStorageValue('serverAuthorization', serverAuthorization.value);
     settings.authorization = serverAuthorization.value;
@@ -120,7 +119,7 @@ function showTab(tab) {
         case "time-clock":
             timeClockTabContainer.style.display = "flex";
             timeClockTabBtn.classList.add("active-tab");
-            
+            loadTimeClockIssues();
             break;
         case "other-issues":
             otherIssuesTabContainer.style.display = "flex";
@@ -143,7 +142,6 @@ function showTab(tab) {
     }
 }
 
-
 function hideTabContainers() {
     const tabContainers = document.querySelectorAll(".tab-container");
     tabContainers.forEach((element) => {
@@ -153,7 +151,7 @@ function hideTabContainers() {
 
 async function getItemCategories() {
     const categories = [];
-    const response = await getDBEntrees("supplies_list", "category", "*", settings, dbActive);
+    const response = await getDBEntrees("issue_schema", "supplies_list", "category", "*", settings, dbActive);
     response.forEach((item) => {
         if (categories.indexOf(item.category) === -1) {
             categories.push(item.category);
@@ -165,140 +163,158 @@ async function getItemCategories() {
 
 // Load Parts Issues Table
 async function loadPartIssues() {
-    const response = await getDBEntrees("parts_issues", "active", "*", settings, dbActive);
+    const response = await getDBEntrees("issue_schema", "parts_issues", "active", "*", settings, dbActive);
     
     response.sort((a, b) => {return b.__createdtime__ - a.__createdtime__});
 
-    partIssuesTable.innerHTML = getTableHeaderRow(["Job", "Cabinet", "Part", "Date", "Sent", "Active", "Delete"]);
+    partIssuesTable.innerHTML = getTableHeaderRow(["Job", "Cabinet", "Part", "Date", "Time", "Sent", "Active", "Delete"]);
 
-    for (const element of response) {
-        // Table row
+    for (const entry of response) {
         const row = document.createElement('tr');
-        row.onmouseover = () => {showNoteOnMouseOver(element.note, partIssuesNote)}
+        row.onmouseover = () => {showNoteOnMouseOver(entry.note, partIssuesNote)}
 
-        // Job table data
-        const job = document.createElement('td');
-        job.textContent = element.jobName;
+        const job = getTableDataWithText(entry.job);
 
-        // Cabinet number table data
-        const cabinetNumber = document.createElement('td');
-        cabinetNumber.textContent = element.cabinetNumber;
+        const cabinetNumber = getTableDataWithText(entry.cabinetNumber);
 
-        // Part table data
-        const part = document.createElement('td');
-        part.textContent = element.part;
+        const part = getTableDataWithText(entry.part);
 
-        // Date table data
-        const date = document.createElement('td');
-        date.textContent = element.date;
+        const date = getTableDataWithText(entry.date);
 
-        // Sent table data and checkbox
+        const time = getTableDataWithText(entry.time);
+
         const sent = getTableDataWithCheckbox(
-            element.sent,
+            entry.sent,
             async (event) => {
                 const isChecked = event.target.checked;
-                await updateDBEntry("parts_issues", {id: element.id, sent: isChecked}, settings, dbActive);
+                await updateDBEntry("issue_schema", "parts_issues", {id: entry.id, sent: isChecked}, settings, dbActive);
             }
         );
 
-        // Active table data and checkbox
         const active = getTableDataWithCheckbox(
-            element.active,
+            entry.active,
             async (event) => {
                 const isChecked = event.target.checked;
-                await updateDBEntry("parts_issues", {id: element.id, active: isChecked}, settings, dbActive);
+                await updateDBEntry("issue_schema", "parts_issues", {id: entry.id, active: isChecked}, settings, dbActive);
             }
         );
 
-        // Delete table data and button
         const deleteTD = getTableDataWithDeleteButton(
             async () => {
-                await deleteDBEntry("parts_issues", element.id, settings, dbActive);
+                await deleteDBEntry("issue_schema", "parts_issues", entry.id, settings, dbActive);
                 await loadPartIssues();
             }
         );
 
-        appendChildren(row, [job, cabinetNumber, part, date, sent, active, deleteTD]);
+        appendChildren(row, [job, cabinetNumber, part, date, time, sent, active, deleteTD]);
         partIssuesTable.appendChild(row);
     };
 }
 
 // Load Supply Issues Table
 async function loadSuppliesIssues() {
-    const response = await getDBEntrees("supply_issues", "active", "*", settings, dbActive);
+    const response = await getDBEntrees("issue_schema", "supply_issues", "active", "*", settings, dbActive);
     
     response.sort((a, b) => {return b.__createdtime__ - a.__createdtime__});
 
     supplyIssuesTableData.innerHTML = 
-        getTableHeaderRow(["Category", "Item", "Currently", "Date", "Ordered", "Active", "Delete"]);
+        getTableHeaderRow(["Category", "Item", "Currently", "Date", "Time", "Ordered", "Active", "Delete"]);
 
-    for (const element of response) {
-        // Table row
+    for (const entry of response) {
         const row = document.createElement('tr');
-        row.onmouseover = () => {showNoteOnMouseOver(element.note, partIssuesNote)}
-        
-        const category = document.createElement('td');
-        const item = document.createElement('td');
-        const currently = document.createElement('td');
-        const date = document.createElement('td');
-        const ordered = document.createElement('td');
-        const orderedCheckbox = document.createElement('input');
-        const active = document.createElement('td');
-        const activeCheckbox = document.createElement('input');
-        const deleteTD = document.createElement('td');
-        const deleteButton = document.createElement('button');
+        row.onmouseover = () => {showNoteOnMouseOver(entry.note, supplyIssuesNote)}
 
-        row.setAttribute('db_id', element.id);
-        row.onmouseover = () => {
-            supplyIssuesNote.textContent = element.note || "Note:";
-            supplyIssuesNote.style.color = element.note ? "var(--active)" : "var(--inactive)";
-        };
+        const category = getTableDataWithText(entry.category);
 
-        category.textContent = element.category;
-        item.textContent = element.item;
-        currently.textContent = element.currently;
-        date.textContent = element.date;
+        const item = getTableDataWithText(entry.item);
 
-        orderedCheckbox.type = "checkbox";
-        orderedCheckbox.checked = element.ordered;
-        orderedCheckbox.setAttribute('db_id', element.id);
-        orderedCheckbox.onchange = async (event) => {
-            const isChecked = event.target.checked;
-            const db_id = event.target.attributes.db_id.value;
-            await updateDBEntry("supply_issues", {id: db_id, ordered: isChecked}, settings, dbActive);
-        }
-        ordered.appendChild(orderedCheckbox);
+        const currently = getTableDataWithText(entry.currently);
 
-        activeCheckbox.type = "checkbox"
-        activeCheckbox.checked = element.active;
-        activeCheckbox.setAttribute('db_id', element.id);
-        activeCheckbox.onchange = async (event) => {
-            const isChecked = event.target.checked;
-            const db_id = event.target.attributes.db_id.value;
-            await updateDBEntry("supply_issues", {id: db_id, active: isChecked}, settings, dbActive);
-        }
-        active.appendChild(activeCheckbox);
+        const date = getTableDataWithText(entry.date);
 
-        deleteButton.textContent = "✖";
-        deleteButton.classList.add("delete-btn");
-        deleteButton.setAttribute('db_id', element.id);
-        deleteButton.onclick = async (event) => {
-            const db_id = event.target.attributes.db_id.value;
-            await deleteDBEntry("supply_issues", db_id, settings, dbActive);
-            await loadSuppliesIssues();
-        }
-        deleteTD.appendChild(deleteButton);
+        const time = getTableDataWithText(entry.time);
 
-        row.appendChild(category);
-        row.appendChild(item);
-        row.appendChild(currently);
-        row.appendChild(date);
-        row.appendChild(ordered);
-        row.appendChild(active);
-        row.appendChild(deleteTD);
-        
+        const ordered = getTableDataWithCheckbox(
+            entry.ordered,
+            async (event) => {
+                const isChecked = event.target.checked;
+                await updateDBEntry("issue_schema", "supply_issues", {id: entry.id, ordered: isChecked}, settings, dbActive);
+            }
+        );
+
+        const active = getTableDataWithCheckbox(
+            entry.active,
+            async (event) => {
+                const isChecked = event.target.checked;
+                await updateDBEntry("issue_schema", "supply_issues", {id: entry.id, active: isChecked}, settings, dbActive);
+            }
+        );
+
+        const deleteTD = getTableDataWithDeleteButton(
+            async () => {
+                await deleteDBEntry("issue_schema", "supply_issues", entry.id, settings, dbActive);
+                await loadSuppliesIssues();
+            }
+        );
+
+        appendChildren(row, [category, item, currently, date, time, ordered, active, deleteTD]);
         supplyIssuesTableData.appendChild(row);
     };
+}
+
+// Load Time Clock Issues Table
+async function loadTimeClockIssues() {
+    const response = await getDBEntrees("issue_schema", "time_clock_issues", "active", "*", settings, dbActive);
+    // console.log('Loading..');
+    response.sort((a, b) => {return b.__createdtime__ - a.__createdtime__});
+
+    timeClockTabTableData.innerHTML = 
+        getTableHeaderRow(["Name", "Missed Time", "Date", "Time", "Acknowledged", "Active", "Delete"]);
+
+    for (const entry of response) {
+        const row = document.createElement('tr');
+        row.onmouseover = () => {showNoteOnMouseOver(entry.note, timeClockTabNote)}
+
+        const name = getTableDataWithText(entry.firstName);
+
+        const missedTime = getTableDataWithText(entry.missedTime);
+
+        const date = getTableDataWithText(entry.date);
+
+        const time = getTableDataWithText(entry.time);
+
+        const acknowledged = getTableDataWithCheckbox(
+            entry.acknowledged,
+            async (event) => {
+                const isChecked = event.target.checked;
+                await updateDBEntry("issue_schema", "time_clock_issues", {id: entry.id, acknowledged: isChecked}, settings, dbActive);
+            }
+        );
+
+        const active = getTableDataWithCheckbox(
+            entry.active,
+            async (event) => {
+                const isChecked = event.target.checked;
+                await updateDBEntry("issue_schema", "time_clock_issues", {id: entry.id, active: isChecked}, settings, dbActive);
+            }
+        );
+
+        const deleteTD = getTableDataWithDeleteButton(
+            async () => {
+                await deleteDBEntry("issue_schema", "time_clock_issues", entry.id, settings, dbActive);
+                await loadTimeClockIssues();
+            }
+        );
+
+        appendChildren(row, [name, missedTime, date, time, acknowledged, active, deleteTD]);
+        timeClockTabTableData.appendChild(row);
+    };
+}
+
+function getTableDataWithText(text) {
+    const td = document.createElement('td');
+    td.textContent = text;
+    return td;
 }
 
 function getTableDataWithDeleteButton(asyncCallback) {

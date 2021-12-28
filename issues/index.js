@@ -138,7 +138,7 @@ submitButton.addEventListener('click', (event) => {
             const clockInOut = new Date(timeInput.value);
             data.missedTime = `${clockInOut.toLocaleDateString()} ${clockInOut.toLocaleTimeString()}`;
             data.firstName = firstNameInput.value;
-            insertDBEntry("time_clock", data, serverSettings);
+            insertDBEntry("time_clock_issues", data, serverSettings);
             loadFormMessageForClockIssue();
             break;
     

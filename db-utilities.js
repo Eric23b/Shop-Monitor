@@ -1,9 +1,10 @@
-export async function getDBEntrees(table, searchColumn, searchValue, serverSettings, dbActiveCallback) {
+
+export async function getDBEntrees(schema, table, searchColumn, searchValue, serverSettings, dbActiveCallback) {
     dbActiveCallback();
     const headers = getBasicHeaders(serverSettings.authorization);
     const raw = JSON.stringify({
         operation: "search_by_value",
-        schema: "issue_schema",
+        schema: schema,
         table: table,
         search_attribute: searchColumn,
         search_value: searchValue,
@@ -15,12 +16,12 @@ export async function getDBEntrees(table, searchColumn, searchValue, serverSetti
     return response;
 }
 
-export async function insertDBEntry(table, data, serverSettings, dbActiveCallback) {
+export async function insertDBEntry(schema, table, data, serverSettings, dbActiveCallback) {
     dbActiveCallback();
     const headers = getBasicHeaders(serverSettings.authorization);
     const raw = JSON.stringify({
         operation: "insert",
-        schema: "issue_schema",
+        schema: schema,
         table: table,
         records: [data]
     });
@@ -29,12 +30,12 @@ export async function insertDBEntry(table, data, serverSettings, dbActiveCallbac
     // console.log(response);
 }
 
-export async function updateDBEntry(table, data, serverSettings, dbActiveCallback) {
+export async function updateDBEntry(schema, table, data, serverSettings, dbActiveCallback) {
     dbActiveCallback();
     const headers = getBasicHeaders(serverSettings.authorization);
     const raw = JSON.stringify({
         operation: "update",
-        schema: "issue_schema",
+        schema: schema,
         table: table,
         records: [data]
     });
@@ -43,12 +44,12 @@ export async function updateDBEntry(table, data, serverSettings, dbActiveCallbac
     // console.log(response);
 }
 
-export async function deleteDBEntry(table, id, serverSettings, dbActiveCallback) {
+export async function deleteDBEntry(schema, table, id, serverSettings, dbActiveCallback) {
     dbActiveCallback();
     const headers = getBasicHeaders(serverSettings.authorization);
     const raw = JSON.stringify({
         operation: "delete",
-        schema: "issue_schema",
+        schema: schema,
         table: table,
         hash_values: [id]
     });
