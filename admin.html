@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="./admin/index.css">
+    <script defer type="module" src="./admin/index.js"></script>
+    <title>Report</title>
+</head>
+<body>
+    <!-- Header -->
+    <div id="tab-header" class="flex-row">
+        <button id="parts-tab-btn" class="active-tab tab-btn" tabContainer="part-issue">Part issues</button>
+        <button id="supply-low-tab-btn" class="tab-btn" tabContainer="supply-issues">Supply low</button>
+        <button id="time-clock-tab-btn" class="tab-btn" tabContainer="time-clock">Time clock</button>
+        <button id="other-issues-tab-btn" class="tab-btn" tabContainer="other-issues">Other issues</button>
+        <button id="supply-list-tab-btn" class="tab-btn" tabContainer="supply-list">Supply list</button>
+        <button id="settings-tab-btn" class="tab-btn" tabContainer="settings">Settings</button>
+    </div>
+    <div id="main">
+        <label id="db-activity">
+            DB <span id="db-activity-light">•</span>
+        </label>
+        
+        <div id="part-issue-container" class="tab-container">
+            <table id="part-issues-table" class="table"></table>
+            <p id="part-issues-note" class="issues-note">Note:</p>
+        </div>
+        
+        <div id="supply-issues-container" class="tab-container">
+            <table id="supply-issues-table" class="table"></table>
+            <p id="supply-issues-note" class="issues-note">Note:</p>
+        </div>
+        
+        <div id="time-clock-container" class="tab-container">
+            <table id="time-clock-issues-table" class="table"></table>
+            <p id="time-clock-issues-note" class="issues-note">Note:</p>
+        </div>
+        
+        <div id="other-issues-container" class="tab-container">
+            <table id="other-issues-table" class="table"></table>
+            <p id="other-issues-note" class="issues-note">Note:</p>
+        </div>
+        
+        <div id="supply-list-container" class="tab-container">
+            
+        </div>
+        
+        <!-- Settings -->
+        <div id="settings-container" class="tab-container">
+            <!-- <label class="flex-column">User Name<input id="user-name" type="text"></label> -->
+            <label class="flex-column">Server URL<input id="server-url" type="text"></label>
+            <label class="flex-column">Authorization<input id="server-authorization" type="password"></label>
+        </div>
+        
+    </div>
+</body>
+</html>

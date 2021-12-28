@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="./issues/index.css">
+    <script defer src="./issues/index.js"></script>
+    <title>Report</title>
+</head>
+<body>
+    <!-- Header -->
+    <div id="header" class="flex-row">
+        <a id="home-btn" href="/issues.html" title="Home">⌂</a>
+        <h1 id="error-message"></h1>
+        <button id="settings-btn" title="Settings">⚙</button>
+    </div>
+    <div id="main">
+        <!-- Server Settings -->
+        <div id="settings-container">
+            <label class="flex-column">Server URL<input id="server-url" type="text"></label>
+            <label class="flex-column">Authorization<input id="server-authorization" type="password"></label>
+        </div>
+
+        <!-- Part Issues -->
+        <div id="part-issues-container">
+            <label>Parts</label>
+            <table id="part-issues-table" class="table"></table>
+        </div>
+
+        <!-- Report -->
+        <div id="report-container" style="display: none;">
+            <!-- Issue -->
+            <label class="flex-column">
+                Issue
+                <select id="issues-select">
+                    <option style="display:none"></option>
+                    <option value="other">Other</option>
+                    <option value="part">Part missing/incorrect</option>
+                    <option value="supplies">Supplies low/out</option>
+                    <option value="clock">Missed clock in/out</option>
+                </select>
+            </label>
+
+            <!-- Missing parts -->
+            <div id="part-container" class="container flex-column">
+                <label class="flex-column">Job name<input id="job-number" type="text"></label>
+                <label class="flex-column">Cabinet number<input id="cabinet-number" type="number" min="0"></label>
+                <label class="flex-column">
+                    Part
+                    <select id="part-select">
+                        <option value="Left Gable">Left Gable</option>
+                        <option value="Right Gable">Right Gable</option>
+                        <option value="Top">Top</option>
+                        <option value="Bottom">Bottom</option>
+                        <option value="Deck">Deck</option>
+                        <option value="Partition">Partition</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </label>
+            </div>
+
+            <!-- Low supplies -->
+            <div id="supplies-container" class="container flex-column">
+                <label class="flex-column">
+                    Category
+                    <select id="category-select">
+                        <option style="display:none"></option>
+                    </select>
+                </label>
+                <label class="flex-column">
+                    Items
+                    <select id="items-select"></select>
+                </label>
+                <label id="supplies-empty-label"><input id="supplies-empty" type="checkbox">Empty</label>
+                <button class="form-button">Add to list</button>
+            </div>
+
+            <!-- Missed clock in/out -->
+            <div id="clock-container" class="container flex-column">
+                <label class="flex-column">Time<input id="time-input" type="datetime-local"></label>
+                <label class="flex-column">First Name<input id="first-name-input" type="text"></label>
+            </div>
+
+            
+            <!-- Form -->
+            <form id="form" class="flex-column" name="shop-issue" method="POST" data-netlify="true" action="/success.html">
+                <textarea id="message" name="message"></textarea>
+                <!-- Notes -->
+                <label class="flex-column">Note<textarea id="note" name="note" placeholder="optional"></textarea></label>
+                <button id="submit-button" class="form-button" type="submit">Send</button>
+            </form>
+        </div>
+
+        <!-- Supply Issue -->
+        <div id="supply-issues-container">
+            <label>Supplies</label>
+            <table id="supply-issues-table" class="table"></table>
+        </div>
+    </div>
+</body>
+</html>
