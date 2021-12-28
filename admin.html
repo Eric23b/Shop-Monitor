@@ -10,13 +10,16 @@
 </head>
 <body>
     <!-- Header -->
-    <div id="tab-header" class="flex-row">
-        <button id="parts-tab-btn" class="active-tab tab-btn" tabContainer="part-issue">Part issues</button>
-        <button id="supply-low-tab-btn" class="tab-btn" tabContainer="supply-issues">Supply low</button>
-        <button id="time-clock-tab-btn" class="tab-btn" tabContainer="time-clock">Time clock</button>
-        <button id="other-issues-tab-btn" class="tab-btn" tabContainer="other-issues">Other issues</button>
-        <button id="supply-list-tab-btn" class="tab-btn" tabContainer="supply-list">Supply list</button>
-        <button id="settings-tab-btn" class="tab-btn" tabContainer="settings">Settings</button>
+    <div id="main-header-container">
+        <button id="home-tab-btn" tabContainer="part-issue"><a href="/">⌂</a></button>
+        <div id="tab-header" class="flex-row">
+            <button id="parts-tab-btn" class="active-tab tab-btn" tabContainer="part-issue">Part issues</button>
+            <button id="supply-low-tab-btn" class="tab-btn" tabContainer="supply-issues">Supply low</button>
+            <button id="time-clock-tab-btn" class="tab-btn" tabContainer="time-clock">Time clock</button>
+            <button id="other-issues-tab-btn" class="tab-btn" tabContainer="other-issues">Other issues</button>
+            <button id="supply-list-tab-btn" class="tab-btn" tabContainer="supply-list">Supply list</button>
+            <button id="settings-tab-btn" class="tab-btn" tabContainer="settings">Settings</button>
+        </div>
     </div>
     <div id="main">
         <label id="db-activity">
