@@ -19,15 +19,13 @@ const settingsTabBtn = document.querySelector("#settings-tab-btn");
 
 const partsTabContainer = document.querySelector("#part-issue-container");
 const partIssuesTable = document.querySelector("#part-issues-table");
-// const partIssuesNote = document.querySelector("#part-issues-note");
 
 const supplyLowTabContainer = document.querySelector("#supply-issues-container");
 const supplyIssuesTable = document.querySelector("#supply-issues-table");
-// const supplyIssuesNote = document.querySelector("#supply-issues-note");
+const supplyCategoryDataList = document.querySelector("#category-datalist");
 
 const timeClockTabContainer = document.querySelector("#time-clock-container");
 const timeClockTabTable = document.querySelector("#time-clock-issues-table");
-// const timeClockTabNote = document.querySelector("#time-clock-issues-note");
 
 const otherIssuesTabContainer = document.querySelector("#other-issues-container");
 const otherIssuesTable = document.querySelector("#other-issues-table");
@@ -39,10 +37,10 @@ const supplyListTable = document.querySelector("#supply-list-table");
 const addSupplyBtn = document.querySelector("#add-supply-btn");
 
 const settingsContainer = document.querySelector("#settings-container");
-// const userName = document.querySelector("#user-name");
 const serverURL = document.querySelector("#server-url");
 const serverAuthorization = document.querySelector("#server-authorization");
 const runDBSetupBtn = document.querySelector("#run-db-setup-btn");
+const removePasswordBtn = document.querySelector("#remove-password-btn");
 
 const dbActivityLight = document.querySelector("#db-activity-light");
 
@@ -50,6 +48,19 @@ const dbActivityLight = document.querySelector("#db-activity-light");
 
 
 // ---INITIALIZE---
+
+hideTabContainers();
+
+const password = getLocalStorageValue('password') || prompt("Enter your password");
+
+if (password !== "pw558") {
+    const a = document.createElement('a');
+    a.href = "/";
+    a.click();
+} 
+else {
+    setLocalStorageValue('password', password);
+}
 
 settings.url = serverURL.value = getLocalStorageValue('serverURL') || "";
 settings.authorization = serverAuthorization.value = getLocalStorageValue('serverAuthorization') || "";
@@ -112,6 +123,10 @@ runDBSetupBtn.addEventListener('click', async () => {
     message += await createTable("other_issues", "issues_schema", settings, dbActive) + "\n";
     message += await createTable("supply_list", "issues_schema", settings, dbActive) + "\n";
     alert(message);
+});
+
+removePasswordBtn.addEventListener('click', () => {
+    setLocalStorageValue('password', "");
 });
 
 // Save serverURL on blur
@@ -181,9 +196,9 @@ function hideTabContainers() {
     });
 }
 
-async function getItemCategories() {
+async function getItemCategories(schema, table) {
     const categories = [];
-    const response = await getDBEntrees("issues_schema", "supply_list", "category", "*", settings, dbActive);
+    const response = await getDBEntrees(schema, table, "category", "*", settings, dbActive);
     response.forEach((item) => {
         if (categories.indexOf(item.category) === -1) {
             categories.push(item.category);
@@ -204,7 +219,7 @@ async function loadPartIssues() {
     for (const entry of response) {
         const row = document.createElement('tr');
 
-        const job = getTableDataWithText(entry.job);
+        const job = getTableDataWithText(entry.jobName);
 
         const cabinetNumber = getTableDataWithText(entry.cabinetNumber);
 
@@ -345,12 +360,12 @@ async function loadOtherIssues() {
     response.sort((a, b) => {return b.__createdtime__ - a.__createdtime__});
 
     otherIssuesTable.innerHTML = 
-        getTableHeaderRow(["Name", "Note", "Date", "Time", "Acknowledged", "Delete"]);
+        getTableHeaderRow(["Note", "Date", "Time", "Acknowledged", "Delete"]);
 
     for (const entry of response) {
         const row = document.createElement('tr');
 
-        const name = getTableDataWithText(entry.firstName);
+        // const name = getTableDataWithText(entry.firstName);
 
         const note = getTableDataWithText(entry.note, true);
 
@@ -373,7 +388,7 @@ async function loadOtherIssues() {
             }
         );
 
-        appendChildren(row, [name, note, date, time, acknowledged, deleteTD]);
+        appendChildren(row, [note, date, time, acknowledged, deleteTD]);
         otherIssuesTable.appendChild(row);
     };
 }
@@ -404,6 +419,14 @@ async function loadSupplyListTable() {
         appendChildren(row, [category, item, deleteTD]);
         supplyListTable.appendChild(row);
     };
+
+    supplyCategoryDataList.innerHTML = "";
+    const categories = await getItemCategories("issues_schema", "supply_list");
+    categories.forEach((category) => {
+        const option = document.createElement("option");
+        option.value = category;
+        supplyCategoryDataList.appendChild(option);
+    });
 }
 
 function getTableDataWithText(text, AddAlertText) {
