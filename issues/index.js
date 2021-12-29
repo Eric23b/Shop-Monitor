@@ -7,7 +7,7 @@ const homeBtn = document.querySelector("#home-btn");
 const errorMessage = document.querySelector("#error-message");
 const settingsBtn = document.querySelector("#settings-btn");
 
-const settingsContainer = document.querySelector("#settings-container")
+const settingsContainer = document.querySelector("#settings-container");
 const serverURL = document.querySelector("#server-url");
 const serverAuthorization = document.querySelector("#server-authorization");
 
@@ -27,7 +27,10 @@ const suppliesEmpty = document.querySelector("#supplies-empty");
 
 const clockContainer = document.querySelector("#clock-container");
 const timeInput = document.querySelector("#time-input");
-const firstNameInput = document.querySelector("#first-name-input");
+const clockFirstNameInput = document.querySelector("#first-name-input");
+
+const otherIssuesContainer = document.querySelector("#other-issues-container");
+const otherIssuesFirstNameInput = document.querySelector("#other-issues-first-name-input");
 
 const note = document.querySelector("#note");
 
@@ -57,7 +60,7 @@ if (serverURL.value && serverAuthorization.value) {
 try {
     loadPartIssues();
     loadSuppliesIssues();
-    loadIssuesSelect();
+    loadCategoriesSelect();
 } catch (error) {
     showMessage(error);
 }
@@ -107,20 +110,15 @@ submitButton.addEventListener('click', (event) => {
         time: date.toLocaleTimeString(),
         date: date.toLocaleDateString(),
         note: note.value,
-        acknowledged: false,
-        active: true,
     };
 
     switch (issuesSelect.value) {
-        case "other":
-            insertDBEntry("other_issues", data, serverSettings);
-            break;
-
         case "part":
             data.jobName = jobNumberInput.value;
             data.cabinetNumber = cabinetNumberInput.value;
             data.part = partSelect.value;
             data.sent = false;
+            data.show = true;
             insertDBEntry("parts_issues", data, serverSettings);
             loadFormMessageForPartIssue();
             break;
@@ -130,16 +128,26 @@ submitButton.addEventListener('click', (event) => {
             data.item = itemsSelect.value;
             data.currently = suppliesEmpty.checked ? "Empty" : "Low";
             data.ordered = false
+            data.show = true;
             insertDBEntry("supply_issues", data, serverSettings);
             loadFormMessageForSupplyIssue();
             break;
 
         case "clock":
             const clockInOut = new Date(timeInput.value);
+            data.acknowledged = false;
             data.missedTime = `${clockInOut.toLocaleDateString()} ${clockInOut.toLocaleTimeString()}`;
-            data.firstName = firstNameInput.value;
+            data.firstName = clockFirstNameInput.value;
             insertDBEntry("time_clock_issues", data, serverSettings);
             loadFormMessageForClockIssue();
+            break;
+
+        case "other":
+            data.acknowledged = false;
+            data.firstName = otherIssuesFirstNameInput.value;
+            console.log(otherIssuesFirstNameInput);
+            insertDBEntry("other_issues", data, serverSettings);
+            loadFormMessageForOtherIssue();
             break;
     
         default:
@@ -171,8 +179,15 @@ function loadFormMessageForClockIssue() {
     const formattedTime = time.toLocaleString('en-US', options);
     message.value += `Forgot to clock in/out at ${formattedTime}\n`;
 }
+function loadFormMessageForOtherIssue() {
+    message.value = "";
+    const time = new Date(timeInput.value);
+    const options = {weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: 'numeric', minute: 'numeric', hour12: true};
+    const formattedTime = time.toLocaleString('en-US', options);
+    message.value += `Forgot to clock in/out at ${formattedTime}\n`;
+}
 
-async function loadIssuesSelect() {
+async function loadCategoriesSelect() {
     const categories = await getItemCategories();
     itemsArray = categories;
     
@@ -186,7 +201,7 @@ async function loadIssuesSelect() {
             option.value = index;
             categorySelect.appendChild(option);
     
-            const items = await getDBEntrees("supplies_list", "category", category, serverSettings)
+            const items = await getDBEntrees("supply_list", "category", category, serverSettings)
             itemsArray[index] = [];
             items.forEach((item) => {
                 itemsArray[index].push(item.item);
@@ -194,13 +209,16 @@ async function loadIssuesSelect() {
             updateCategoryItems();
         };
     } catch (error) {
-        showMessage(error);
+        // showMessage(error);
     }
 }
 
 async function getItemCategories() {
     const categories = [];
-    const response = await getDBEntrees("supplies_list", "category", "*", serverSettings);
+    const response = await getDBEntrees("supply_list", "category", "*", serverSettings);
+
+    if (response.error) return;
+
     response.forEach((item) => {
         if (categories.indexOf(item.category) === -1) {
             categories.push(item.category);
@@ -229,12 +247,13 @@ function updateContainer() {
     if (issuesSelect.value === "part") partContainer.style.display = "flex";
     if (issuesSelect.value === "supplies") suppliesContainer.style.display = "flex";
     if (issuesSelect.value === "clock") clockContainer.style.display = "flex";
+    if (issuesSelect.value === "other") otherIssuesContainer.style.display = "flex";
 }
 
 async function loadPartIssues() {
-    const response = await getDBEntrees("parts_issues", "active", true, serverSettings);
+    const response = await getDBEntrees("parts_issues", "show", true, serverSettings);
 
-    if (typeof response !== "object") return;
+    if (response.error) return;
     
     response.sort((a, b) => {return b.__createdtime__ - a.__createdtime__});
 
@@ -269,9 +288,9 @@ async function loadPartIssues() {
 }
 
 async function loadSuppliesIssues() {
-    const response = await getDBEntrees("supply_issues", "active", true, serverSettings);
+    const response = await getDBEntrees("supply_issues", "show", true, serverSettings);
 
-    if (typeof response !== "object") return;
+    if (response.error) return;
     
     response.sort((a, b) => {return b.__createdtime__ - a.__createdtime__});
 
@@ -333,7 +352,7 @@ function formFilled() {
             return !!categorySelect.value && !!itemsSelect.value;
 
         case "clock":
-            return !!timeInput.value;
+            return !!timeInput.value && !!clockFirstNameInput.value;
     
         default:
             return false;
@@ -344,6 +363,7 @@ function hideContainers() {
     partContainer.style.display = "none";
     suppliesContainer.style.display = "none";
     clockContainer.style.display = "none";
+    otherIssuesContainer.style.display = "none";
 }
 
 async function getDBEntrees(table, searchColumn, searchValue, serverSettings) {
@@ -353,7 +373,7 @@ async function getDBEntrees(table, searchColumn, searchValue, serverSettings) {
 
     const raw = JSON.stringify({
         "operation": "search_by_value",
-        "schema": "issue_schema",
+        "schema": "issues_schema",
         "table": table,
         "search_attribute": searchColumn,
         "search_value": searchValue,
@@ -368,11 +388,11 @@ async function getDBEntrees(table, searchColumn, searchValue, serverSettings) {
     };
 
     const response = await fetch(serverSettings.url, requestOptions);
-    if (!response.ok) {
-        showMessage(`DB error: ${response.statusText}`);
-    }
+    // if (!response.ok) {
+    //     showMessage(`DB error: ${response.statusText}`);
+    // }
     const data = await response.json();
-    console.log(data);
+    // console.log(data);
     return data;
 }
 
@@ -383,7 +403,7 @@ async function insertDBEntry(table, data, serverSettings) {
 
     const raw = JSON.stringify({
         "operation": "insert",
-        "schema": "issue_schema",
+        "schema": "issues_schema",
         "table": table,
         "records": [
             data
@@ -398,9 +418,9 @@ async function insertDBEntry(table, data, serverSettings) {
     };
 
     const response = await fetch(serverSettings.url, requestOptions);
-    if (!response.ok) {
-        showMessage(`DB error: ${response.statusText}`);
-    }
+    // if (!response.ok) {
+    //     showMessage(`DB error: ${response.statusText}`);
+    // }
     const text = await response.text();
     console.log(text);
 }

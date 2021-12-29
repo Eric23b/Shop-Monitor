@@ -58,6 +58,42 @@ export async function deleteDBEntry(schema, table, id, serverSettings, dbActiveC
     // console.log(response);
 }
 
+export async function createSchema(schema, serverSettings, dbActiveCallback) {
+    dbActiveCallback();
+    const headers = getBasicHeaders(serverSettings.authorization);
+    const raw = JSON.stringify({
+        operation: "create_schema",
+        schema: schema,
+    });
+    const requestOptions = buildRequestOptions(headers, raw);
+    const response = await sendDBRequest(serverSettings.url, requestOptions);
+    if (response.message) {
+        return response.message;
+    }
+    else {
+        return response.error;
+    }
+}
+
+export async function createTable(table, schema, serverSettings, dbActiveCallback) {
+    dbActiveCallback();
+    const headers = getBasicHeaders(serverSettings.authorization);
+    const raw = JSON.stringify({
+        "operation": "create_table",
+        "schema": schema,
+        "table": table,
+        "hash_attribute": "id"
+    });
+    const requestOptions = buildRequestOptions(headers, raw);
+    const response = await sendDBRequest(serverSettings.url, requestOptions);
+    if (response.message) {
+        return response.message;
+    }
+    else {
+        return response.error;
+    }
+}
+
 function getBasicHeaders(authorization) {
     const headers = new Headers();
     headers.append("Content-Type", "application/json");
@@ -75,10 +111,10 @@ function buildRequestOptions(headers, body) {
 }
 
 async function sendDBRequest(url, requestOptions) {
-    const response = await fetch(url, requestOptions);
-    if (!response.ok) {
-        console.error(response.statusText);
+    try {
+        const response = await fetch(url, requestOptions);
+        const data = await response.json();
+        return data;
+    } catch (error) {
     }
-    const data = await response.json();
-    return data;
 }

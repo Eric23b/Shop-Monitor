@@ -57,6 +57,15 @@ body{
     margin: 0;
 }
 
+body *{
+    font-size: x-large;
+    font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', 'Geneva', 'Verdana', 'sans-serif';
+    color: var(--color);
+    background-color: var(--background_color);
+    box-sizing: border-box;
+    accent-color: var(--accent_color);
+}
+
 #main-header-container{
     display: flex;
     flex-direction: row;
@@ -81,10 +90,11 @@ body{
 
 .tab-container{
     display: flex;
-    flex-direction: row;
+    flex-direction: column;
     flex-wrap: wrap;
     justify-content: center;
-    align-items: flex-start;
+    align-items: center;
+    align-content: center;
     width: 100%;
     max-width: 100%;
     gap: 1rem;
@@ -125,18 +135,6 @@ body{
     background: transparent;
 }
 
-div *{
-    font-size: x-large;
-    font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', 'Geneva', 'Verdana', 'sans-serif';
-    color: var(--color);
-    background-color: var(--background_color);
-    /* width: max-content; */
-    /* max-width: 100%; */
-    box-sizing: border-box;
-    accent-color: var(--accent_color);
-    /* color: springgreen; */
-}
-
 
 .tab-btn{
     padding: 0.25rem 0.75rem;
@@ -162,7 +160,6 @@ div *{
 table *{
     font-size: large;
 }
-
 table{
     table-layout:fixed;
     max-width: max-content;
@@ -175,26 +172,53 @@ table{
     overflow-x: auto;
     display: block;
 }
-
 th{
     padding: 0.5rem 1rem;
 }
-
 tr{
     overflow: scroll; 
     /* border: none; */
 }
-
 tr:hover{
     background-color: var(--background_hover_color);
 }
-
 td{
+    max-width: 20rem;
     text-align: center;
     padding: 0.25rem 0.5rem;
     background: transparent;
     border: none;
     white-space: pre-line;
+    overflow: hidden;
+}
+
+.form-btn{
+    width: 100%;
+    padding: 0.5rem;
+    border: 1px solid #555;
+    border-radius: .5rem;
+    cursor: pointer;
+    color: var(--color);
+    background-color: var(--background_color);
+}
+.form-btn:hover{
+    color: var(--background_color);
+    background-color: var(--color);
+}
+
+.small-btn{
+    width: 100%;
+    max-width: max-content;
+    padding: 0.5rem 1rem;
+    border: 1px solid #555;
+    border-radius: .5rem;
+    cursor: pointer;
+    color: var(--color);
+    background-color: var(--background_color);
+}
+.small-btn:hover{
+    color: var(--background_color);
+    background-color: var(--color);
 }
 
 .delete-btn{
@@ -241,10 +265,13 @@ td{
 .flex-row{
     display: flex;
     flex-direction: row;
-    justify-content: space-between;
+    flex-wrap: wrap;
+    justify-content: center;
     align-items: center;
+    align-content: center;
     gap: 0.5rem;
-    /* min-width: 100%; */
+    width: 100%;
+    /* max-width: max-content; */
     box-sizing: border-box;
 }
 
@@ -261,9 +288,36 @@ input{
     box-sizing: border-box;
 }
 
-.settings-input{
-    width: 40rem;
-    max-width: 40rem;
+.input-label{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    margin-bottom: 1rem;
+}
+.labeled-input{
+    width: 100%;
+    /* width: 20rem; */
+}
+.input-column{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    max-width: 25rem;
+}
+
+.small-input-label{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+    max-width: 25rem;
+    margin-bottom: 1rem;
+}
+.small-labeled-input{
+    width: 100%;
+    /* width: 20rem; */
 }
 
 .container{
