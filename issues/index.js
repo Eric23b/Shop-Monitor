@@ -29,8 +29,8 @@ const clockContainer = document.querySelector("#clock-container");
 const timeInput = document.querySelector("#time-input");
 const clockFirstNameInput = document.querySelector("#first-name-input");
 
-const otherIssuesContainer = document.querySelector("#other-issues-container");
-const otherIssuesFirstNameInput = document.querySelector("#other-issues-first-name-input");
+// const otherIssuesContainer = document.querySelector("#other-issues-container");
+// const otherIssuesFirstNameInput = document.querySelector("#other-issues-first-name-input");
 
 const note = document.querySelector("#note");
 
@@ -144,8 +144,7 @@ submitButton.addEventListener('click', (event) => {
 
         case "other":
             data.acknowledged = false;
-            data.firstName = otherIssuesFirstNameInput.value;
-            console.log(otherIssuesFirstNameInput);
+            // data.firstName = otherIssuesFirstNameInput.value;
             insertDBEntry("other_issues", data, serverSettings);
             loadFormMessageForOtherIssue();
             break;
@@ -180,11 +179,7 @@ function loadFormMessageForClockIssue() {
     message.value += `Forgot to clock in/out at ${formattedTime}\n`;
 }
 function loadFormMessageForOtherIssue() {
-    message.value = "";
-    const time = new Date(timeInput.value);
-    const options = {weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: 'numeric', minute: 'numeric', hour12: true};
-    const formattedTime = time.toLocaleString('en-US', options);
-    message.value += `Forgot to clock in/out at ${formattedTime}\n`;
+message.value = "";
 }
 
 async function loadCategoriesSelect() {
@@ -247,7 +242,7 @@ function updateContainer() {
     if (issuesSelect.value === "part") partContainer.style.display = "flex";
     if (issuesSelect.value === "supplies") suppliesContainer.style.display = "flex";
     if (issuesSelect.value === "clock") clockContainer.style.display = "flex";
-    if (issuesSelect.value === "other") otherIssuesContainer.style.display = "flex";
+    // if (issuesSelect.value === "other") otherIssuesContainer.style.display = "flex";
 }
 
 async function loadPartIssues() {
@@ -342,9 +337,6 @@ function formFilled() {
     if (!issuesSelect.value) return false;
 
     switch (issuesSelect.value) {
-        case "other":
-            return !!note.value;
-
         case "part":
             return !!jobNumberInput.value && !!cabinetNumberInput.value && !!partSelect.value;
 
@@ -353,7 +345,10 @@ function formFilled() {
 
         case "clock":
             return !!timeInput.value && !!clockFirstNameInput.value;
-    
+
+        case "other":
+            return !!note.value;
+
         default:
             return false;
     }
@@ -363,7 +358,7 @@ function hideContainers() {
     partContainer.style.display = "none";
     suppliesContainer.style.display = "none";
     clockContainer.style.display = "none";
-    otherIssuesContainer.style.display = "none";
+    // otherIssuesContainer.style.display = "none";
 }
 
 async function getDBEntrees(table, searchColumn, searchValue, serverSettings) {
