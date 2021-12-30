@@ -1,6 +1,7 @@
 
 export async function getDBEntrees(schema, table, searchColumn, searchValue, serverSettings, dbActiveCallback) {
-    dbActiveCallback();
+    if (dbActiveCallback) dbActiveCallback();
+    
     const headers = getBasicHeaders(serverSettings.authorization);
     const raw = JSON.stringify({
         operation: "search_by_value",
