@@ -1,4 +1,5 @@
 import {getDBEntrees, insertDBEntry, updateDBEntry, deleteDBEntry, createSchema, createTable} from "../db-utilities.js";
+import {getTableDataWithText, getTableHeaderRow, getTableDataWithCheckbox, getTableDataWithDeleteButton} from "../table-utilities.js";
 
 const settings = {
     url: "",
@@ -52,7 +53,6 @@ const dbActivityLight = document.querySelector("#db-activity-light");
 hideTabContainers();
 
 const password = getLocalStorageValue('password') || prompt("Enter your password");
-
 if (password !== "pw558") {
     const a = document.createElement('a');
     a.href = "/";
@@ -69,15 +69,19 @@ settings.authorization = serverAuthorization.value = getLocalStorageValue('serve
 // showSettings();
 if (serverURL.value && serverAuthorization.value) {
     try {
-        loadPartIssues();
-        // loadSuppliesIssues();
-        // loadTimeClockIssues();
-        // loadOtherIssues();
-        // loadSupplyListTable();
+        await loadPartIssues();
     } catch (error) {
         console.log(error);
     }
     showTab("part-issue");
+    await checkForUnresolvedIssues();
+    
+    setInterval(async () => {
+        await checkForUnresolvedIssues();
+        const activeTab = document.querySelector('.active-tab');
+        const activeTabID = activeTab.attributes.tabContainer.value;
+        // showTab(activeTabID);
+    }, 10000); // 60000 * 5
 }
 else {
     showTab("settings");
@@ -111,7 +115,7 @@ addSupplyBtn.addEventListener('click', async () => {
         item: item,
     }
     await insertDBEntry("issues_schema","supply_list", data, settings, dbActive);
-    loadSupplyListTable();
+    await loadSupplyListTable();
 });
 
 runDBSetupBtn.addEventListener('click', async () => {
@@ -145,7 +149,7 @@ serverAuthorization.addEventListener('blur', function () {
 
 // ---FUNCTIONS---
 
-function showTab(tab) {
+async function showTab(tab) {
     hideTabContainers();
 
     const buttons = document.querySelectorAll("#tab-header .tab-btn");
@@ -157,27 +161,27 @@ function showTab(tab) {
         case "part-issue":
             partsTabContainer.style.display = "flex";
             partTabBtn.classList.add("active-tab");
-            loadPartIssues();
+            await loadPartIssues();
             break;
         case "supply-issues":
             supplyLowTabContainer.style.display = "flex";
             supplyLowTabBtn.classList.add("active-tab");
-            loadSuppliesIssues();
+            await loadSuppliesIssues();
             break;
         case "time-clock":
             timeClockTabContainer.style.display = "flex";
             timeClockTabBtn.classList.add("active-tab");
-            loadTimeClockIssues();
+            await loadTimeClockIssues();
             break;
         case "other-issues":
             otherIssuesTabContainer.style.display = "flex";
             otherIssuesTabBtn.classList.add("active-tab");
-            loadOtherIssues();
+            await loadOtherIssues();
             break;
         case "supply-list":
             supplyListTabContainer.style.display = "flex";
             supplyListTabBtn.classList.add("active-tab");
-            loadSupplyListTable();
+            await loadSupplyListTable();
             break;
         case "settings":
             settingsContainer.style.display = "flex";
@@ -187,6 +191,26 @@ function showTab(tab) {
         default:
             break;
     }
+}
+
+async function checkForUnresolvedIssues() {
+    const partsOperation = await getEntryCountWithValue("issues_schema", "parts_issues", "sent", false) ? "add" : "remove";
+    partTabBtn.classList[partsOperation]("after-visible");
+
+    const supplyLowOperation = await getEntryCountWithValue("issues_schema", "supply_issues", "ordered", false) ? "add" : "remove";
+    supplyLowTabBtn.classList[supplyLowOperation]("after-visible");
+
+    const timeClockOperation = await getEntryCountWithValue("issues_schema", "time_clock_issues", "acknowledged", false) ? "add" : "remove";
+    timeClockTabBtn.classList[timeClockOperation]("after-visible");
+
+    const otherOperation = await getEntryCountWithValue("issues_schema", "other_issues", "acknowledged", false) ? "add" : "remove";
+    otherIssuesTabBtn.classList[otherOperation]("after-visible");
+}
+
+async function getEntryCountWithValue(schema, table, column, value) {
+    const response = await getDBEntrees(schema, table, column, value, settings);
+    if (!response) return 0;
+    return response.length;
 }
 
 function hideTabContainers() {
@@ -212,6 +236,8 @@ async function getItemCategories(schema, table) {
 async function loadPartIssues() {
     const response = await getDBEntrees("issues_schema", "parts_issues", "__createdtime__", "*", settings, dbActive);
     
+    if (!response) return;
+    
     response.sort((a, b) => {return b.__createdtime__ - a.__createdtime__});
 
     partIssuesTable.innerHTML = getTableHeaderRow(["Job", "Cabinet", "Part", "Note", "Date", "Time", "Sent", "Show", "Delete"]);
@@ -236,6 +262,7 @@ async function loadPartIssues() {
             async (event) => {
                 const isChecked = event.target.checked;
                 await updateDBEntry("issues_schema", "parts_issues", {id: entry.id, sent: isChecked}, settings, dbActive);
+                await checkForUnresolvedIssues();
             }
         );
 
@@ -251,6 +278,7 @@ async function loadPartIssues() {
             async () => {
                 await deleteDBEntry("issues_schema", "parts_issues", entry.id, settings, dbActive);
                 await loadPartIssues();
+                await checkForUnresolvedIssues();
             }
         );
 
@@ -263,6 +291,8 @@ async function loadPartIssues() {
 async function loadSuppliesIssues() {
     const response = await getDBEntrees("issues_schema", "supply_issues", "__createdtime__", "*", settings, dbActive);
     
+    if (!response) return;
+
     response.sort((a, b) => {return b.__createdtime__ - a.__createdtime__});
 
     supplyIssuesTable.innerHTML = 
@@ -288,6 +318,7 @@ async function loadSuppliesIssues() {
             async (event) => {
                 const isChecked = event.target.checked;
                 await updateDBEntry("issues_schema", "supply_issues", {id: entry.id, ordered: isChecked}, settings, dbActive);
+                await checkForUnresolvedIssues();
             }
         );
 
@@ -303,6 +334,7 @@ async function loadSuppliesIssues() {
             async () => {
                 await deleteDBEntry("issues_schema", "supply_issues", entry.id, settings, dbActive);
                 await loadSuppliesIssues();
+                await checkForUnresolvedIssues();
             }
         );
 
@@ -315,6 +347,8 @@ async function loadSuppliesIssues() {
 async function loadTimeClockIssues() {
     const response = await getDBEntrees("issues_schema", "time_clock_issues", "__createdtime__", "*", settings, dbActive);
     
+    if (!response) return;
+
     response.sort((a, b) => {return b.__createdtime__ - a.__createdtime__});
 
     timeClockTabTable.innerHTML = 
@@ -338,6 +372,7 @@ async function loadTimeClockIssues() {
             async (event) => {
                 const isChecked = event.target.checked;
                 await updateDBEntry("issues_schema", "time_clock_issues", {id: entry.id, acknowledged: isChecked}, settings, dbActive);
+                await checkForUnresolvedIssues();
             }
         );
 
@@ -345,6 +380,7 @@ async function loadTimeClockIssues() {
             async () => {
                 await deleteDBEntry("issues_schema", "time_clock_issues", entry.id, settings, dbActive);
                 await loadTimeClockIssues();
+                await checkForUnresolvedIssues();
             }
         );
 
@@ -357,6 +393,8 @@ async function loadTimeClockIssues() {
 async function loadOtherIssues() {
     const response = await getDBEntrees("issues_schema", "other_issues", "__createdtime__", "*", settings, dbActive);
     
+    if (!response) return;
+
     response.sort((a, b) => {return b.__createdtime__ - a.__createdtime__});
 
     otherIssuesTable.innerHTML = 
@@ -364,8 +402,6 @@ async function loadOtherIssues() {
 
     for (const entry of response) {
         const row = document.createElement('tr');
-
-        // const name = getTableDataWithText(entry.firstName);
 
         const note = getTableDataWithText(entry.note, true);
 
@@ -378,6 +414,7 @@ async function loadOtherIssues() {
             async (event) => {
                 const isChecked = event.target.checked;
                 await updateDBEntry("issues_schema", "other_issues", {id: entry.id, acknowledged: isChecked}, settings, dbActive);
+                await checkForUnresolvedIssues();
             }
         );
 
@@ -385,6 +422,7 @@ async function loadOtherIssues() {
             async () => {
                 await deleteDBEntry("issues_schema", "other_issues", entry.id, settings, dbActive);
                 await loadOtherIssues();
+                await checkForUnresolvedIssues();
             }
         );
 
@@ -397,6 +435,8 @@ async function loadOtherIssues() {
 async function loadSupplyListTable() {
     const response = await getDBEntrees("issues_schema", "supply_list", "__createdtime__", "*", settings, dbActive);
     
+    if (!response) return;
+
     response.sort((a, b) => {return b.__createdtime__ - a.__createdtime__});
 
     supplyListTable.innerHTML = 
@@ -429,54 +469,10 @@ async function loadSupplyListTable() {
     });
 }
 
-function getTableDataWithText(text, AddAlertText) {
-    const td = document.createElement('td');
-    td.textContent = text;
-    if (AddAlertText) {
-        td.onclick = () => {alert(text)}
-        td.style.cursor = "pointer";
-    }
-    return td;
-}
-
-function getTableDataWithDeleteButton(asyncCallback) {
-    const tableData = document.createElement('td');
-    const button = document.createElement('button');
-    button.textContent = "✖";
-    button.classList.add("delete-btn");
-    button.onclick = asyncCallback;
-    tableData.appendChild(button);
-    return tableData;
-}
-
-function getTableDataWithCheckbox(checked, asyncCallback) {
-    const tableData = document.createElement('td');
-    const checkbox = document.createElement('input');
-    checkbox.type = "checkbox";
-    checkbox.checked = checked;
-    checkbox.onchange = asyncCallback;
-    tableData.appendChild(checkbox);
-    return tableData;
-}
-
-function showNoteOnMouseOver(noteText, NoteTextArea) {
-    NoteTextArea.textContent = noteText || "Note:";
-    NoteTextArea.style.color = noteText ? "var(--active)" : "var(--inactive)";
-}
-
 function appendChildren(parent, childList) {
     childList.forEach((childElement) => {
         parent.appendChild(childElement);
     });
-}
-
-function getTableHeaderRow(headers) {
-    let htmlText = "<tr>";
-    headers.forEach((header) => {
-        htmlText += `<th>${header}</th>`;
-    });
-    htmlText += "</tr>";
-    return htmlText;
 }
 
 function getLocalStorageValue(key) {

@@ -122,11 +122,12 @@ body *{
 }
 
 #db-activity{
-    position: absolute;
-    top: calc(100vh - 3rem);
-    left: calc(100vw - 5rem);
+    position: fixed;
+    /* top: calc(100vh - 3rem); */
+    bottom: 1rem;
+    left: calc(100vw - 4rem);
     color: var(--inactive);
-    font-size: larger;
+    font-size: large;
     background: transparent;
     pointer-events: none;
 }
@@ -145,6 +146,14 @@ body *{
 .tab-btn:hover{
     color: var(--active);
 }
+.tab-btn::after{
+    position: absolute;
+    content: "*";
+    color: var(--accent_color);
+    /* font-size: larger; */
+    font-weight: bolder;
+    visibility: hidden;
+}
 .active-tab{
     padding: 0.25rem 0.75rem;
     color: var(--active);
@@ -156,6 +165,9 @@ body *{
     color: var(--accent_color);
 }
 
+.after-visible::after{
+    visibility: visible;
+}
 
 table *{
     font-size: large;
@@ -195,6 +207,7 @@ td{
 .form-btn{
     width: 100%;
     padding: 0.5rem;
+    margin-bottom: 1rem;
     border: 1px solid #555;
     border-radius: .5rem;
     cursor: pointer;
@@ -204,6 +217,10 @@ td{
 .form-btn:hover{
     color: var(--background_color);
     background-color: var(--color);
+}
+.form-btn:active{
+    color: var(--color);
+    background-color: var(--background_color);
 }
 
 .small-btn{
@@ -219,6 +236,10 @@ td{
 .small-btn:hover{
     color: var(--background_color);
     background-color: var(--color);
+}
+.small-btn:active{
+    color: var(--color);
+    background-color: var(--background_color);
 }
 
 .delete-btn{
@@ -270,7 +291,7 @@ td{
     align-items: center;
     align-content: center;
     gap: 0.5rem;
-    width: 100%;
+    /* width: 100%; */
     /* max-width: max-content; */
     box-sizing: border-box;
 }
@@ -312,7 +333,7 @@ input{
     flex-direction: column;
     align-items: center;
     width: 100%;
-    max-width: 25rem;
+    max-width: 20rem;
     margin-bottom: 1rem;
 }
 .small-labeled-input{
