@@ -67,11 +67,14 @@ try {
 
 setInterval(() => {
     if ((!issuesSelect.value) && (!note.value) && (!!serverURL.value) && (!!serverAuthorization.value)) {
-        const refreshLink = document.createElement('a');
-        refreshLink.href = "/";
-        refreshLink.click();
+        // const refreshLink = document.createElement('a');
+        // refreshLink.href = "/";
+        // refreshLink.click();
+
+        loadPartIssues();
+        loadSuppliesIssues();
     }
-}, 60000 * 20);
+}, 60000); // 60000 * 20
 
 
 
@@ -179,7 +182,7 @@ function loadFormMessageForClockIssue() {
     message.value += `Forgot to clock in/out at ${formattedTime}\n`;
 }
 function loadFormMessageForOtherIssue() {
-message.value = "";
+    message.value = "";
 }
 
 async function loadCategoriesSelect() {
@@ -196,7 +199,7 @@ async function loadCategoriesSelect() {
             option.value = index;
             categorySelect.appendChild(option);
     
-            const items = await getDBEntrees("supply_list", "category", category, serverSettings)
+            const items = await getDBEntrees("supply_list", "category", category, serverSettings);
             itemsArray[index] = [];
             items.forEach((item) => {
                 itemsArray[index].push(item.item);
