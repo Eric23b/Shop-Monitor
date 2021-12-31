@@ -5,7 +5,7 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="./issues/index.css">
-    <script defer src="./issues/index.js"></script>
+    <script defer type="module" src="./issues/index.js"></script>
     <title>Report</title>
 </head>
 <body>
@@ -20,12 +20,6 @@
         <div id="settings-container">
             <label class="flex-column">Server URL<input id="server-url" type="text"></label>
             <label class="flex-column">Authorization<input id="server-authorization" type="password"></label>
-        </div>
-
-        <!-- Part Issues -->
-        <div id="part-issues-container">
-            <label>Parts</label>
-            <table id="part-issues-table" class="table"></table>
         </div>
 
         <!-- Report -->
@@ -73,7 +67,13 @@
                     <select id="items-select"></select>
                 </label>
                 <label id="supplies-empty-label"><input id="supplies-empty" type="checkbox">Empty</label>
-                <button class="form-button">Add to list</button>
+                <button id="add-item-to-list" class="form-button">Add to list</button>
+                <div id="item-list-container">
+                    <!-- <label class="list-item">Category <br> Item bla bla bla  Item bla bla bla   Item bla bla bla   Item bla bla bla <button class="delete-btn">✖</button></label>
+                    <label class="list-item">Category <br> Item bla bla bla  Item bla bla bla   Item bla bla bla   Item bla bla bla <button class="delete-btn">✖</button></label>
+                    <label class="list-item">Category <br> Item bla bla bla  Item bla bla bla   Item bla bla bla   Item bla bla bla <button class="delete-btn">✖</button></label>
+                    <label class="list-item">Category <br> Item bla bla bla  Item bla bla bla   Item bla bla bla   Item bla bla bla <button class="delete-btn">✖</button></label> -->
+                </div>
             </div>
 
             <!-- Missed clock in/out -->
@@ -94,6 +94,12 @@
                 <label class="flex-column">Note<textarea id="note" name="note" placeholder="optional"></textarea></label>
                 <button id="submit-button" class="form-button" type="submit">Send</button>
             </form>
+        </div>
+
+        <!-- Part Issues -->
+        <div id="part-issues-container">
+            <label>Parts</label>
+            <table id="part-issues-table" class="table"></table>
         </div>
 
         <!-- Supply Issue -->

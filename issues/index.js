@@ -1,7 +1,12 @@
+// import { Component} from "./db-utilities.js";
+
+
 const serverSettings = {
     url: "",
     authorization: ""
 }
+
+const itemList = [];
 
 const homeBtn = document.querySelector("#home-btn");
 const errorMessage = document.querySelector("#error-message");
@@ -24,6 +29,8 @@ const suppliesContainer = document.querySelector("#supplies-container");
 const categorySelect = document.querySelector("#category-select");
 const itemsSelect = document.querySelector("#items-select");
 const suppliesEmpty = document.querySelector("#supplies-empty");
+const addItemToListBtn = document.querySelector("#add-item-to-list");
+const itemListContainer = document.querySelector("#item-list-container");
 
 const clockContainer = document.querySelector("#clock-container");
 const timeInput = document.querySelector("#time-input");
@@ -70,15 +77,25 @@ setInterval(() => {
         // const refreshLink = document.createElement('a');
         // refreshLink.href = "/";
         // refreshLink.click();
-
-        loadPartIssues();
-        loadSuppliesIssues();
     }
+
+    loadPartIssues();
+    loadSuppliesIssues();
 }, 60000); // 60000 * 20
 
 
 
 // ---EVENT LISTENERS---
+
+
+addItemToListBtn.addEventListener('click', () => {
+    itemList.push({
+        category: categorySelect[categorySelect.value].textContent,
+        name: itemsSelect.value,
+        currentAmount: suppliesEmpty.checked ? "Empty" : "Low",
+    });
+    updateLowSupplyItemsList();
+});
 
 homeBtn.addEventListener("click", () => {
     hideSettings();
@@ -103,7 +120,7 @@ issuesSelect.addEventListener("change", updateContainer);
 categorySelect.addEventListener("change", updateCategoryItems);
 
 // Send Button Click
-submitButton.addEventListener('click', (event) => {
+submitButton.addEventListener('click', async (event) => {
     event.preventDefault();
 
     if (!formFilled()) return;
@@ -127,12 +144,14 @@ submitButton.addEventListener('click', (event) => {
             break;
 
         case "supplies":
-            data.category = categorySelect[categorySelect.value].textContent;
-            data.item = itemsSelect.value;
-            data.currently = suppliesEmpty.checked ? "Empty" : "Low";
-            data.ordered = false
-            data.show = true;
-            insertDBEntry("supply_issues", data, serverSettings);
+            itemList.forEach(async (item) => {
+                data.category = item.category;
+                data.item = item.name ;
+                data.currently = item.currentAmount;
+                data.ordered = false
+                data.show = true;
+                await insertDBEntry("supply_issues", data, serverSettings);
+            });
             loadFormMessageForSupplyIssue();
             break;
 
@@ -161,6 +180,31 @@ submitButton.addEventListener('click', (event) => {
 
 // ---FUNCTIONS---
 
+function updateLowSupplyItemsList() {
+    itemListContainer.innerHTML = ``;
+    itemList.forEach((item, index) => {
+        const listItem = getItemElement(item.category, item.name, item.currentAmount, index);
+        itemListContainer.appendChild(listItem);
+    })
+};
+
+function getItemElement(category, item, currentAmount, index) {
+    const categoryLabel = document.createElement("p");
+    categoryLabel.innerHTML = `${category}<br/>${item}<br/>${currentAmount}`;
+    categoryLabel.classList.add("list-item");
+    const deleteBtn = document.createElement("button");
+    deleteBtn.textContent = "✖";
+    deleteBtn.classList.add("delete-btn");
+    deleteBtn.onclick = (event) => {
+        if (event.target.tagName !== "BUTTON") return;
+        console.log(event);
+        itemList.splice(index, 1);
+        updateLowSupplyItemsList();
+    }
+    categoryLabel.appendChild(deleteBtn);
+    return categoryLabel;
+}
+
 function loadFormMessageForPartIssue() {
     message.value = "";
     message.value += "Missing or damaged part.\n";
@@ -170,8 +214,11 @@ function loadFormMessageForPartIssue() {
 }
 function loadFormMessageForSupplyIssue() {
     message.value = "";
-    message.value += suppliesEmpty.checked ? `Supply empty.\n` : `Supply low.\n`;
-    message.value += `${categorySelect.textContent}, ${itemsSelect.value}`;
+    for (const item of itemList) {
+        message.value += `Supplies ${item.currentAmount}\nCategory: ${item.category}\nItem:${item.name}\n----------------\n`;
+    }
+    // message.value += suppliesEmpty.checked ? `Supply empty.\n` : `Supply low.\n`;
+    // message.value += `${categorySelect.textContent}, ${itemsSelect.value}`;
     // message.value += `${supplies[categorySelect.value].name}, ${itemsSelect.value}`;
 }
 function loadFormMessageForClockIssue() {
@@ -179,7 +226,7 @@ function loadFormMessageForClockIssue() {
     const time = new Date(timeInput.value);
     const options = {weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: 'numeric', minute: 'numeric', hour12: true};
     const formattedTime = time.toLocaleString('en-US', options);
-    message.value += `Forgot to clock in/out at ${formattedTime}\n`;
+    message.value += `${clockFirstNameInput.value} forgot to clock in/out at ${formattedTime}\n`;
 }
 function loadFormMessageForOtherIssue() {
     message.value = "";
@@ -344,7 +391,7 @@ function formFilled() {
             return !!jobNumberInput.value && !!cabinetNumberInput.value && !!partSelect.value;
 
         case "supplies":
-            return !!categorySelect.value && !!itemsSelect.value;
+            return itemList.length > 0;
 
         case "clock":
             return !!timeInput.value && !!clockFirstNameInput.value;
