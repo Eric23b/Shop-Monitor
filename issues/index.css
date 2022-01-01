@@ -2,7 +2,9 @@
 :root{
     --color: #191d25;
     --background_color: #edeff3;
+    --background_hover_color: #d1d3d6;
     --border_color: #454750;
+    --accent_color: #0ba27a;
     --yes: forestgreen;
     --no: tomato;
 }
@@ -12,6 +14,7 @@
         --background_color: #13131a;
         --background_hover_color: #313138;
         --border_color: #51525a;
+        --accent_color: #2ceeba;
         --yes: springgreen;
         --no: tomato;
     }
@@ -21,6 +24,7 @@ html{
     color: var(--color);
     background-color: var(--background_color);
     box-sizing: border-box;
+    /* accent-color: var(--accent_color); */
 }
 
 #header h1{
@@ -95,6 +99,8 @@ table{
     max-width: 100%;
     margin-bottom: 1rem;
     border: solid 1px var(--border_color);
+    /* max-height: 20rem;
+    overflow-y: auto; */
 }
 
 th{
@@ -111,6 +117,7 @@ td{
     min-height: 10rem;
     max-height: 20rem;
     padding: 0.5rem;
+    margin-bottom: 1rem;
     border-radius: .5rem;
     border: solid 1px var(--border_color);
     overflow-y: auto;
