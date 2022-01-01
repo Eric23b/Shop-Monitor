@@ -8,6 +8,7 @@
     --inactive: #191d2586;
     --yes: forestgreen;
     --no: tomato;
+    --accent_color: rgb(44, 238, 186);
 }
 @media (prefers-color-scheme: dark) {
     :root{
@@ -51,6 +52,6 @@ body{
     font-size: 3rem;
 }
 #main-container a:hover{
-    color: var(--accent_color);
+    /* color: var(--accent_color); */
     background-color: var(--background_hover_color);
 }

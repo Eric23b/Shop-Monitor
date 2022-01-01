@@ -30,9 +30,9 @@ html{
     scrollbar-width: thin;
     scrollbar-color: var(--border_color) transparent;
 }
-*::-webkit-scrollbar-thumb:hover {
+/* *::-webkit-scrollbar-thumb:hover {
     background-color: var(--accent_color);
-}
+} */
 *::-webkit-scrollbar {
     width: 12px;
     height: 12px;
@@ -45,9 +45,9 @@ html{
     border-radius: 20px;
     border: 3px solid var(--background_color);
 }
-*::-webkit-scrollbar-thumb:hover {
+/* *::-webkit-scrollbar-thumb:hover {
     background-color: var(--accent_color);
-}
+} */
 *::-webkit-scrollbar-corner {
     background: var(--background_color);
 }
@@ -149,7 +149,7 @@ body *{
 .tab-btn::after{
     position: absolute;
     content: "*";
-    color: var(--accent_color);
+    /* color: var(--accent_color); */
     /* font-size: larger; */
     font-weight: bolder;
     visibility: hidden;
@@ -161,9 +161,9 @@ body *{
     border: none;
     border-bottom: 2px solid var(--active);
 }
-.active-tab:active{
+/* .active-tab:active{
     color: var(--accent_color);
-}
+} */
 
 .after-visible::after{
     visibility: visible;
