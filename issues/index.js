@@ -250,7 +250,7 @@ async function loadCategoriesSelect() {
             option.value = index;
             categorySelect.appendChild(option);
     
-            const items = await getDBEntrees("issues_schema", "supply_list", "category", category, serverSettings);
+            const items = await getDBEntrees("inventory_schema", "supply_list", "category", category, serverSettings);
             // const items = await getDBEntreesOLD("supply_list", "category", category, serverSettings);
             itemsArray[index] = [];
             items.forEach((item) => {
@@ -265,7 +265,7 @@ async function loadCategoriesSelect() {
 
 async function getItemCategories() {
     const categories = [];
-    const response = await getDBEntrees("issues_schema", "supply_list", "category", "*", serverSettings);
+    const response = await getDBEntrees("inventory_schema", "supply_list", "category", "*", serverSettings);
     // const response = await getDBEntreesOLD("supply_list", "category", "*", serverSettings);
 
     if (response.error) return;
