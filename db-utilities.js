@@ -18,7 +18,8 @@ export async function getDBEntrees(schema, table, searchColumn, searchValue, ser
 }
 
 export async function insertDBEntry(schema, table, data, serverSettings, dbActiveCallback) {
-    dbActiveCallback();
+    if (dbActiveCallback) dbActiveCallback();
+
     const headers = getBasicHeaders(serverSettings.authorization);
     const raw = JSON.stringify({
         operation: "insert",
@@ -32,7 +33,8 @@ export async function insertDBEntry(schema, table, data, serverSettings, dbActiv
 }
 
 export async function updateDBEntry(schema, table, data, serverSettings, dbActiveCallback) {
-    dbActiveCallback();
+    if (dbActiveCallback) dbActiveCallback();
+
     const headers = getBasicHeaders(serverSettings.authorization);
     const raw = JSON.stringify({
         operation: "update",
@@ -46,7 +48,8 @@ export async function updateDBEntry(schema, table, data, serverSettings, dbActiv
 }
 
 export async function deleteDBEntry(schema, table, id, serverSettings, dbActiveCallback) {
-    dbActiveCallback();
+    if (dbActiveCallback) dbActiveCallback();
+
     const headers = getBasicHeaders(serverSettings.authorization);
     const raw = JSON.stringify({
         operation: "delete",
@@ -60,7 +63,8 @@ export async function deleteDBEntry(schema, table, id, serverSettings, dbActiveC
 }
 
 export async function createSchema(schema, serverSettings, dbActiveCallback) {
-    dbActiveCallback();
+    if (dbActiveCallback) dbActiveCallback();
+
     const headers = getBasicHeaders(serverSettings.authorization);
     const raw = JSON.stringify({
         operation: "create_schema",
@@ -77,7 +81,8 @@ export async function createSchema(schema, serverSettings, dbActiveCallback) {
 }
 
 export async function createTable(table, schema, serverSettings, dbActiveCallback) {
-    dbActiveCallback();
+    if (dbActiveCallback) dbActiveCallback();
+    
     const headers = getBasicHeaders(serverSettings.authorization);
     const raw = JSON.stringify({
         "operation": "create_table",
