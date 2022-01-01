@@ -1,4 +1,4 @@
-// import { Component} from "./db-utilities.js";
+import { insertDBEntry, getDBEntrees } from "../db-utilities.js";
 
 
 const serverSettings = {
@@ -121,7 +121,7 @@ categorySelect.addEventListener("change", updateCategoryItems);
 
 // Send Button Click
 submitButton.addEventListener('click', async (event) => {
-    // event.preventDefault();
+    event.preventDefault();
 
     if (!formFilled()) return;
 
@@ -139,7 +139,8 @@ submitButton.addEventListener('click', async (event) => {
             data.part = partSelect.value;
             data.sent = false;
             data.show = true;
-            insertDBEntry("parts_issues", data, serverSettings);
+            await insertDBEntry("issues_schema", "parts_issues", data, serverSettings);
+            // insertDBEntryOLB("parts_issues", data, serverSettings);
             loadFormMessageForPartIssue();
             break;
 
@@ -150,7 +151,8 @@ submitButton.addEventListener('click', async (event) => {
                 data.currently = item.currentAmount;
                 data.ordered = false
                 data.show = true;
-                await insertDBEntry("supply_issues", data, serverSettings);
+                await insertDBEntry("issues_schema", "supply_issues", data, serverSettings);
+                // await insertDBEntryOLB("supply_issues", data, serverSettings);
             });
             loadFormMessageForSupplyIssue();
             break;
@@ -160,14 +162,16 @@ submitButton.addEventListener('click', async (event) => {
             data.acknowledged = false;
             data.missedTime = `${clockInOut.toLocaleDateString()} ${clockInOut.toLocaleTimeString()}`;
             data.firstName = clockFirstNameInput.value;
-            insertDBEntry("time_clock_issues", data, serverSettings);
+            await insertDBEntry("issues_schema", "time_clock_issues", data, serverSettings);
+            // insertDBEntryOLB("time_clock_issues", data, serverSettings);
             loadFormMessageForClockIssue();
             break;
 
         case "other":
             data.acknowledged = false;
             // data.firstName = otherIssuesFirstNameInput.value;
-            insertDBEntry("other_issues", data, serverSettings);
+            await insertDBEntry("issues_schema", "other_issues", data, serverSettings);
+            // insertDBEntryOLB("other_issues", data, serverSettings);
             loadFormMessageForOtherIssue();
             break;
     
@@ -246,7 +250,8 @@ async function loadCategoriesSelect() {
             option.value = index;
             categorySelect.appendChild(option);
     
-            const items = await getDBEntrees("supply_list", "category", category, serverSettings);
+            const items = await getDBEntrees("issues_schema", "supply_list", "category", category, serverSettings);
+            // const items = await getDBEntreesOLD("supply_list", "category", category, serverSettings);
             itemsArray[index] = [];
             items.forEach((item) => {
                 itemsArray[index].push(item.item);
@@ -260,7 +265,8 @@ async function loadCategoriesSelect() {
 
 async function getItemCategories() {
     const categories = [];
-    const response = await getDBEntrees("supply_list", "category", "*", serverSettings);
+    const response = await getDBEntrees("issues_schema", "supply_list", "category", "*", serverSettings);
+    // const response = await getDBEntreesOLD("supply_list", "category", "*", serverSettings);
 
     if (response.error) return;
 
@@ -296,7 +302,8 @@ function updateContainer() {
 }
 
 async function loadPartIssues() {
-    const response = await getDBEntrees("parts_issues", "show", true, serverSettings);
+    const response = await getDBEntrees("issues_schema", "parts_issues", "show", true, serverSettings);
+    // const response = await getDBEntreesOLD("parts_issues", "show", true, serverSettings);
 
     if (response.error) return;
     
@@ -333,7 +340,8 @@ async function loadPartIssues() {
 }
 
 async function loadSuppliesIssues() {
-    const response = await getDBEntrees("supply_issues", "show", true, serverSettings);
+    const response = await getDBEntrees("issues_schema", "supply_issues", "show", true, serverSettings);
+    // const response = await getDBEntreesOLD("supply_issues", "show", true, serverSettings);
 
     if (response.error) return;
     
@@ -411,64 +419,64 @@ function hideContainers() {
     // otherIssuesContainer.style.display = "none";
 }
 
-async function getDBEntrees(table, searchColumn, searchValue, serverSettings) {
-    const myHeaders = new Headers();
-    myHeaders.append("Content-Type", "application/json");
-    myHeaders.append("Authorization", `Basic ${serverSettings.authorization}`);
+// async function getDBEntreesOLD(table, searchColumn, searchValue, serverSettings) {
+//     const myHeaders = new Headers();
+//     myHeaders.append("Content-Type", "application/json");
+//     myHeaders.append("Authorization", `Basic ${serverSettings.authorization}`);
 
-    const raw = JSON.stringify({
-        "operation": "search_by_value",
-        "schema": "issues_schema",
-        "table": table,
-        "search_attribute": searchColumn,
-        "search_value": searchValue,
-        "get_attributes": ["*"]
-    });
+//     const raw = JSON.stringify({
+//         "operation": "search_by_value",
+//         "schema": "issues_schema",
+//         "table": table,
+//         "search_attribute": searchColumn,
+//         "search_value": searchValue,
+//         "get_attributes": ["*"]
+//     });
 
-    const requestOptions = {
-        method: 'POST',
-        headers: myHeaders,
-        body: raw,
-        redirect: 'follow'
-    };
+//     const requestOptions = {
+//         method: 'POST',
+//         headers: myHeaders,
+//         body: raw,
+//         redirect: 'follow'
+//     };
 
-    const response = await fetch(serverSettings.url, requestOptions);
-    // if (!response.ok) {
-    //     showMessage(`DB error: ${response.statusText}`);
-    // }
-    const data = await response.json();
-    // console.log(data);
-    return data;
-}
+//     const response = await fetch(serverSettings.url, requestOptions);
+//     // if (!response.ok) {
+//     //     showMessage(`DB error: ${response.statusText}`);
+//     // }
+//     const data = await response.json();
+//     // console.log(data);
+//     return data;
+// }
 
-async function insertDBEntry(table, data, serverSettings) {
-    const myHeaders = new Headers();
-    myHeaders.append("Content-Type", "application/json");
-    myHeaders.append("Authorization", `Basic ${serverSettings.authorization}`);
+// async function insertDBEntryOLB(table, data, serverSettings) {
+//     const myHeaders = new Headers();
+//     myHeaders.append("Content-Type", "application/json");
+//     myHeaders.append("Authorization", `Basic ${serverSettings.authorization}`);
 
-    const raw = JSON.stringify({
-        "operation": "insert",
-        "schema": "issues_schema",
-        "table": table,
-        "records": [
-            data
-        ],
-    });
+//     const raw = JSON.stringify({
+//         "operation": "insert",
+//         "schema": "issues_schema",
+//         "table": table,
+//         "records": [
+//             data
+//         ],
+//     });
 
-    const requestOptions = {
-        method: 'POST',
-        headers: myHeaders,
-        body: raw,
-        redirect: 'follow'
-    };
+//     const requestOptions = {
+//         method: 'POST',
+//         headers: myHeaders,
+//         body: raw,
+//         redirect: 'follow'
+//     };
 
-    const response = await fetch(serverSettings.url, requestOptions);
-    // if (!response.ok) {
-    //     showMessage(`DB error: ${response.statusText}`);
-    // }
-    const text = await response.text();
-    console.log(text);
-}
+//     const response = await fetch(serverSettings.url, requestOptions);
+//     // if (!response.ok) {
+//     //     showMessage(`DB error: ${response.statusText}`);
+//     // }
+//     const text = await response.text();
+//     console.log(text);
+// }
 
 function getLocalStorageValue(key) {
     if (window.localStorage[key])
