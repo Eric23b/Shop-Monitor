@@ -149,7 +149,7 @@ body *{
 .tab-btn::after{
     position: absolute;
     content: "*";
-    /* color: var(--accent_color); */
+    color: var(--accent_color);
     /* font-size: larger; */
     font-weight: bolder;
     visibility: hidden;
@@ -161,9 +161,9 @@ body *{
     border: none;
     border-bottom: 2px solid var(--active);
 }
-/* .active-tab:active{
+.active-tab:active{
     color: var(--accent_color);
-} */
+}
 
 .after-visible::after{
     visibility: visible;
