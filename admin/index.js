@@ -33,9 +33,10 @@ const otherIssuesTable = document.querySelector("#other-issues-table");
 
 const supplyListTabContainer = document.querySelector("#supply-list-container");
 const supplyListCategoryInput = document.querySelector("#supply-list-category-input");
+const addSupplyBtn = document.querySelector("#add-supply-btn");
+const categoryFilterInput = document.querySelector("#category-filter-input");
 const supplyListItemInput = document.querySelector("#supply-list-item-input");
 const supplyListTable = document.querySelector("#supply-list-table");
-const addSupplyBtn = document.querySelector("#add-supply-btn");
 
 const settingsContainer = document.querySelector("#settings-container");
 const serverURL = document.querySelector("#server-url");
@@ -116,6 +117,10 @@ addSupplyBtn.addEventListener('click', async () => {
     }
     await insertDBEntry("issues_schema","supply_list", data, settings, dbActive);
     await loadSupplyListTable();
+});
+
+categoryFilterInput.addEventListener('keypress', async (event) => {
+    if (event.key === 'Enter') loadSupplyListTable();
 });
 
 runDBSetupBtn.addEventListener('click', async () => {
@@ -433,11 +438,20 @@ async function loadOtherIssues() {
 
 // Supply List Table
 async function loadSupplyListTable() {
-    const response = await getDBEntrees("issues_schema", "supply_list", "__createdtime__", "*", settings, dbActive);
+    const filter = categoryFilterInput.value || "*";
+
+    const response = await getDBEntrees("issues_schema", "supply_list", "category", filter, settings, dbActive);
     
     if (!response) return;
 
-    response.sort((a, b) => {return b.__createdtime__ - a.__createdtime__});
+    response.sort((a, b) => {
+        var categoryA = a.category.toUpperCase(); // ignore upper and lowercase
+        var categoryB = b.category.toUpperCase(); // ignore upper and lowercase
+        if (categoryA < categoryB) return -1;
+        if (categoryA > categoryB) return 1;
+        return 0;
+      });
+    // response.sort((a, b) => {return b.__createdtime__ - a.__createdtime__});
 
     supplyListTable.innerHTML = 
         getTableHeaderRow(["Category", "Item", "Delete"]);
