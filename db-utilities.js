@@ -100,6 +100,35 @@ export async function createTable(table, schema, serverSettings, dbActiveCallbac
     }
 }
 
+export async function createAttributes(attributes, table, schema, serverSettings, dbActiveCallback) {
+    let message = "";
+    for (const attribute of attributes) {
+        message += await createAttribute(attribute, table, schema, serverSettings, dbActiveCallback) + "\n";        
+    }
+    return message.trim();
+}
+
+export async function createAttribute(attribute, table, schema, serverSettings, dbActiveCallback) {
+    if (dbActiveCallback) dbActiveCallback();
+    
+    const headers = getBasicHeaders(serverSettings.authorization);
+    const raw = JSON.stringify({
+        "operation": "create_attribute",
+        "schema": schema,
+        "table": table,
+        "attribute": attribute
+    });
+    const requestOptions = buildRequestOptions(headers, raw);
+    const response = await sendDBRequest(serverSettings.url, requestOptions);
+    // console.log(response);
+    if (response.message) {
+        return response.message;
+    }
+    else {
+        return response.error;
+    }
+}
+
 function getBasicHeaders(authorization) {
     const headers = new Headers();
     headers.append("Content-Type", "application/json");

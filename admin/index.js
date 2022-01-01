@@ -1,4 +1,4 @@
-import {getDBEntrees, insertDBEntry, updateDBEntry, deleteDBEntry, createSchema, createTable} from "../db-utilities.js";
+import {getDBEntrees, insertDBEntry, updateDBEntry, deleteDBEntry, createSchema, createTable, createAttributes} from "../db-utilities.js";
 import {getTableDataWithText, getTableHeaderRow, getTableDataWithCheckbox, getTableDataWithDeleteButton} from "../table-utilities.js";
 
 const settings = {
@@ -115,7 +115,7 @@ addSupplyBtn.addEventListener('click', async () => {
         category: category,
         item: item,
     }
-    await insertDBEntry("issues_schema","supply_list", data, settings, dbActive);
+    await insertDBEntry("inventory_schema", "supply_list", data, settings, dbActive);
     await loadSupplyListTable();
 });
 
@@ -123,14 +123,29 @@ categoryFilterInput.addEventListener('keypress', async (event) => {
     if (event.key === 'Enter') loadSupplyListTable();
 });
 
+const tableAttributes = {
+    supplyList: ["category", "item"],
+    partsIssues: ["cabinetNumber", "date", "jobName", "note", "part", "sent", "show", "time"],
+    supplyIssues: ["category", "item", "currently", "date", "note", "ordered", "show", "time"],
+    timeClockIssues: ["firstName", "date", "acknowledged", "missedTime", "note", "time"],
+    otherIssues: ["date", "acknowledged", "note", "time"],
+
+}
 runDBSetupBtn.addEventListener('click', async () => {
     let message = "";
+    message += await createSchema("inventory_schema", settings, dbActive) + "\n";
+    message += await createTable("supply_list", "inventory_schema", settings, dbActive) + "\n";
+    message += await createAttributes(tableAttributes.supplyList, "supply_list", "inventory_schema", settings, dbActive) + "\n";
+
     message += await createSchema("issues_schema", settings, dbActive) + "\n";
     message += await createTable("parts_issues", "issues_schema", settings, dbActive) + "\n";
+    message += await createAttributes(tableAttributes.partsIssues, "parts_issues", "issues_schema", settings, dbActive) + "\n";
     message += await createTable("supply_issues", "issues_schema", settings, dbActive) + "\n";
+    message += await createAttributes(tableAttributes.supplyIssues, "supply_issues", "issues_schema", settings, dbActive) + "\n";
     message += await createTable("time_clock_issues", "issues_schema", settings, dbActive) + "\n";
+    message += await createAttributes(tableAttributes.timeClockIssues, "time_clock_issues", "issues_schema", settings, dbActive) + "\n";
     message += await createTable("other_issues", "issues_schema", settings, dbActive) + "\n";
-    message += await createTable("supply_list", "issues_schema", settings, dbActive) + "\n";
+    message += await createAttributes(tableAttributes.otherIssues, "other_issues", "issues_schema", settings, dbActive) + "\n";
     alert(message);
 });
 
@@ -241,7 +256,7 @@ async function getItemCategories(schema, table) {
 async function loadPartIssues() {
     const response = await getDBEntrees("issues_schema", "parts_issues", "__createdtime__", "*", settings, dbActive);
     
-    if (!response) return;
+    if ((!response) || (response.error)) return;
     
     response.sort((a, b) => {return b.__createdtime__ - a.__createdtime__});
 
@@ -296,7 +311,7 @@ async function loadPartIssues() {
 async function loadSuppliesIssues() {
     const response = await getDBEntrees("issues_schema", "supply_issues", "__createdtime__", "*", settings, dbActive);
     
-    if (!response) return;
+    if ((!response) || (response.error)) return;
 
     response.sort((a, b) => {return b.__createdtime__ - a.__createdtime__});
 
@@ -352,7 +367,7 @@ async function loadSuppliesIssues() {
 async function loadTimeClockIssues() {
     const response = await getDBEntrees("issues_schema", "time_clock_issues", "__createdtime__", "*", settings, dbActive);
     
-    if (!response) return;
+    if ((!response) || (response.error)) return;
 
     response.sort((a, b) => {return b.__createdtime__ - a.__createdtime__});
 
@@ -398,7 +413,7 @@ async function loadTimeClockIssues() {
 async function loadOtherIssues() {
     const response = await getDBEntrees("issues_schema", "other_issues", "__createdtime__", "*", settings, dbActive);
     
-    if (!response) return;
+    if ((!response) || (response.error)) return;
 
     response.sort((a, b) => {return b.__createdtime__ - a.__createdtime__});
 
@@ -440,9 +455,9 @@ async function loadOtherIssues() {
 async function loadSupplyListTable() {
     const filter = categoryFilterInput.value || "*";
 
-    const response = await getDBEntrees("issues_schema", "supply_list", "category", filter, settings, dbActive);
+    const response = await getDBEntrees("inventory_schema", "supply_list", "category", filter, settings, dbActive);
     
-    if (!response) return;
+    if ((!response) || (response.error)) return;
 
     response.sort((a, b) => {
         var categoryA = a.category.toUpperCase(); // ignore upper and lowercase
@@ -465,7 +480,7 @@ async function loadSupplyListTable() {
 
         const deleteTD = getTableDataWithDeleteButton(
             async () => {
-                await deleteDBEntry("issues_schema", "supply_list", entry.id, settings, dbActive);
+                await deleteDBEntry("inventory_schema", "supply_list", entry.id, settings, dbActive);
                 await loadSupplyListTable();
             }
         );
@@ -475,7 +490,7 @@ async function loadSupplyListTable() {
     };
 
     supplyCategoryDataList.innerHTML = "";
-    const categories = await getItemCategories("issues_schema", "supply_list");
+    const categories = await getItemCategories("inventory_schema", "supply_list");
     categories.forEach((category) => {
         const option = document.createElement("option");
         option.value = category;
