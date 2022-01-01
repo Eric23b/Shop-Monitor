@@ -121,7 +121,7 @@ categorySelect.addEventListener("change", updateCategoryItems);
 
 // Send Button Click
 submitButton.addEventListener('click', async (event) => {
-    event.preventDefault();
+    // event.preventDefault();
 
     if (!formFilled()) return;
 
