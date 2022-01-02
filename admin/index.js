@@ -39,6 +39,7 @@ const supplyListItemInput = document.querySelector("#supply-list-item-input");
 const supplyListTable = document.querySelector("#supply-list-table");
 
 const settingsContainer = document.querySelector("#settings-container");
+const darkThemeCheckbox = document.querySelector("#dark-theme-checkbox");
 const serverURL = document.querySelector("#server-url");
 const serverAuthorization = document.querySelector("#server-authorization");
 const runDBSetupBtn = document.querySelector("#run-db-setup-btn");
@@ -50,6 +51,20 @@ const dbActivityLight = document.querySelector("#db-activity-light");
 
 
 // ---INITIALIZE---
+
+
+function setTheme() {
+    const theme = getLocalStorageValue('theme') || "light";
+    document.documentElement.setAttribute('data-color-theme', theme);
+    darkThemeCheckbox.checked = theme == "dark" ? true : false;
+}
+
+darkThemeCheckbox.addEventListener('change', () => {
+    setLocalStorageValue('theme', darkThemeCheckbox.checked ? "dark" : "light");
+    setTheme()
+});
+
+setTheme();
 
 hideTabContainers();
 
@@ -78,9 +93,10 @@ if (serverURL.value && serverAuthorization.value) {
     await checkForUnresolvedIssues();
     
     setInterval(async () => {
+        dbActive();
         await checkForUnresolvedIssues();
-        const activeTab = document.querySelector('.active-tab');
-        const activeTabID = activeTab.attributes.tabContainer.value;
+        // const activeTab = document.querySelector('.active-tab');
+        // const activeTabID = activeTab.attributes.tabContainer.value;
         // showTab(activeTabID);
     }, 10000); // 60000 * 5
 }
@@ -121,6 +137,9 @@ addSupplyBtn.addEventListener('click', async () => {
 
 categoryFilterInput.addEventListener('keypress', async (event) => {
     if (event.key === 'Enter') loadSupplyListTable();
+});
+categoryFilterInput.addEventListener('blur', async () => {
+    loadSupplyListTable();
 });
 
 const tableAttributes = {
@@ -460,13 +479,12 @@ async function loadSupplyListTable() {
     if ((!response) || (response.error)) return;
 
     response.sort((a, b) => {
-        var categoryA = a.category.toUpperCase(); // ignore upper and lowercase
-        var categoryB = b.category.toUpperCase(); // ignore upper and lowercase
+        const categoryA = a.category.toUpperCase();
+        const categoryB = b.category.toUpperCase();
         if (categoryA < categoryB) return -1;
         if (categoryA > categoryB) return 1;
         return 0;
       });
-    // response.sort((a, b) => {return b.__createdtime__ - a.__createdtime__});
 
     supplyListTable.innerHTML = 
         getTableHeaderRow(["Category", "Item", "Delete"]);

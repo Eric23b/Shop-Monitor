@@ -12,5 +12,14 @@
         <a href="./admin.html">Admin</a>
         <a href="./issues.html">Issues</a>
     </section>
+    <script>
+        const theme = getLocalStorageValue('theme') || "light";
+        document.documentElement.setAttribute('data-color-theme', theme);
+
+        function getLocalStorageValue(key) {
+            if (window.localStorage[key])
+                return JSON.parse(window.localStorage.getItem(key));
+        }
+    </script>
 </body>
 </html>
