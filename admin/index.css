@@ -8,7 +8,7 @@
     --inactive: #191d2586;
     --yes: forestgreen;
     --no: tomato;
-    --accent_color: #03926c;
+    --accent_color: #0ba27a;
 }
 /* @media (prefers-color-scheme: dark) { */
 [data-color-theme='dark']{
@@ -325,7 +325,7 @@ input{
     justify-content: center;
     align-items: baseline;
     gap: 0.5rem;
-    width: 100%;
+    width: max-content;
     margin-bottom: 1rem;
 }
 .big-checkbox{
