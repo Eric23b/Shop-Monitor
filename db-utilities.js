@@ -100,14 +100,31 @@ export async function createTable(table, schema, serverSettings, dbActiveCallbac
     }
 }
 
+/**
+ * Adds columns/attributes to a table 
+ * @param {[String]} attributes - An array of column/attribute titles
+ * @param {String} table
+ * @param {String} schema
+ * @param {{url:String, authorization:String}} serverSettings
+ * @param {callback} dbActiveCallback
+ * @return {String}  Database messages
+ */
 export async function createAttributes(attributes, table, schema, serverSettings, dbActiveCallback) {
     let message = "";
     for (const attribute of attributes) {
-        message += await createAttribute(attribute, table, schema, serverSettings, dbActiveCallback) + "\n";        
+        message += await createAttribute(attribute, table, schema, serverSettings, dbActiveCallback) + "\n";
     }
     return message.trim();
 }
-
+/**
+ * Adds column/attribute to a table
+ * @param {String} attribute - column/attribute title
+ * @param {String} table
+ * @param {String} schema
+ * @param {{url:String, authorization:String}} serverSettings
+ * @param {callback} dbActiveCallback
+ * @return {String}  Database message
+ */
 export async function createAttribute(attribute, table, schema, serverSettings, dbActiveCallback) {
     if (dbActiveCallback) dbActiveCallback();
     
