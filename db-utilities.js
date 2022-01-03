@@ -1,7 +1,5 @@
 
-export async function getDBEntrees(schema, table, searchColumn, searchValue, serverSettings, dbActiveCallback) {
-    if (dbActiveCallback) dbActiveCallback();
-    
+export async function getDBEntrees(schema, table, searchColumn, searchValue, serverSettings, dbActiveCallback) {    
     const headers = getBasicHeaders(serverSettings.authorization);
     const raw = JSON.stringify({
         operation: "search_by_value",
@@ -13,13 +11,13 @@ export async function getDBEntrees(schema, table, searchColumn, searchValue, ser
     });
     const requestOptions = buildRequestOptions(headers, raw);
     const response = await sendDBRequest(serverSettings.url, requestOptions);
-    // console.log(response);
+
+    if (dbActiveCallback) dbActiveCallback(!response.error);
+
     return response;
 }
 
 export async function insertDBEntry(schema, table, data, serverSettings, dbActiveCallback) {
-    if (dbActiveCallback) dbActiveCallback();
-
     const headers = getBasicHeaders(serverSettings.authorization);
     const raw = JSON.stringify({
         operation: "insert",
@@ -29,12 +27,11 @@ export async function insertDBEntry(schema, table, data, serverSettings, dbActiv
     });
     const requestOptions = buildRequestOptions(headers, raw);
     const response = await sendDBRequest(serverSettings.url, requestOptions);
-    // console.log(response);
+
+    if (dbActiveCallback) dbActiveCallback(!response.error);
 }
 
 export async function updateDBEntry(schema, table, data, serverSettings, dbActiveCallback) {
-    if (dbActiveCallback) dbActiveCallback();
-
     const headers = getBasicHeaders(serverSettings.authorization);
     const raw = JSON.stringify({
         operation: "update",
@@ -44,12 +41,11 @@ export async function updateDBEntry(schema, table, data, serverSettings, dbActiv
     });
     const requestOptions = buildRequestOptions(headers, raw);
     const response = await sendDBRequest(serverSettings.url, requestOptions);
-    // console.log(response);
+
+    if (dbActiveCallback) dbActiveCallback(!response.error);
 }
 
 export async function deleteDBEntry(schema, table, id, serverSettings, dbActiveCallback) {
-    if (dbActiveCallback) dbActiveCallback();
-
     const headers = getBasicHeaders(serverSettings.authorization);
     const raw = JSON.stringify({
         operation: "delete",
@@ -59,12 +55,11 @@ export async function deleteDBEntry(schema, table, id, serverSettings, dbActiveC
     });
     const requestOptions = buildRequestOptions(headers, raw);
     const response = await sendDBRequest(serverSettings.url, requestOptions);
-    // console.log(response);
+
+    if (dbActiveCallback) dbActiveCallback(!response.error);
 }
 
 export async function createSchema(schema, serverSettings, dbActiveCallback) {
-    if (dbActiveCallback) dbActiveCallback();
-
     const headers = getBasicHeaders(serverSettings.authorization);
     const raw = JSON.stringify({
         operation: "create_schema",
@@ -72,6 +67,9 @@ export async function createSchema(schema, serverSettings, dbActiveCallback) {
     });
     const requestOptions = buildRequestOptions(headers, raw);
     const response = await sendDBRequest(serverSettings.url, requestOptions);
+
+    if (dbActiveCallback) dbActiveCallback(!response.error);
+
     if (response.message) {
         return response.message;
     }
@@ -81,8 +79,6 @@ export async function createSchema(schema, serverSettings, dbActiveCallback) {
 }
 
 export async function createTable(table, schema, serverSettings, dbActiveCallback) {
-    if (dbActiveCallback) dbActiveCallback();
-    
     const headers = getBasicHeaders(serverSettings.authorization);
     const raw = JSON.stringify({
         "operation": "create_table",
@@ -92,6 +88,9 @@ export async function createTable(table, schema, serverSettings, dbActiveCallbac
     });
     const requestOptions = buildRequestOptions(headers, raw);
     const response = await sendDBRequest(serverSettings.url, requestOptions);
+
+    if (dbActiveCallback) dbActiveCallback(!response.error);
+
     if (response.message) {
         return response.message;
     }
@@ -126,8 +125,6 @@ export async function createAttributes(attributes, table, schema, serverSettings
  * @return {String}  Database message
  */
 export async function createAttribute(attribute, table, schema, serverSettings, dbActiveCallback) {
-    if (dbActiveCallback) dbActiveCallback();
-    
     const headers = getBasicHeaders(serverSettings.authorization);
     const raw = JSON.stringify({
         "operation": "create_attribute",
@@ -137,7 +134,9 @@ export async function createAttribute(attribute, table, schema, serverSettings, 
     });
     const requestOptions = buildRequestOptions(headers, raw);
     const response = await sendDBRequest(serverSettings.url, requestOptions);
-    // console.log(response);
+    
+    if (dbActiveCallback) dbActiveCallback(!response.error);
+
     if (response.message) {
         return response.message;
     }

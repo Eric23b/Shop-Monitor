@@ -93,12 +93,9 @@ if (serverURL.value && serverAuthorization.value) {
     await checkForUnresolvedIssues();
     
     setInterval(async () => {
-        dbActive();
+        dbActive(true);  // TODO: Should only light up green if it was successful
         await checkForUnresolvedIssues();
-        // const activeTab = document.querySelector('.active-tab');
-        // const activeTabID = activeTab.attributes.tabContainer.value;
-        // showTab(activeTabID);
-    }, 10000); // 60000 * 5
+    }, 10000);
 }
 else {
     showTab("settings");
@@ -554,10 +551,10 @@ function setLocalStorageValue(key, value) {
     window.localStorage.setItem(key, JSON.stringify(value));
 }
 
-function dbActive() {
-    dbActivityLight.style.color = "var(--yes)";
+function dbActive(success) {
+    dbActivityLight.style.color = success ? "var(--yes)" : "var(--no)";
     setTimeout(() => {
-        dbActivityLight.style.color = "var(--no)";
+        dbActivityLight.style.color = "var(--inactive)";
     }, 200);
 }
 
