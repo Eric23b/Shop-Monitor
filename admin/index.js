@@ -108,7 +108,7 @@ else {
 // ---EVENT LISTENERS---
 
 // Tab click (add style and refresh data)
-tabHeader.addEventListener('click', (event) => {
+tabHeader.addEventListener('click', async (event) => {
     const buttons = document.querySelectorAll("#tab-header .tab-btn");
     buttons.forEach((button) => {
         button.classList.remove("active-tab");
@@ -118,7 +118,9 @@ tabHeader.addEventListener('click', (event) => {
     event.target.classList.add("active-tab");
 
     const containerID = event.target.attributes.tabContainer.value;
-    showTab(containerID);
+    await showTab(containerID);
+
+    await checkForUnresolvedIssues();
 });
 
 addSupplyBtn.addEventListener('click', async () => {
@@ -279,7 +281,7 @@ async function loadPartIssues() {
     
     response.sort((a, b) => {return b.__createdtime__ - a.__createdtime__});
 
-    partIssuesTable.innerHTML = getTableHeaderRow(["Job", "Cabinet", "Part", "Note", "Date", "Time", "Sent", "Show", "Delete"]);
+    partIssuesTable.innerHTML = getTableHeaderRow(["Job", "Cabinet", "Part", "Note", "Date", "Time", "Sent*", "Show", "Delete"]);
 
     for (const entry of response) {
         const row = document.createElement('tr');
@@ -292,7 +294,7 @@ async function loadPartIssues() {
 
         const note = getTableDataWithText(entry.note, true);
 
-        const date = getTableDataWithText(entry.date);
+        const date = getTableDataWithText(getRelativeDate(entry.date));
 
         const time = getTableDataWithText(entry.time);
 
@@ -335,7 +337,7 @@ async function loadSuppliesIssues() {
     response.sort((a, b) => {return b.__createdtime__ - a.__createdtime__});
 
     supplyIssuesTable.innerHTML = 
-        getTableHeaderRow(["Category", "Item", "Currently", "Note", "Date", "Time", "Ordered", "Show", "Delete"]);
+        getTableHeaderRow(["Category", "Item", "Currently", "Note", "Date", "Time", "Ordered*", "Show", "Delete"]);
 
     for (const entry of response) {
         const row = document.createElement('tr');
@@ -348,7 +350,7 @@ async function loadSuppliesIssues() {
 
         const note = getTableDataWithText(entry.note, true);
 
-        const date = getTableDataWithText(entry.date);
+        const date = getTableDataWithText(getRelativeDate(entry.date));
 
         const time = getTableDataWithText(entry.time);
 
@@ -391,7 +393,7 @@ async function loadTimeClockIssues() {
     response.sort((a, b) => {return b.__createdtime__ - a.__createdtime__});
 
     timeClockTabTable.innerHTML = 
-        getTableHeaderRow(["Name", "Missed Time", "Note", "Date", "Time", "Acknowledged", "Delete"]);
+        getTableHeaderRow(["Name", "Missed Time", "Note", "Date", "Time", "Acknowledged*", "Delete"]);
 
     for (const entry of response) {
         const row = document.createElement('tr');
@@ -402,7 +404,7 @@ async function loadTimeClockIssues() {
 
         const note = getTableDataWithText(entry.note, true);
 
-        const date = getTableDataWithText(entry.date);
+        const date = getTableDataWithText(getRelativeDate(entry.date));
 
         const time = getTableDataWithText(entry.time);
 
@@ -437,14 +439,14 @@ async function loadOtherIssues() {
     response.sort((a, b) => {return b.__createdtime__ - a.__createdtime__});
 
     otherIssuesTable.innerHTML = 
-        getTableHeaderRow(["Note", "Date", "Time", "Acknowledged", "Delete"]);
+        getTableHeaderRow(["Note", "Date", "Time", "Acknowledged*", "Delete"]);
 
     for (const entry of response) {
         const row = document.createElement('tr');
 
         const note = getTableDataWithText(entry.note, true);
 
-        const date = getTableDataWithText(entry.date);
+        const date = getTableDataWithText(getRelativeDate(entry.date));
 
         const time = getTableDataWithText(entry.time);
 
@@ -507,12 +509,33 @@ async function loadSupplyListTable() {
         supplyListTable.appendChild(row);
     };
 
-    supplyCategoryDataList.innerHTML = "";
+    loadDataListWithCategories(supplyCategoryDataList);
+}
+
+function getRelativeDate(date) {
+    if (date === today()) return "Today"
+    else if (date == yesterday()) return "Yesterday"
+    else return date;
+}
+
+function today() {
+    const today = new Date();
+    return today.toLocaleDateString();
+}
+
+function yesterday() {
+    const today = new Date();
+    today.setDate(today.getDate() - 1);
+    return today.toLocaleDateString();
+}
+
+async function loadDataListWithCategories(dataList) {
+    dataList.innerHTML = "";
     const categories = await getItemCategories("inventory_schema", "supply_list");
     categories.forEach((category) => {
         const option = document.createElement("option");
         option.value = category;
-        supplyCategoryDataList.appendChild(option);
+        dataList.appendChild(option);
     });
 }
 
