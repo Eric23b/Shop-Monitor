@@ -11,7 +11,7 @@ export function getTableHeaderRow(headers) {
 export function getTableDataWithText(text, AddAlertText) {
     const td = document.createElement('td');
     td.textContent = text;
-    if (AddAlertText) {
+    if ((text) && (AddAlertText)) {
         td.onclick = () => {alert(text)}
         td.style.cursor = "pointer";
     }
