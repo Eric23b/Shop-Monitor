@@ -1,5 +1,6 @@
 import { insertDBEntry, getDBEntrees } from "../db-utilities.js";
 
+const isDev = true;
 
 const serverSettings = {
     url: "",
@@ -61,7 +62,6 @@ if (serverSettings.url && serverSettings.authorization) {
     }
 
     setInterval(() => {
-    
         loadPartIssues();
         loadSuppliesIssues();
     }, 60000); // 60000 * 20
@@ -92,7 +92,9 @@ categorySelect.addEventListener("change", updateCategoryItems);
 
 // Send Button Click
 submitButton.addEventListener('click', async (event) => {
-    event.preventDefault();
+    if (isDev) {
+        event.preventDefault();
+    }
     
     if (!formFilled()) return;
 
@@ -115,14 +117,14 @@ submitButton.addEventListener('click', async (event) => {
             break;
 
         case "supplies":
-            itemList.forEach(async (item) => {
+            for (const item of itemList) {
                 data.category = item.category;
                 data.item = item.name ;
                 data.currently = item.currentAmount;
                 data.ordered = false
                 data.show = true;
                 await insertDBEntry("issues_schema", "supply_issues", data, serverSettings);
-            });
+            }
             loadFormMessageForSupplyIssue();
             break;
 
@@ -143,6 +145,12 @@ submitButton.addEventListener('click', async (event) => {
     
         default:
             break;
+    }
+
+    if (isDev) {
+        const a = document.createElement('a');
+        a.href = "/success.html";
+        a.click();
     }
 });
 
@@ -365,7 +373,7 @@ function formFilled() {
             return !!note.value;
 
         default:
-            if (!note.value) showMessage("Select an Issue from the drop-down");
+            showMessage("Select an Issue from the drop-down");
             return false;
     }
 }
