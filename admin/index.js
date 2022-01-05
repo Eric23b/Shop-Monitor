@@ -1,5 +1,15 @@
 import {getDBEntrees, insertDBEntry, updateDBEntry, deleteDBEntry, createSchema, createTable, createAttributes} from "../db-utilities.js";
 import {getTableDataWithText, getTableHeaderRow, getTableDataWithCheckbox, getTableDataWithDeleteButton} from "../table-utilities.js";
+import {
+    INVENTORY_SCHEMA,
+    SUPPLY_LIST_TABLE,
+    ISSUE_SCHEMA,
+    PARTS_ISSUES_TABLE,
+    SUPPLY_ISSUES_TABLE,
+    TIME_CLOCK_ISSUES_TABLE,
+    OTHER_ISSUES_TABLE,
+    TABLE_ATTRIBUTES
+} from "../directives.js";
 
 const settings = {
     url: "",
@@ -130,7 +140,7 @@ addSupplyBtn.addEventListener('click', async () => {
         category: category,
         item: item,
     }
-    await insertDBEntry("inventory_schema", "supply_list", data, settings, dbActive);
+    await insertDBEntry(INVENTORY_SCHEMA, "supply_list", data, settings, dbActive);
     await loadSupplyListTable();
 });
 
@@ -141,29 +151,21 @@ categoryFilterInput.addEventListener('blur', async () => {
     loadSupplyListTable();
 });
 
-const tableAttributes = {
-    supplyList: ["category", "item"],
-    partsIssues: ["cabinetNumber", "date", "jobName", "note", "part", "sent", "show", "time"],
-    supplyIssues: ["category", "item", "currently", "date", "note", "ordered", "show", "time"],
-    timeClockIssues: ["firstName", "date", "acknowledged", "missedTime", "note", "time"],
-    otherIssues: ["date", "acknowledged", "note", "time"],
-
-}
 runDBSetupBtn.addEventListener('click', async () => {
     let message = "";
-    message += await createSchema("inventory_schema", settings, dbActive) + "\n";
-    message += await createTable("supply_list", "inventory_schema", settings, dbActive) + "\n";
-    message += await createAttributes(tableAttributes.supplyList, "supply_list", "inventory_schema", settings, dbActive) + "\n";
+    message += await createSchema(INVENTORY_SCHEMA, settings, dbActive) + "\n";
+    message += await createTable(SUPPLY_LIST_TABLE, INVENTORY_SCHEMA, settings, dbActive) + "\n";
+    message += await createAttributes(TABLE_ATTRIBUTES.supplyList, SUPPLY_LIST_TABLE, INVENTORY_SCHEMA, settings, dbActive) + "\n";
 
-    message += await createSchema("issues_schema", settings, dbActive) + "\n";
-    message += await createTable("parts_issues", "issues_schema", settings, dbActive) + "\n";
-    message += await createAttributes(tableAttributes.partsIssues, "parts_issues", "issues_schema", settings, dbActive) + "\n";
-    message += await createTable("supply_issues", "issues_schema", settings, dbActive) + "\n";
-    message += await createAttributes(tableAttributes.supplyIssues, "supply_issues", "issues_schema", settings, dbActive) + "\n";
-    message += await createTable("time_clock_issues", "issues_schema", settings, dbActive) + "\n";
-    message += await createAttributes(tableAttributes.timeClockIssues, "time_clock_issues", "issues_schema", settings, dbActive) + "\n";
-    message += await createTable("other_issues", "issues_schema", settings, dbActive) + "\n";
-    message += await createAttributes(tableAttributes.otherIssues, "other_issues", "issues_schema", settings, dbActive) + "\n";
+    message += await createSchema(ISSUE_SCHEMA, settings, dbActive) + "\n";
+    message += await createTable(PARTS_ISSUES_TABLE, ISSUE_SCHEMA, settings, dbActive) + "\n";
+    message += await createAttributes(TABLE_ATTRIBUTES.partsIssues, PARTS_ISSUES_TABLE, ISSUE_SCHEMA, settings, dbActive) + "\n";
+    message += await createTable(SUPPLY_ISSUES_TABLE, ISSUE_SCHEMA, settings, dbActive) + "\n";
+    message += await createAttributes(TABLE_ATTRIBUTES.supplyIssues, SUPPLY_ISSUES_TABLE, ISSUE_SCHEMA, settings, dbActive) + "\n";
+    message += await createTable(TIME_CLOCK_ISSUES_TABLE, ISSUE_SCHEMA, settings, dbActive) + "\n";
+    message += await createAttributes(TABLE_ATTRIBUTES.timeClockIssues, TIME_CLOCK_ISSUES_TABLE, ISSUE_SCHEMA, settings, dbActive) + "\n";
+    message += await createTable(OTHER_ISSUES_TABLE, ISSUE_SCHEMA, settings, dbActive) + "\n";
+    message += await createAttributes(TABLE_ATTRIBUTES.otherIssues, OTHER_ISSUES_TABLE, ISSUE_SCHEMA, settings, dbActive) + "\n";
     alert(message);
 });
 
@@ -232,16 +234,16 @@ async function showTab(tab) {
 }
 
 async function checkForUnresolvedIssues() {
-    const partsOperation = await getEntryCountWithValue("issues_schema", "parts_issues", "sent", false) ? "add" : "remove";
+    const partsOperation = await getEntryCountWithValue(ISSUE_SCHEMA, PARTS_ISSUES_TABLE, "sent", false) ? "add" : "remove";
     partTabBtn.classList[partsOperation]("after-visible");
 
-    const supplyLowOperation = await getEntryCountWithValue("issues_schema", "supply_issues", "ordered", false) ? "add" : "remove";
+    const supplyLowOperation = await getEntryCountWithValue(ISSUE_SCHEMA, SUPPLY_ISSUES_TABLE, "ordered", false) ? "add" : "remove";
     supplyLowTabBtn.classList[supplyLowOperation]("after-visible");
 
-    const timeClockOperation = await getEntryCountWithValue("issues_schema", "time_clock_issues", "acknowledged", false) ? "add" : "remove";
+    const timeClockOperation = await getEntryCountWithValue(ISSUE_SCHEMA, TIME_CLOCK_ISSUES_TABLE, "acknowledged", false) ? "add" : "remove";
     timeClockTabBtn.classList[timeClockOperation]("after-visible");
 
-    const otherOperation = await getEntryCountWithValue("issues_schema", "other_issues", "acknowledged", false) ? "add" : "remove";
+    const otherOperation = await getEntryCountWithValue(ISSUE_SCHEMA, OTHER_ISSUES_TABLE, "acknowledged", false) ? "add" : "remove";
     otherIssuesTabBtn.classList[otherOperation]("after-visible");
 }
 
@@ -272,7 +274,7 @@ async function getItemCategories(schema, table) {
 
 // Load Parts Issues Table
 async function loadPartIssues() {
-    const response = await getDBEntrees("issues_schema", "parts_issues", "__createdtime__", "*", settings, dbActive);
+    const response = await getDBEntrees(ISSUE_SCHEMA, PARTS_ISSUES_TABLE, "__createdtime__", "*", settings, dbActive);
     
     if ((!response) || (response.error)) return;
     
@@ -299,7 +301,7 @@ async function loadPartIssues() {
             entry.sent,
             async (event) => {
                 const isChecked = event.target.checked;
-                await updateDBEntry("issues_schema", "parts_issues", {id: entry.id, sent: isChecked}, settings, dbActive);
+                await updateDBEntry(ISSUE_SCHEMA, PARTS_ISSUES_TABLE, {id: entry.id, sent: isChecked}, settings, dbActive);
                 await checkForUnresolvedIssues();
             }
         );
@@ -308,13 +310,13 @@ async function loadPartIssues() {
             entry.show,
             async (event) => {
                 const isChecked = event.target.checked;
-                await updateDBEntry("issues_schema", "parts_issues", {id: entry.id, show: isChecked}, settings, dbActive);
+                await updateDBEntry(ISSUE_SCHEMA, PARTS_ISSUES_TABLE, {id: entry.id, show: isChecked}, settings, dbActive);
             }
         );
 
         const deleteTD = getTableDataWithDeleteButton(
             async () => {
-                await deleteDBEntry("issues_schema", "parts_issues", entry.id, settings, dbActive);
+                await deleteDBEntry(ISSUE_SCHEMA, PARTS_ISSUES_TABLE, entry.id, settings, dbActive);
                 await loadPartIssues();
                 await checkForUnresolvedIssues();
             }
@@ -327,7 +329,7 @@ async function loadPartIssues() {
 
 // Load Supply Issues Table
 async function loadSuppliesIssues() {
-    const response = await getDBEntrees("issues_schema", "supply_issues", "__createdtime__", "*", settings, dbActive);
+    const response = await getDBEntrees(ISSUE_SCHEMA, SUPPLY_ISSUES_TABLE, "__createdtime__", "*", settings, dbActive);
     
     if ((!response) || (response.error)) return;
 
@@ -355,7 +357,7 @@ async function loadSuppliesIssues() {
             entry.ordered,
             async (event) => {
                 const isChecked = event.target.checked;
-                await updateDBEntry("issues_schema", "supply_issues", {id: entry.id, ordered: isChecked}, settings, dbActive);
+                await updateDBEntry(ISSUE_SCHEMA, SUPPLY_ISSUES_TABLE, {id: entry.id, ordered: isChecked}, settings, dbActive);
                 await checkForUnresolvedIssues();
             }
         );
@@ -364,13 +366,13 @@ async function loadSuppliesIssues() {
             entry.show,
             async (event) => {
                 const isChecked = event.target.checked;
-                await updateDBEntry("issues_schema", "supply_issues", {id: entry.id, show: isChecked}, settings, dbActive);
+                await updateDBEntry(ISSUE_SCHEMA, SUPPLY_ISSUES_TABLE, {id: entry.id, show: isChecked}, settings, dbActive);
             }
         );
 
         const deleteTD = getTableDataWithDeleteButton(
             async () => {
-                await deleteDBEntry("issues_schema", "supply_issues", entry.id, settings, dbActive);
+                await deleteDBEntry(ISSUE_SCHEMA, SUPPLY_ISSUES_TABLE, entry.id, settings, dbActive);
                 await loadSuppliesIssues();
                 await checkForUnresolvedIssues();
             }
@@ -383,7 +385,7 @@ async function loadSuppliesIssues() {
 
 // Load Time Clock Issues Table
 async function loadTimeClockIssues() {
-    const response = await getDBEntrees("issues_schema", "time_clock_issues", "__createdtime__", "*", settings, dbActive);
+    const response = await getDBEntrees(ISSUE_SCHEMA, TIME_CLOCK_ISSUES_TABLE, "__createdtime__", "*", settings, dbActive);
     
     if ((!response) || (response.error)) return;
 
@@ -409,14 +411,14 @@ async function loadTimeClockIssues() {
             entry.acknowledged,
             async (event) => {
                 const isChecked = event.target.checked;
-                await updateDBEntry("issues_schema", "time_clock_issues", {id: entry.id, acknowledged: isChecked}, settings, dbActive);
+                await updateDBEntry(ISSUE_SCHEMA, TIME_CLOCK_ISSUES_TABLE, {id: entry.id, acknowledged: isChecked}, settings, dbActive);
                 await checkForUnresolvedIssues();
             }
         );
 
         const deleteTD = getTableDataWithDeleteButton(
             async () => {
-                await deleteDBEntry("issues_schema", "time_clock_issues", entry.id, settings, dbActive);
+                await deleteDBEntry(ISSUE_SCHEMA, TIME_CLOCK_ISSUES_TABLE, entry.id, settings, dbActive);
                 await loadTimeClockIssues();
                 await checkForUnresolvedIssues();
             }
@@ -429,7 +431,7 @@ async function loadTimeClockIssues() {
 
 // Other Issues Table
 async function loadOtherIssues() {
-    const response = await getDBEntrees("issues_schema", "other_issues", "__createdtime__", "*", settings, dbActive);
+    const response = await getDBEntrees(ISSUE_SCHEMA, OTHER_ISSUES_TABLE, "__createdtime__", "*", settings, dbActive);
     
     if ((!response) || (response.error)) return;
 
@@ -451,14 +453,14 @@ async function loadOtherIssues() {
             entry.acknowledged,
             async (event) => {
                 const isChecked = event.target.checked;
-                await updateDBEntry("issues_schema", "other_issues", {id: entry.id, acknowledged: isChecked}, settings, dbActive);
+                await updateDBEntry(ISSUE_SCHEMA, OTHER_ISSUES_TABLE, {id: entry.id, acknowledged: isChecked}, settings, dbActive);
                 await checkForUnresolvedIssues();
             }
         );
 
         const deleteTD = getTableDataWithDeleteButton(
             async () => {
-                await deleteDBEntry("issues_schema", "other_issues", entry.id, settings, dbActive);
+                await deleteDBEntry(ISSUE_SCHEMA, OTHER_ISSUES_TABLE, entry.id, settings, dbActive);
                 await loadOtherIssues();
                 await checkForUnresolvedIssues();
             }
@@ -473,7 +475,7 @@ async function loadOtherIssues() {
 async function loadSupplyListTable() {
     const filter = categoryFilterInput.value || "*";
 
-    const response = await getDBEntrees("inventory_schema", "supply_list", "category", filter, settings, dbActive);
+    const response = await getDBEntrees(INVENTORY_SCHEMA, SUPPLY_LIST_TABLE, "category", filter, settings, dbActive);
     
     if ((!response) || (response.error)) return;
 
@@ -497,7 +499,7 @@ async function loadSupplyListTable() {
 
         const deleteTD = getTableDataWithDeleteButton(
             async () => {
-                await deleteDBEntry("inventory_schema", "supply_list", entry.id, settings, dbActive);
+                await deleteDBEntry(INVENTORY_SCHEMA, SUPPLY_LIST_TABLE, entry.id, settings, dbActive);
                 await loadSupplyListTable();
             }
         );
@@ -528,7 +530,7 @@ function yesterday() {
 
 async function loadDataListWithCategories(dataList) {
     dataList.innerHTML = "";
-    const categories = await getItemCategories("inventory_schema", "supply_list");
+    const categories = await getItemCategories(INVENTORY_SCHEMA, SUPPLY_LIST_TABLE);
     categories.forEach((category) => {
         const option = document.createElement("option");
         option.value = category;
