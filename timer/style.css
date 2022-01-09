@@ -1,0 +1,203 @@
+
+:root{
+    --color: #191d25;
+    --background_color: #edeff3;
+    --background_hover_color: #b2b8c6;
+    --border_color: #454750;
+    --active: #191d25;
+    --inactive: #191d2586;
+    --yes: forestgreen;
+    --no: tomato;
+    --accent_color: #0ba27a;
+}
+/* @media (prefers-color-scheme: dark) { */
+[data-color-theme='dark']{
+    /* :root{ */
+        --color: #e0e0eb;
+        --background_color: #13131a;
+        --background_hover_color: #2b2b31;
+        --border_color: #51525a;
+        --active: #e0e0eb;
+        --inactive: #e0e0eb80;
+        --yes: springgreen;
+        --no: tomato;
+        --accent_color: rgb(44, 238, 186);
+    /* } */
+}
+
+::-moz-selection{
+    color: var(--background_color);
+    background-color: var(--color);
+}
+
+::selection{
+    color: var(--background_color);
+    background-color: var(--color);
+}
+
+::-webkit-selection{
+    color: var(--background_color);
+    background-color: var(--color);
+}
+
+body{
+    padding: 0;
+    margin: 0;
+    box-sizing: border-box;
+    color: var(--color);
+    background-color: var(--background_color);
+}
+
+.view{
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    width: 20rem;
+    min-width: max-content;
+    max-width: 100%;
+    /* height: 100vh; */
+    margin: 0 auto;
+    padding: 0.5rem;
+    box-sizing: border-box;
+}
+
+a,
+label,
+button,
+input,
+select,
+option,
+textarea{
+    font-size: 24px;
+    font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', 'Geneva', 'Verdana', 'sans-serif';
+    box-sizing: border-box;
+    color: var(--color);
+    background-color: var(--background_color);
+    accent-color: rgb(62, 133, 97);
+    outline-color: rgb(62, 133, 97);
+    outline-width: 2px;
+    /* outline-style: solid; */
+}
+a:focus-within{
+    outline-style: solid;
+}
+
+label{
+    width: max-content;
+    max-width: 100%;
+}
+
+label *{
+    min-width: 100%;
+    width: max-content;
+    max-width: 100%;
+    color: var(--color);
+    background-color: var(--background_color);
+}
+
+.flex-column{
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    width: max-content;
+    min-width: 100%;
+    margin-bottom: 1rem;
+    box-sizing: border-box;
+}
+
+.flex-row{
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.5rem;
+    min-width: 100%;
+    box-sizing: border-box;
+}
+
+select{
+    width: max-content;
+    min-width: 100%;
+    border: 1px solid #555;
+    border-radius: .5rem;
+}
+
+input{
+    /* width fixes a size problem */
+    width: 7rem;
+    border: 1px solid #555;
+    border-radius: .5rem;
+    box-sizing: border-box;
+}
+
+textarea{
+    display: none;
+    border: 1px solid #555;
+    border-radius: .5rem;
+}
+
+button{
+    font-size: 1.25em;
+    width: 100%;
+    padding: 0.5rem;
+    margin: 0.5rem 0;
+    border: 1px solid #555;
+    border-radius: .5rem;
+    cursor: pointer;
+    color: var(--color);
+    background-color: var(--background_color);
+}
+button:hover{
+    color: var(--background_color);
+    background-color: var(--color);
+}
+button:disabled{
+    color: var(--border_color);
+}
+
+#reset{
+    display: block;
+    text-decoration: none;
+    font-size: 3rem;
+    font-weight: bold;
+    color: var(--color);
+    padding: 0;
+    margin: 0;
+}
+
+#message{
+    /* color: var(--accent_color); */
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    text-align: center;
+    flex-basis: 1;
+}
+
+#settings{
+    display: block;
+    background: transparent;
+    border: none;
+    font-size: 3rem;
+    width: max-content;
+    color: var(--color);
+    padding: 0;
+    margin: 0;
+}
+
+#start-btn{
+    color: var(--background_color);
+    background-color: limegreen;
+}
+#start-btn:active{
+    background-color: var(--color);
+}
+#stop-btn{
+    color: var(--background_color);
+    background-color: red;
+}
+#stop-btn:active{
+    background-color: var(--color);
+}

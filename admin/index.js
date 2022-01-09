@@ -8,6 +8,12 @@ import {
     SUPPLY_ISSUES_TABLE,
     TIME_CLOCK_ISSUES_TABLE,
     OTHER_ISSUES_TABLE,
+    LOGS_SCHEMA,
+    TIMER_TABLE,
+    BUSINESS_SCHEMA,
+    EMPLOYEES_TABLE,
+    JOBS_TABLE,
+    STATIONS_TABLE,
     TABLE_ATTRIBUTES
 } from "../directives.js";
 
@@ -15,6 +21,8 @@ const settings = {
     url: "",
     authorization: ""
 }
+
+let station = "";
 
 // const homeBtn = document.querySelector("#home-btn");
 // const errorMessage = document.querySelector("#error-message");
@@ -52,6 +60,7 @@ const settingsContainer = document.querySelector("#settings-container");
 const darkThemeCheckbox = document.querySelector("#dark-theme-checkbox");
 const serverURL = document.querySelector("#server-url");
 const serverAuthorization = document.querySelector("#server-authorization");
+const stationName = document.querySelector("#station-name");
 const runDBSetupBtn = document.querySelector("#run-db-setup-btn");
 const removePasswordBtn = document.querySelector("#remove-password-btn");
 
@@ -62,17 +71,6 @@ const dbActivityLight = document.querySelector("#db-activity-light");
 
 // ---INITIALIZE---
 
-
-function setTheme() {
-    const theme = getLocalStorageValue('theme') || "light";
-    document.documentElement.setAttribute('data-color-theme', theme);
-    darkThemeCheckbox.checked = theme == "dark" ? true : false;
-}
-
-darkThemeCheckbox.addEventListener('change', () => {
-    setLocalStorageValue('theme', darkThemeCheckbox.checked ? "dark" : "light");
-    setTheme()
-});
 
 setTheme();
 
@@ -90,6 +88,7 @@ else {
 
 settings.url = serverURL.value = getLocalStorageValue('serverURL') || "";
 settings.authorization = serverAuthorization.value = getLocalStorageValue('serverAuthorization') || "";
+station = stationName.value = getLocalStorageValue('stationName') || "";
 
 
 // showSettings();
@@ -112,7 +111,13 @@ else {
 }
 
 
+
 // ---EVENT LISTENERS---
+
+darkThemeCheckbox.addEventListener('change', () => {
+    setLocalStorageValue('theme', darkThemeCheckbox.checked ? "dark" : "light");
+    setTheme()
+});
 
 // Tab click (add style and refresh data)
 tabHeader.addEventListener('click', async (event) => {
@@ -153,10 +158,12 @@ categoryFilterInput.addEventListener('blur', async () => {
 
 runDBSetupBtn.addEventListener('click', async () => {
     let message = "";
+    // Inventory
     message += await createSchema(INVENTORY_SCHEMA, settings, dbActive) + "\n";
     message += await createTable(SUPPLY_LIST_TABLE, INVENTORY_SCHEMA, settings, dbActive) + "\n";
     message += await createAttributes(TABLE_ATTRIBUTES.supplyList, SUPPLY_LIST_TABLE, INVENTORY_SCHEMA, settings, dbActive) + "\n";
 
+    // Issues
     message += await createSchema(ISSUE_SCHEMA, settings, dbActive) + "\n";
     message += await createTable(PARTS_ISSUES_TABLE, ISSUE_SCHEMA, settings, dbActive) + "\n";
     message += await createAttributes(TABLE_ATTRIBUTES.partsIssues, PARTS_ISSUES_TABLE, ISSUE_SCHEMA, settings, dbActive) + "\n";
@@ -166,6 +173,20 @@ runDBSetupBtn.addEventListener('click', async () => {
     message += await createAttributes(TABLE_ATTRIBUTES.timeClockIssues, TIME_CLOCK_ISSUES_TABLE, ISSUE_SCHEMA, settings, dbActive) + "\n";
     message += await createTable(OTHER_ISSUES_TABLE, ISSUE_SCHEMA, settings, dbActive) + "\n";
     message += await createAttributes(TABLE_ATTRIBUTES.otherIssues, OTHER_ISSUES_TABLE, ISSUE_SCHEMA, settings, dbActive) + "\n";
+
+    // Logs
+    message += await createSchema(LOGS_SCHEMA, settings, dbActive) + "\n";
+    message += await createTable(TIMER_TABLE, LOGS_SCHEMA, settings, dbActive) + "\n";
+    message += await createAttributes(TABLE_ATTRIBUTES.timer_logs, TIMER_TABLE, LOGS_SCHEMA, settings, dbActive) + "\n";
+
+    // Business
+    message += await createSchema(BUSINESS_SCHEMA, settings, dbActive) + "\n";
+    message += await createTable(EMPLOYEES_TABLE, BUSINESS_SCHEMA, settings, dbActive) + "\n";
+    message += await createAttributes(TABLE_ATTRIBUTES.employees, EMPLOYEES_TABLE, BUSINESS_SCHEMA, settings, dbActive) + "\n";
+    message += await createTable(JOBS_TABLE, BUSINESS_SCHEMA, settings, dbActive) + "\n";
+    message += await createAttributes(TABLE_ATTRIBUTES.jobs, JOBS_TABLE, BUSINESS_SCHEMA, settings, dbActive) + "\n";
+    message += await createTable(STATIONS_TABLE, BUSINESS_SCHEMA, settings, dbActive) + "\n";
+    message += await createAttributes(TABLE_ATTRIBUTES.stations, STATIONS_TABLE, BUSINESS_SCHEMA, settings, dbActive) + "\n";
     alert(message);
 });
 
@@ -178,10 +199,17 @@ serverURL.addEventListener('blur', () => {
     setLocalStorageValue('serverURL', serverURL.value);
     settings.url = serverURL.value;
 });
+
 // Save serverAuthorization on blur
-serverAuthorization.addEventListener('blur', function () {
+serverAuthorization.addEventListener('blur', () => {
     setLocalStorageValue('serverAuthorization', serverAuthorization.value);
     settings.authorization = serverAuthorization.value;
+});
+
+// Save station name on blur
+stationName.addEventListener('blur', () => {
+    setLocalStorageValue('stationName', stationName.value);
+    station = stationName.value;
 });
 
 
@@ -560,9 +588,8 @@ function dbActive(success) {
     }, 200);
 }
 
-// function showMessage(messageText) {
-//     errorMessage.textContent = messageText;
-//     setTimeout(() => {
-//         errorMessage.textContent = "";
-//     }, 4000);
-// }
+function setTheme() {
+    const theme = getLocalStorageValue('theme') || "light";
+    document.documentElement.setAttribute('data-color-theme', theme);
+    darkThemeCheckbox.checked = theme == "dark" ? true : false;
+}
