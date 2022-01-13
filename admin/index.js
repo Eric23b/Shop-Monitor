@@ -135,18 +135,22 @@ tabHeader.addEventListener('click', async (event) => {
     await checkForUnresolvedIssues();
 });
 
+// Add Button
 addSupplyBtn.addEventListener('click', async () => {
     const category = supplyListCategoryInput.value.trim();
-    const item = supplyListItemInput.value.trim();
+    const itemText = supplyListItemInput.value.trim();
+    const items = itemText.split('\n');
+    
+    if ((!category) || (!itemText)) return;
 
-    if ((!category) || (!item)) return;
-
-    const data = {
-        category: category,
-        item: item,
+    for (const item of items) {
+        const data = {
+            category: category,
+            item: item,
+        }
+        await insertDBEntry(INVENTORY_SCHEMA, "supply_list", data, settings, dbActive);
     }
-    await insertDBEntry(INVENTORY_SCHEMA, "supply_list", data, settings, dbActive);
-    await loadSupplyListTable();
+    await loadSupplyListTable();        
 });
 
 categoryFilterInput.addEventListener('keypress', async (event) => {

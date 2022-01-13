@@ -43,9 +43,13 @@
         </div>
         
         <div id="supply-list-container" class="tab-container">
-            <div class="flex-row">
+            <div class="flex-column">
                 <label class="small-input-label">Category<input id="supply-list-category-input" class="labeled-input" type="text" list="category-datalist"></label>
-                <label class="small-input-label">Item<input id="supply-list-item-input" class="labeled-input" type="text"></label>
+                <!-- <label class="small-input-label">Item<input id="supply-list-item-input" class="labeled-input" type="text"></label> -->
+                <label class="small-input-label">Item
+                    <textarea id="supply-list-item-input" class="labeled-input" type="text">
+                    </textarea>
+                    </label>
                 <button id="add-supply-btn" class="small-btn">Add</button>
                 <datalist id="category-datalist">
                     <option value="Blum"></option>

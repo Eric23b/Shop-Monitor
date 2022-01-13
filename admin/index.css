@@ -241,6 +241,14 @@ td{
     background-color: var(--background_color);
 }
 
+#supply-list-item-input{
+    min-height: 10rem;
+    border: 1px solid #555;
+    border-radius: .5rem;
+    box-sizing: border-box;
+}
+
+
 .delete-btn{
     font-size: larger;
     border: none;
