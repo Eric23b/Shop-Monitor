@@ -42,28 +42,36 @@
             <table id="other-issues-table" class="table"></table>
         </div>
         
+        <!-- Supply List Editor -->
         <div id="supply-list-container" class="tab-container">
-            <div class="flex-column">
-                <label class="small-input-label">Category<input id="supply-list-category-input" class="labeled-input" type="text" list="category-datalist"></label>
-                <!-- <label class="small-input-label">Item<input id="supply-list-item-input" class="labeled-input" type="text"></label> -->
-                <label class="small-input-label">Item
-                    <textarea id="supply-list-item-input" class="labeled-input" type="text">
-                    </textarea>
+            <div class="flex-row gap-2rem align-start">
+                <div class="flex-column">
+                    <label class="small-input-label">Category
+                        <input id="supply-list-category-input" class="labeled-input" type="text" list="category-datalist">
                     </label>
-                <button id="add-supply-btn" class="small-btn">Add</button>
-                <datalist id="category-datalist">
-                    <option value="Blum"></option>
-                    <option value="Grass"></option>
-                </datalist>
+                    <!-- <label class="small-input-label">Item<input id="supply-list-item-input" class="labeled-input" type="text"></label> -->
+                    <label class="small-input-label">Item
+                        <textarea id="supply-list-item-input" class="labeled-input" type="text"></textarea>
+                    </label>
+                    <button id="add-supply-btn" class="small-btn">Add</button>
+                    <datalist id="category-datalist">
+                        <option value="Blum"></option>
+                        <option value="Grass"></option>
+                    </datalist>
+                </div>
+                <div class="flex-column">
+                    <label class="small-input-label">Category filter:
+                        <input id="category-filter-input" class="labeled-input" type="text" value="*" list="category-datalist">
+                    </label>
+                    <table id="supply-list-table" class="table">
+                        <tr>
+                            <th>Category</th>
+                            <th>Item</th>
+                            <th>Delete</th>
+                        </tr>
+                    </table>
+                </div>
             </div>
-            <label >Category filter: <input id="category-filter-input" type="text" value="*" list="category-datalist"></label>
-            <table id="supply-list-table" class="table">
-                <tr>
-                    <th>Category</th>
-                    <th>Item</th>
-                    <th>Delete</th>
-                </tr>
-            </table>
         </div>
         
         <!-- Settings -->

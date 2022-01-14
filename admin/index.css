@@ -95,7 +95,7 @@ body *{
     align-items: center;
     align-content: center;
     width: 100%;
-    max-width: 100%;
+    max-width: max-content;
     gap: 1rem;
 }
 
@@ -173,7 +173,7 @@ table *{
 }
 table{
     table-layout:fixed;
-    max-width: max-content;
+    /* max-width: max-content; */
     width: 100%;
     margin-bottom: 1rem;
     border: solid 1px var(--border_color);
@@ -224,7 +224,7 @@ td{
 
 .small-btn{
     width: 100%;
-    max-width: max-content;
+    /* max-width: max-content; */
     padding: 0.5rem 1rem;
     border: 1px solid #555;
     border-radius: .5rem;
@@ -265,7 +265,7 @@ td{
 }
 
 
-.issues-note{
+/* .issues-note{
     color: var(--inactive);
     white-space: pre-line;
     width: max-content;
@@ -277,7 +277,7 @@ td{
     margin: 0;
     border: 1px solid var(--border_color);
     overflow: auto;
-}
+} */
 
 .flex-column{
     display: flex;
@@ -299,8 +299,15 @@ td{
     align-content: center;
     gap: 0.5rem;
     /* width: 100%; */
-    /* max-width: max-content; */
+    max-width: max-content;
     box-sizing: border-box;
+}
+
+.gap-2rem{
+    gap: 2rem;
+}
+.align-start{
+    align-items: flex-start;
 }
 
 select{
@@ -345,8 +352,8 @@ input{
     display: flex;
     flex-direction: column;
     align-items: center;
-    width: 100%;
-    max-width: 25rem;
+    width: 40rem;
+    max-width: 100%;
 }
 
 .small-input-label{
@@ -354,7 +361,7 @@ input{
     flex-direction: column;
     align-items: center;
     width: 100%;
-    max-width: 20rem;
+    /* max-width: 20rem; */
     margin-bottom: 1rem;
 }
 .small-labeled-input{
