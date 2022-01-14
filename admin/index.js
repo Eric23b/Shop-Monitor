@@ -52,6 +52,7 @@ const otherIssuesTable = document.querySelector("#other-issues-table");
 const supplyListTabContainer = document.querySelector("#supply-list-container");
 const supplyListCategoryInput = document.querySelector("#supply-list-category-input");
 const addSupplyBtn = document.querySelector("#add-supply-btn");
+const clearSupplyBtn = document.querySelector("#clear-supply-btn");
 const categoryFilterInput = document.querySelector("#category-filter-input");
 const supplyListItemInput = document.querySelector("#supply-list-item-input");
 const supplyListTable = document.querySelector("#supply-list-table");
@@ -151,6 +152,12 @@ addSupplyBtn.addEventListener('click', async () => {
         await insertDBEntry(INVENTORY_SCHEMA, "supply_list", data, settings, dbActive);
     }
     await loadSupplyListTable();        
+});
+
+// Clear Button
+clearSupplyBtn.addEventListener('click', async () => {
+    supplyListCategoryInput.value = '';
+    supplyListItemInput.value = '';
 });
 
 categoryFilterInput.addEventListener('keypress', async (event) => {
