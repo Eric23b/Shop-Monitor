@@ -32,6 +32,7 @@ export function getTableDataWithDeleteButton(asyncCallback) {
     const tableData = document.createElement('td');
     const button = document.createElement('button');
     button.textContent = "✖";
+    button.title = "Delete";
     button.classList.add("delete-btn");
     button.onclick = asyncCallback;
     tableData.appendChild(button);
