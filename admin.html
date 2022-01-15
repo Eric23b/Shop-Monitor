@@ -17,29 +17,43 @@
             <button id="supply-low-tab-btn" class="tab-btn" tabContainer="supply-issues">Supply low</button>
             <button id="time-clock-tab-btn" class="tab-btn" tabContainer="time-clock">Time clock</button>
             <button id="other-issues-tab-btn" class="tab-btn" tabContainer="other-issues">Other issues</button>
+            <button id="timers-tab-btn" class="tab-btn" tabContainer="timers">Timers</button>
             <button id="supply-list-tab-btn" class="tab-btn" tabContainer="supply-list">Supply list</button>
             <button id="settings-tab-btn" class="tab-btn" tabContainer="settings">Settings</button>
         </div>
     </div>
     <div id="main">
+        <!-- DB Activity Light -->
         <label id="db-activity">
             DB <span id="db-activity-light">•</span>
         </label>
         
+        <!-- Part Issues -->
         <div id="part-issue-container" class="tab-container">
             <table id="part-issues-table" class="table"></table>
         </div>
         
+        <!-- Supply Issues -->
         <div id="supply-issues-container" class="tab-container">
             <table id="supply-issues-table" class="table"></table>
         </div>
         
+        <!-- Time Clock Issues -->
         <div id="time-clock-container" class="tab-container">
             <table id="time-clock-issues-table" class="table"></table>
         </div>
         
+        <!-- Other issues -->
         <div id="other-issues-container" class="tab-container">
             <table id="other-issues-table" class="table"></table>
+        </div>
+        
+        <!-- Timers -->
+        <div id="timers-container" class="tab-container">
+            <label class="small-input-label">Task filter:
+                <input id="task-filter-input" class="labeled-input" type="text" value="*" list="category-datalist">
+            </label>
+            <table id="timers-table" class="table"></table>
         </div>
         
         <!-- Supply List Editor -->

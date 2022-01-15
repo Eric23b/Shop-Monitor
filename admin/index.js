@@ -33,6 +33,7 @@ const partTabBtn = document.querySelector("#parts-tab-btn");
 const supplyLowTabBtn = document.querySelector("#supply-low-tab-btn");
 const timeClockTabBtn = document.querySelector("#time-clock-tab-btn");
 const otherIssuesTabBtn = document.querySelector("#other-issues-tab-btn");
+const timersTabBtn = document.querySelector("#timers-tab-btn");
 const supplyListTabBtn = document.querySelector("#supply-list-tab-btn");
 const settingsTabBtn = document.querySelector("#settings-tab-btn");
 
@@ -48,6 +49,9 @@ const timeClockTabTable = document.querySelector("#time-clock-issues-table");
 
 const otherIssuesTabContainer = document.querySelector("#other-issues-container");
 const otherIssuesTable = document.querySelector("#other-issues-table");
+
+const timersTabContainer = document.querySelector("#timers-container");
+const timersTable = document.querySelector("#timers-table");
 
 const supplyListTabContainer = document.querySelector("#supply-list-container");
 const supplyListCategoryInput = document.querySelector("#supply-list-category-input");
@@ -256,6 +260,11 @@ async function showTab(tab) {
             otherIssuesTabContainer.style.display = "flex";
             otherIssuesTabBtn.classList.add("active-tab");
             await loadOtherIssues();
+            break;
+        case "timers":
+            timersTabContainer.style.display = "flex";
+            timersTabBtn.classList.add("active-tab");
+            // await loadOtherIssues();
             break;
         case "supply-list":
             supplyListTabContainer.style.display = "flex";
