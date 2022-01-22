@@ -18,6 +18,17 @@ export function getTableDataWithText(text, AddAlertText) {
     return td;
 }
 
+export function getTableDataWithEditText(text, promptText, editCallback) {
+    const td = document.createElement('td');
+    td.textContent = text == "null" ? "" : text;
+    td.onclick = () => {
+        const newText = prompt(promptText, text == null ? "" : text);
+        editCallback(newText);
+    }
+    td.style.cursor = "pointer";
+    return td;
+}
+
 export function getTableDataWithCheckbox(checked, asyncCallback) {
     const tableData = document.createElement('td');
     const checkbox = document.createElement('input');
