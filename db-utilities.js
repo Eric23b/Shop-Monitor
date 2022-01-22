@@ -145,6 +145,21 @@ export async function createAttribute(attribute, table, schema, serverSettings, 
     }
 }
 
+export async function describeDatabase(serverSettings, dbActiveCallback) {
+    const headers = getBasicHeaders(serverSettings.authorization);
+    const raw = JSON.stringify({
+        operation: "describe_all"
+    });
+    const requestOptions = buildRequestOptions(headers, raw);
+    const response = await sendDBRequest(serverSettings.url, requestOptions);
+
+    if (dbActiveCallback) dbActiveCallback(!response.error);
+
+    
+        return response;
+    
+}
+
 function getBasicHeaders(authorization) {
     const headers = new Headers();
     headers.append("Content-Type", "application/json");
