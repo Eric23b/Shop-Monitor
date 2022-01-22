@@ -17,6 +17,8 @@ import {
     TABLE_ATTRIBUTES
 } from "../directives.js";
 
+const pageTitle = "Admin";
+
 const settings = {
     url: "",
     authorization: ""
@@ -34,6 +36,8 @@ const supplyLowTabBtn = document.querySelector("#supply-low-tab-btn");
 const timeClockTabBtn = document.querySelector("#time-clock-tab-btn");
 const otherIssuesTabBtn = document.querySelector("#other-issues-tab-btn");
 const timersTabBtn = document.querySelector("#timers-tab-btn");
+const jobsTabBtn = document.querySelector("#jobs-tab-btn");
+const employeesTabBtn = document.querySelector("#employees-tab-btn");
 const supplyListTabBtn = document.querySelector("#supply-list-tab-btn");
 const settingsTabBtn = document.querySelector("#settings-tab-btn");
 
@@ -52,6 +56,12 @@ const otherIssuesTable = document.querySelector("#other-issues-table");
 
 const timersTabContainer = document.querySelector("#timers-container");
 const timersTable = document.querySelector("#timers-table");
+
+const jobsTabContainer = document.querySelector("#jobs-container");
+const jobsTabTable = document.querySelector("#jobs-issues-table");
+
+const employeesTabContainer = document.querySelector("#employees-container");
+const employeesTabTable = document.querySelector("#employees-issues-table");
 
 const supplyListTabContainer = document.querySelector("#supply-list-container");
 const supplyListCategoryInput = document.querySelector("#supply-list-category-input");
@@ -264,7 +274,17 @@ async function showTab(tab) {
         case "timers":
             timersTabContainer.style.display = "flex";
             timersTabBtn.classList.add("active-tab");
-            // await loadOtherIssues();
+            await loadTimersTable();
+            break;
+        case "jobs":
+            jobsTabContainer.style.display = "flex";
+            jobsTabBtn.classList.add("active-tab");
+            // await loadTimersTable();
+            break;
+        case "employees":
+            employeesTabContainer.style.display = "flex";
+            employeesTabBtn.classList.add("active-tab");
+            // await loadTimersTable();
             break;
         case "supply-list":
             supplyListTabContainer.style.display = "flex";
@@ -293,6 +313,10 @@ async function checkForUnresolvedIssues() {
 
     const otherOperation = await getEntryCountWithValue(ISSUE_SCHEMA, OTHER_ISSUES_TABLE, "acknowledged", false) ? "add" : "remove";
     otherIssuesTabBtn.classList[otherOperation]("after-visible");
+
+    // Page title
+    const addRemoveText = partsOperation + supplyLowOperation + timeClockOperation + otherOperation;
+    document.title = pageTitle + (addRemoveText.includes('add') ? " - New Issue" : "");
 }
 
 async function getEntryCountWithValue(schema, table, column, value) {
@@ -519,6 +543,11 @@ async function loadOtherIssues() {
     };
 }
 
+
+async function loadTimersTable() {
+    timersTable.innerHTML = getTableHeaderRow(["Job", "Sanding"]);
+}
+
 // Supply List Table
 async function loadSupplyListTable() {
     const filter = categoryFilterInput.value || "*";
@@ -527,16 +556,9 @@ async function loadSupplyListTable() {
     
     if ((!response) || (response.error)) return;
 
-    response.sort((a, b) => {
-        const categoryA = a.category.toUpperCase();
-        const categoryB = b.category.toUpperCase();
-        if (categoryA < categoryB) return -1;
-        if (categoryA > categoryB) return 1;
-        return 0;
-      });
+    response.sort(alphabetSort);
 
-    supplyListTable.innerHTML = 
-        getTableHeaderRow(["Category", "Item", "Delete"]);
+    supplyListTable.innerHTML = getTableHeaderRow(["Category", "Item", "Delete"]);
 
     for (const entry of response) {
         const row = document.createElement('tr');
@@ -557,6 +579,14 @@ async function loadSupplyListTable() {
     };
 
     loadDataListWithCategories(supplyCategoryDataList);
+}
+
+function alphabetSort(a, b) {
+    const categoryA = a.category.toUpperCase();
+    const categoryB = b.category.toUpperCase();
+    if (categoryA < categoryB) return -1;
+    if (categoryA > categoryB) return 1;
+    return 0;
 }
 
 function getRelativeDate(date) {
