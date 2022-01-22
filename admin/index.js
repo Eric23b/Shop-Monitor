@@ -1,15 +1,22 @@
-import {getDBEntrees,
+import {
+    getDBEntrees,
     insertDBEntry,
     updateDBEntry,
     deleteDBEntry,
     createSchema,
     createTable,
-    createAttributes} from "../db-utilities.js";
-import {getTableDataWithText,
+    createAttributes,
+    describeDatabase
+} from "../db-utilities.js";
+
+import {
+    getTableDataWithText,
     getTableDataWithEditText,
     getTableHeaderRow,
     getTableDataWithCheckbox,
-    getTableDataWithDeleteButton} from "../table-utilities.js";
+    getTableDataWithDeleteButton
+} from "../table-utilities.js";
+
 import {
     INVENTORY_SCHEMA,
     SUPPLY_LIST_TABLE,
@@ -91,6 +98,7 @@ const darkThemeCheckbox = document.querySelector("#dark-theme-checkbox");
 const serverURL = document.querySelector("#server-url");
 const serverAuthorization = document.querySelector("#server-authorization");
 const stationName = document.querySelector("#station-name");
+const saveDataBaseButton = document.querySelector("#save-db-backup-btn");
 const runDBSetupBtn = document.querySelector("#run-db-setup-btn");
 const removePasswordBtn = document.querySelector("#remove-password-btn");
 
@@ -218,6 +226,38 @@ categoryFilterInput.addEventListener('keypress', async (event) => {
 });
 categoryFilterInput.addEventListener('blur', async () => {
     loadSupplyListTable();
+});
+
+saveDataBaseButton.addEventListener('click', async () => {
+    let schemasAndTables = {};
+    const response = await describeDatabase(settings, dbActive);
+    for (const schema in response) {
+        if (Object.hasOwnProperty.call(response, schema)) {
+            schemasAndTables[schema] = [];
+            const element = response[schema];
+            for (const el in element) {
+                if (Object.hasOwnProperty.call(element, el)) {
+                    const elem = element[el];
+                    schemasAndTables[schema].push(elem.name);
+                }
+            }
+        }
+    }
+
+    let jsonData = {};
+    for (const schema in schemasAndTables) {
+        if (Object.hasOwnProperty.call(schemasAndTables, schema)) {
+            const tableArray = schemasAndTables[schema];
+            jsonData[schema] = {};
+            for (const table of tableArray) {
+                const response = await getDBEntrees(schema, table, "__createdtime__", "*", settings, dbActive);
+                jsonData[schema][table] = {...jsonData[schema][table], ...response};
+            }
+        }
+    }
+
+    const date = (new Date()).toLocaleDateString();
+    saveTextFile(JSON.stringify(jsonData, null, 1), `Database Backup ${date}`, "json");
 });
 
 runDBSetupBtn.addEventListener('click', async () => {
@@ -818,4 +858,15 @@ function setTheme() {
     const theme = getLocalStorageValue('theme') || "light";
     document.documentElement.setAttribute('data-color-theme', theme);
     darkThemeCheckbox.checked = theme == "dark" ? true : false;
+}
+
+function saveTextFile(data, fileName, fileType) {
+    let jsonData = new Blob([data], {type: `text/${fileType}`});  
+    let jsonURL = URL.createObjectURL(jsonData);
+
+    let hiddenElement = document.createElement('a');
+    hiddenElement.href = jsonURL;
+    hiddenElement.target = '_blank';
+    hiddenElement.download = `${fileName}.${fileType}`;
+    hiddenElement.click();
 }
