@@ -52,20 +52,28 @@
         
         <!-- Timers -->
         <div id="timers-container" class="tab-container">
-            <label class="small-input-label">Task filter:
-                <input id="task-filter-input" class="labeled-input" type="text" value="*" list="category-datalist">
+            <label class="small-input-label">Job filter:
+                <input id="timers-job-filter-input" class="labeled-input" type="text" value="*" list="category-datalist">
             </label>
             <table id="timers-table" class="table"></table>
         </div>
         
         <!-- Jobs -->
         <div id="jobs-container" class="tab-container">
+            <label class="small-input-label">New job name
+                <input id="job-input" class="labeled-input" type="text" list="category-datalist">
+            </label>
+            <button id="add-job-btn" class="small-btn">Add</button>
             <table id="jobs-table" class="table"></table>
         </div>
         
         <!-- Employees -->
-        <div id="employees-container" class="tab-container">
-            <table id="employees-table" class="table"></table>
+        <div id="employee-container" class="tab-container">
+            <label class="small-input-label">New employee name
+                <input id="employee-input" class="labeled-input" type="text" list="category-datalist">
+            </label>
+            <button id="add-employee-btn" class="small-btn">Add</button>
+            <table id="employee-table" class="table"></table>
         </div>
         
         <!-- Supply List Editor -->

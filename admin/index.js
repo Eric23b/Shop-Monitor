@@ -1,5 +1,15 @@
-import {getDBEntrees, insertDBEntry, updateDBEntry, deleteDBEntry, createSchema, createTable, createAttributes} from "../db-utilities.js";
-import {getTableDataWithText, getTableHeaderRow, getTableDataWithCheckbox, getTableDataWithDeleteButton} from "../table-utilities.js";
+import {getDBEntrees,
+    insertDBEntry,
+    updateDBEntry,
+    deleteDBEntry,
+    createSchema,
+    createTable,
+    createAttributes} from "../db-utilities.js";
+import {getTableDataWithText,
+    getTableDataWithEditText,
+    getTableHeaderRow,
+    getTableDataWithCheckbox,
+    getTableDataWithDeleteButton} from "../table-utilities.js";
 import {
     INVENTORY_SCHEMA,
     SUPPLY_LIST_TABLE,
@@ -55,13 +65,18 @@ const otherIssuesTabContainer = document.querySelector("#other-issues-container"
 const otherIssuesTable = document.querySelector("#other-issues-table");
 
 const timersTabContainer = document.querySelector("#timers-container");
+const timersJobFilter = document.querySelector("#timers-job-filter-input");
 const timersTable = document.querySelector("#timers-table");
 
 const jobsTabContainer = document.querySelector("#jobs-container");
-const jobsTabTable = document.querySelector("#jobs-issues-table");
+const newJobNameInput = document.querySelector("#job-input");
+const addJobButton = document.querySelector("#add-job-btn");
+const employeeTable = document.querySelector("#jobs-table");
 
-const employeesTabContainer = document.querySelector("#employees-container");
-const employeesTabTable = document.querySelector("#employees-issues-table");
+const employeesTabContainer = document.querySelector("#employee-container");
+const employeeNameInput = document.querySelector("#employee-input");
+const addEmployeeButton = document.querySelector("#add-employee-btn");
+const employeesTable = document.querySelector("#employee-table");
 
 const supplyListTabContainer = document.querySelector("#supply-list-container");
 const supplyListCategoryInput = document.querySelector("#supply-list-category-input");
@@ -150,6 +165,30 @@ tabHeader.addEventListener('click', async (event) => {
     await checkForUnresolvedIssues();
 });
 
+// Add job button
+addJobButton.addEventListener('click', async () => {
+    const jobName = newJobNameInput.value.trim();
+
+    if (!jobName) return;
+
+    const data = {name: jobName, active: true};
+
+    await insertDBEntry(BUSINESS_SCHEMA, JOBS_TABLE, data, settings, dbActive);
+    await loadJobsTable();
+});
+
+// Add employee button
+addEmployeeButton.addEventListener('click', async () => {
+    const employeeName = employeeNameInput.value.trim();
+
+    if (!employeeName) return;
+
+    const data = {name: employeeName, active: true};
+
+    await insertDBEntry(BUSINESS_SCHEMA, EMPLOYEES_TABLE, data, settings, dbActive);
+    await loadEmployeeTable();
+});
+
 // Add Button
 addSupplyBtn.addEventListener('click', async () => {
     const category = supplyListCategoryInput.value.trim();
@@ -163,7 +202,7 @@ addSupplyBtn.addEventListener('click', async () => {
             category: category,
             item: item,
         }
-        await insertDBEntry(INVENTORY_SCHEMA, "supply_list", data, settings, dbActive);
+        await insertDBEntry(INVENTORY_SCHEMA, SUPPLY_LIST_TABLE, data, settings, dbActive);
     }
     await loadSupplyListTable();        
 });
@@ -279,12 +318,12 @@ async function showTab(tab) {
         case "jobs":
             jobsTabContainer.style.display = "flex";
             jobsTabBtn.classList.add("active-tab");
-            // await loadTimersTable();
+            await loadJobsTable();
             break;
         case "employees":
             employeesTabContainer.style.display = "flex";
             employeesTabBtn.classList.add("active-tab");
-            // await loadTimersTable();
+            await loadEmployeeTable();
             break;
         case "supply-list":
             supplyListTabContainer.style.display = "flex";
@@ -543,9 +582,148 @@ async function loadOtherIssues() {
     };
 }
 
-
 async function loadTimersTable() {
+    const filter = timersJobFilter.value || "*";
+
+    const response = await getDBEntrees(LOGS_SCHEMA, TIMER_TABLE, "jobName", filter, settings, dbActive);
+    
+    if ((!response) || (response.error)) return;
+
+    // response.sort((a, b) => {
+    //     const jobNameA = String(a.jobName).toUpperCase();
+    //     const jobNameB = String(b.jobName).toUpperCase();
+    //     if (jobNameA < jobNameB) return -1;
+    //     if (jobNameA > jobNameB) return 1;
+    //     return 0;
+    // });
+
+    let jobsListObject = {};
+
+    for (const job of response) {
+        if (jobsListObject[job.jobID]) {
+            jobsListObject[job.jobID].push(job);
+        }
+        else {
+            jobsListObject[job.jobID] = [];
+            jobsListObject[job.jobID].push(job);
+        }
+    }
+
+    for (const jobID in jobsListObject) {
+        if (Object.hasOwnProperty.call(jobsListObject, jobID)) {
+            const jobTimerArray = jobsListObject[jobID];
+            console.log(jobTimerArray);
+        }
+    }
+
+    // console.log(jobs);
+
     timersTable.innerHTML = getTableHeaderRow(["Job", "Sanding"]);
+
+    for (const entry of response) {
+        const row = document.createElement('tr');
+        row.addEventListener('click', async () => {
+            console.log(entry.jobID);
+        });
+
+        const jobName = getTableDataWithText(entry.jobName);
+
+        const employeeName = getTableDataWithText(entry.employeeName);
+
+        const task = getTableDataWithText(entry.task);
+
+        const eventType = getTableDataWithText(entry.eventType);
+
+        appendChildren(row, [jobName, employeeName, task, eventType]);
+        timersTable.appendChild(row);
+    };
+}
+
+// Jobs Table
+async function loadJobsTable() {
+    const response = await getDBEntrees(BUSINESS_SCHEMA, JOBS_TABLE, "__createdtime__", "*", settings, dbActive);
+    
+    if ((!response) || (response.error)) return;
+
+    response.sort((a, b) => {return b.__createdtime__ - a.__createdtime__});
+
+    employeeTable.innerHTML = getTableHeaderRow(["Name", "Active", "Delete"]);
+
+    for (const entry of response) {
+        const row = document.createElement('tr');
+
+        const name = getTableDataWithEditText(entry.name, "Job name", async (newName) => {
+            await updateDBEntry(BUSINESS_SCHEMA, JOBS_TABLE, {id: entry.id, name: newName}, settings, dbActive);
+            await loadJobsTable();
+        });
+
+        const active = getTableDataWithCheckbox(
+            entry.active,
+            async (event) => {
+                const isChecked = event.target.checked;
+                await updateDBEntry(BUSINESS_SCHEMA, JOBS_TABLE, {id: entry.id, active: isChecked}, settings, dbActive);
+            }
+        );
+
+        const deleteTD = getTableDataWithDeleteButton(
+            async () => {
+                await deleteDBEntry(BUSINESS_SCHEMA, JOBS_TABLE, entry.id, settings, dbActive);
+                await loadJobsTable();
+            }
+        );
+
+        appendChildren(row, [name, active, deleteTD]);
+        employeeTable.appendChild(row);
+    };
+}
+
+// Employees Table
+async function loadEmployeeTable() {
+    const response = await getDBEntrees(BUSINESS_SCHEMA, EMPLOYEES_TABLE, "__createdtime__", "*", settings, dbActive);
+    
+    if ((!response) || (response.error)) return;
+
+    response.sort((a, b) => {
+        const nameA = String(a.name).toUpperCase();
+        const nameB = String(b.name).toUpperCase();
+        if (nameA < nameB) return -1;
+        if (nameA > nameB) return 1;
+        return 0;
+    });
+
+    employeesTable.innerHTML = getTableHeaderRow(["Name", "Stations", "Active", "Delete"]);
+
+    for (const entry of response) {
+        const row = document.createElement('tr');
+
+        const name = getTableDataWithEditText(entry.name, "Name", async (newName) => {
+            await updateDBEntry(BUSINESS_SCHEMA, EMPLOYEES_TABLE, {id: entry.id, name: newName}, settings, dbActive);
+            await loadEmployeeTable();
+        });
+
+        const stations = getTableDataWithEditText(entry.stations, "Stations", async (newStations) => {
+            await updateDBEntry(BUSINESS_SCHEMA, EMPLOYEES_TABLE, {id: entry.id, stations: newStations}, settings, dbActive);
+            await loadEmployeeTable();
+        });
+
+        const active = getTableDataWithCheckbox(
+            entry.active,
+            async (event) => {
+                const isChecked = event.target.checked;
+                await updateDBEntry(BUSINESS_SCHEMA, EMPLOYEES_TABLE, {id: entry.id, active: isChecked}, settings, dbActive);
+            }
+        );
+
+        const deleteTD = getTableDataWithDeleteButton(
+            async () => {
+                await deleteDBEntry(BUSINESS_SCHEMA, EMPLOYEES_TABLE, entry.id, settings, dbActive);
+                await loadEmployeeTable();
+            }
+        );
+
+        appendChildren(row, [name, stations,active, deleteTD]);
+        employeesTable.appendChild(row);
+    };
 }
 
 // Supply List Table
@@ -556,7 +734,13 @@ async function loadSupplyListTable() {
     
     if ((!response) || (response.error)) return;
 
-    response.sort(alphabetSort);
+    response.sort((a, b) => {
+        const categoryA = a.category.toUpperCase();
+        const categoryB = b.category.toUpperCase();
+        if (categoryA < categoryB) return -1;
+        if (categoryA > categoryB) return 1;
+        return 0;
+    });
 
     supplyListTable.innerHTML = getTableHeaderRow(["Category", "Item", "Delete"]);
 
@@ -578,15 +762,7 @@ async function loadSupplyListTable() {
         supplyListTable.appendChild(row);
     };
 
-    loadDataListWithCategories(supplyCategoryDataList);
-}
-
-function alphabetSort(a, b) {
-    const categoryA = a.category.toUpperCase();
-    const categoryB = b.category.toUpperCase();
-    if (categoryA < categoryB) return -1;
-    if (categoryA > categoryB) return 1;
-    return 0;
+    loadDataListWithItemCategories(supplyCategoryDataList);
 }
 
 function getRelativeDate(date) {
@@ -606,7 +782,7 @@ function yesterday() {
     return today.toLocaleDateString();
 }
 
-async function loadDataListWithCategories(dataList) {
+async function loadDataListWithItemCategories(dataList) {
     dataList.innerHTML = "";
     const categories = await getItemCategories(INVENTORY_SCHEMA, SUPPLY_LIST_TABLE);
     categories.forEach((category) => {
