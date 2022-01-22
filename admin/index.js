@@ -159,12 +159,12 @@ darkThemeCheckbox.addEventListener('change', () => {
 
 // Tab click (add style and refresh data)
 tabHeader.addEventListener('click', async (event) => {
+    if (!event.target.attributes.tabContainer) return;
+
     const buttons = document.querySelectorAll("#tab-header .tab-btn");
     buttons.forEach((button) => {
         button.classList.remove("active-tab");
     });
-    
-    if (!event.target.attributes.tabContainer) return;
     event.target.classList.add("active-tab");
 
     const containerID = event.target.attributes.tabContainer.value;
@@ -229,6 +229,7 @@ categoryFilterInput.addEventListener('blur', async () => {
 });
 
 saveDataBaseButton.addEventListener('click', async () => {
+    // Catalog database schemas and tables
     let schemasAndTables = {};
     const response = await describeDatabase(settings, dbActive);
     for (const schema in response) {
@@ -244,6 +245,7 @@ saveDataBaseButton.addEventListener('click', async () => {
         }
     }
 
+    // Get each table
     let jsonData = {};
     for (const schema in schemasAndTables) {
         if (Object.hasOwnProperty.call(schemasAndTables, schema)) {
