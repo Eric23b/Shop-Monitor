@@ -12,5 +12,14 @@
         <h1>Report sent.</h1>
         <a href="/issues.html" style="color: var(--color);text-decoration: none;font-size: x-large;">⇦ Back</a>
     </div>
+    <script>
+        const theme = getLocalStorageValue('theme') || "light";
+        document.documentElement.setAttribute('data-color-theme', theme);
+
+        function getLocalStorageValue(key) {
+            if (window.localStorage[key])
+                return JSON.parse(window.localStorage.getItem(key));
+        }
+    </script>
 </body>
 </html>

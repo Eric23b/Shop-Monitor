@@ -10,7 +10,16 @@
 <body>
     <div style="margin: auto; width: max-content;">
         <h1>That page does not exist.</h1>
-        <a href="/issues.html" style="color: var(--color); text-decoration: none; font-size: x-large; width: 100%; text-align: center; display: block">Home</a>
+        <a href="index.html" style="color: var(--color); text-decoration: none; font-size: x-large; width: 100%; text-align: center; display: block">Home</a>
     </div>
+    <script>
+        const theme = getLocalStorageValue('theme') || "light";
+        document.documentElement.setAttribute('data-color-theme', theme);
+
+        function getLocalStorageValue(key) {
+            if (window.localStorage[key])
+                return JSON.parse(window.localStorage.getItem(key));
+        }
+    </script>
 </body>
 </html>
