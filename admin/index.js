@@ -108,8 +108,22 @@ const promptInput = document.querySelector("#prompt-input");
 const promptCancelBtn = document.querySelector("#prompt-cancel-btn");
 const promptOKBtn = document.querySelector("#prompt-ok-btn");
 
+const alertBackground = document.querySelector("#alert");
+const alertLabel = document.querySelector("#alert-label");
+const alertMessage = document.querySelector("#alert-message");
+const alertOKBtn = document.querySelector("#alert-ok-btn");
+
 const dbActivityLight = document.querySelector("#db-activity-light");
 
+function showAlert(labelText, messageText, OKCallback) {
+    alertBackground.style.display = "flex";
+    alertLabel.textContent = labelText;
+    alertMessage.textContent = messageText;
+    alertOKBtn.onclick = () => {
+        if (OKCallback) {OKCallback();}
+        alertBackground.style.display = "none";
+    }
+}
 
 
 // ---INITIALIZE---
@@ -307,7 +321,8 @@ runDBSetupBtn.addEventListener('click', async () => {
     message += await createAttributes(TABLE_ATTRIBUTES.jobs, JOBS_TABLE, BUSINESS_SCHEMA, settings, dbActive) + "\n";
     message += await createTable(STATIONS_TABLE, BUSINESS_SCHEMA, settings, dbActive) + "\n";
     message += await createAttributes(TABLE_ATTRIBUTES.stations, STATIONS_TABLE, BUSINESS_SCHEMA, settings, dbActive) + "\n";
-    alert(message);
+
+    showAlert("Database message", message)
 });
 
 removePasswordBtn.addEventListener('click', () => {
