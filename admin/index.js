@@ -115,16 +115,6 @@ const alertOKBtn = document.querySelector("#alert-ok-btn");
 
 const dbActivityLight = document.querySelector("#db-activity-light");
 
-function showAlert(labelText, messageText, OKCallback) {
-    alertBackground.style.display = "flex";
-    alertLabel.textContent = labelText;
-    alertMessage.textContent = messageText;
-    alertOKBtn.onclick = () => {
-        if (OKCallback) {OKCallback();}
-        alertBackground.style.display = "none";
-    }
-}
-
 
 // ---INITIALIZE---
 
@@ -135,21 +125,24 @@ hideTabContainers();
 
 const password = getLocalStorageValue('password');
 if (password !== "pw558") {
-    showPrompt("Enter password", "", (enteredPassword) => {
-        if (enteredPassword !== "pw558") {
+    showPrompt("Enter password",
+        "",
+        (enteredPassword) => {
+            if (enteredPassword !== "pw558") {
+                const a = document.createElement('a');
+                a.href = "/";
+                a.click();
+            }
+            else {
+                setLocalStorageValue('password', enteredPassword);
+            }
+        },
+        () => {
             const a = document.createElement('a');
             a.href = "/";
             a.click();
         }
-        else {
-            setLocalStorageValue('password', enteredPassword);
-        }
-    },
-    () => {
-        const a = document.createElement('a');
-        a.href = "/";
-        a.click();
-    });
+    );
 }
 
 settings.url = serverURL.value = getLocalStorageValue('serverURL') || "";
@@ -322,7 +315,7 @@ runDBSetupBtn.addEventListener('click', async () => {
     message += await createTable(STATIONS_TABLE, BUSINESS_SCHEMA, settings, dbActive) + "\n";
     message += await createAttributes(TABLE_ATTRIBUTES.stations, STATIONS_TABLE, BUSINESS_SCHEMA, settings, dbActive) + "\n";
 
-    showAlert("Database message", message)
+    showAlert("Database message", message);
 });
 
 removePasswordBtn.addEventListener('click', () => {
@@ -473,7 +466,8 @@ async function loadPartIssues() {
 
         const part = getTableDataWithText(entry.part);
 
-        const note = getTableDataWithText(entry.note, true);
+        const note = getTableDataWithText(entry.note);
+        addAlertClickToElement(note, "Note", entry.note);
 
         const date = getTableDataWithText(getRelativeDate(entry.date));
 
@@ -525,11 +519,13 @@ async function loadSuppliesIssues() {
 
         const category = getTableDataWithText(entry.category);
 
-        const item = getTableDataWithText(entry.item, true);
+        const item = getTableDataWithText(entry.item);
+        addAlertClickToElement(item, "Item", entry.item);
 
         const currently = getTableDataWithText(entry.currently);
 
-        const note = getTableDataWithText(entry.note, true);
+        const note = getTableDataWithText(entry.note);
+        addAlertClickToElement(note, "Note", entry.note);
 
         const date = getTableDataWithText(getRelativeDate(entry.date));
 
@@ -583,7 +579,8 @@ async function loadTimeClockIssues() {
 
         const missedTime = getTableDataWithText(entry.missedTime);
 
-        const note = getTableDataWithText(entry.note, true);
+        const note = getTableDataWithText(entry.note);
+        addAlertClickToElement(note, "Note", entry.note);
 
         const date = getTableDataWithText(getRelativeDate(entry.date));
 
@@ -625,7 +622,8 @@ async function loadOtherIssues() {
     for (const entry of response) {
         const row = document.createElement('tr');
 
-        const note = getTableDataWithText(entry.note, true);
+        const note = getTableDataWithText(entry.note);
+        addAlertClickToElement(note, "Note", entry.note);
 
         const date = getTableDataWithText(getRelativeDate(entry.date));
 
@@ -832,7 +830,8 @@ async function loadSupplyListTable() {
 
         const category = getTableDataWithText(entry.category);
 
-        const item = getTableDataWithText(entry.item, true);
+        const item = getTableDataWithText(entry.item);
+        addAlertClickToElement(item, "Item", entry.item);
 
         const deleteTD = getTableDataWithDeleteButton(
             async () => {
@@ -892,22 +891,50 @@ function setLocalStorageValue(key, value) {
 
 function showPrompt(labelText, defaultText, OKCallback, cancelCallback) {
     promptBackground.style.display = "flex";
+    // promptBackground.onclick = cancelClick;
+
     promptLabel.textContent = labelText;
+
     promptInput.value = defaultText;
     promptInput.select();
     promptInput.onkeypress = (event) => {
-        if (event.key === "Enter") {
-            OKCallback(promptInput.value);
-            promptBackground.style.display = "none";
-        }
+        if (event.key === "Enter") okClick();
     }
-    promptOKBtn.onclick = () => {
+
+    promptOKBtn.onclick = okClick;
+
+    promptCancelBtn.onclick = cancelClick;
+
+    function cancelClick() {
+        if (cancelCallback) cancelCallback(promptInput.value);
+        promptBackground.style.display = "none";
+    }
+
+    function okClick() {
         OKCallback(promptInput.value);
         promptBackground.style.display = "none";
     }
-    promptCancelBtn.onclick = () => {
-        if (cancelCallback) cancelCallback(promptInput.value);
-        promptBackground.style.display = "none";
+}
+
+function addAlertClickToElement(element, title, message) {
+    if (!message) return;
+    element.onclick = () => {showAlert(title, message);}
+    element.style.cursor = "pointer";
+}
+
+function showAlert(labelText, messageText, OKCallback) {
+    alertBackground.style.display = "flex";
+    // alertBackground.onclick = okClick;
+
+    alertLabel.textContent = labelText;
+
+    alertMessage.textContent = messageText;
+
+    alertOKBtn.onclick = okClick;
+
+    function okClick() {
+        if (OKCallback) OKCallback();
+        alertBackground.style.display = "none";
     }
 }
 
