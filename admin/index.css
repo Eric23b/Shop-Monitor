@@ -2,6 +2,7 @@
 :root{
     --color: #191d25;
     --background_color: #edeff3;
+    --background_transparent_color: #edeff3c2;
     --background_hover_color: #b2b8c6;
     --border_color: #454750;
     --active: #191d25;
@@ -15,6 +16,7 @@
     /* :root{ */
         --color: #e0e0eb;
         --background_color: #13131a;
+        --background_transparent_color: #13131abb;
         --background_hover_color: #2b2b31;
         --border_color: #51525a;
         --active: #e0e0eb;
@@ -376,4 +378,55 @@ input{
     justify-content: center;
     align-items: center;
     margin: 0;
+}
+
+.model-background{
+    position: absolute;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100vw;
+    height: 100vh;
+    inset: 0;
+    z-index: 10;
+    padding: 0.5rem;
+    background: var(--background_transparent_color);
+    /* opacity: 0.8; */
+}
+.model-window{
+    display: flex;
+    flex-direction: column;
+    max-width: 100%;
+    padding: 1rem;
+    border: 1px solid var(--border_color);
+    gap: 0.5rem;
+    background-color: var(--background_color);
+}
+.model-input-label{
+    
+    overflow-wrap: break-word;
+}
+.model-button-group{
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-top: 1rem;
+    justify-content: flex-end;
+}
+.model-button{
+    min-width: 7rem;
+    padding: 0.5rem 1rem;
+    border: 1px solid #555;
+    border-radius: .5rem;
+    cursor: pointer;
+    color: var(--color);
+    background-color: var(--background_color);
+}
+.model-button:hover{
+    color: var(--background_color);
+    background-color: var(--color);
+}
+.model-button:active{
+    color: var(--color);
+    background-color: var(--background_color);
 }

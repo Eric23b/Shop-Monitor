@@ -41,7 +41,7 @@ const settings = {
     authorization: ""
 }
 
-let station = "";
+// let station = "";
 
 // const homeBtn = document.querySelector("#home-btn");
 // const errorMessage = document.querySelector("#error-message");
@@ -102,8 +102,13 @@ const saveDataBaseButton = document.querySelector("#save-db-backup-btn");
 const runDBSetupBtn = document.querySelector("#run-db-setup-btn");
 const removePasswordBtn = document.querySelector("#remove-password-btn");
 
-const dbActivityLight = document.querySelector("#db-activity-light");
+const promptBackground = document.querySelector("#prompt");
+const promptLabel = document.querySelector("#prompt-label");
+const promptInput = document.querySelector("#prompt-input");
+const promptCancelBtn = document.querySelector("#prompt-cancel-btn");
+const promptOKBtn = document.querySelector("#prompt-ok-btn");
 
+const dbActivityLight = document.querySelector("#db-activity-light");
 
 
 
@@ -114,19 +119,28 @@ setTheme();
 
 hideTabContainers();
 
-const password = getLocalStorageValue('password') || prompt("Enter your password");
+const password = getLocalStorageValue('password');
 if (password !== "pw558") {
-    const a = document.createElement('a');
-    a.href = "/";
-    a.click();
-} 
-else {
-    setLocalStorageValue('password', password);
+    showPrompt("Enter password", "", (enteredPassword) => {
+        if (enteredPassword !== "pw558") {
+            const a = document.createElement('a');
+            a.href = "/";
+            a.click();
+        }
+        else {
+            setLocalStorageValue('password', enteredPassword);
+        }
+    },
+    () => {
+        const a = document.createElement('a');
+        a.href = "/";
+        a.click();
+    });
 }
 
 settings.url = serverURL.value = getLocalStorageValue('serverURL') || "";
 settings.authorization = serverAuthorization.value = getLocalStorageValue('serverAuthorization') || "";
-station = stationName.value = getLocalStorageValue('stationName') || "";
+// station = stationName.value = getLocalStorageValue('stationName') || "";
 
 
 // showSettings();
@@ -315,7 +329,7 @@ serverAuthorization.addEventListener('blur', () => {
 // Save station name on blur
 stationName.addEventListener('blur', () => {
     setLocalStorageValue('stationName', stationName.value);
-    station = stationName.value;
+    // station = stationName.value;
 });
 
 
@@ -694,10 +708,14 @@ async function loadJobsTable() {
     for (const entry of response) {
         const row = document.createElement('tr');
 
-        const name = getTableDataWithEditText(entry.name, "Job name", async (newName) => {
-            await updateDBEntry(BUSINESS_SCHEMA, JOBS_TABLE, {id: entry.id, name: newName}, settings, dbActive);
-            await loadJobsTable();
-        });
+        const name = getTableDataWithText(entry.name);
+        name.onclick = () => {
+            showPrompt("Job name", entry.name, async (newName) => {
+                await updateDBEntry(BUSINESS_SCHEMA, JOBS_TABLE, {id: entry.id, name: newName}, settings, dbActive);
+                await loadJobsTable();
+            });
+        }
+        name.style.cursor = "pointer";
 
         const active = getTableDataWithCheckbox(
             entry.active,
@@ -738,15 +756,23 @@ async function loadEmployeeTable() {
     for (const entry of response) {
         const row = document.createElement('tr');
 
-        const name = getTableDataWithEditText(entry.name, "Name", async (newName) => {
-            await updateDBEntry(BUSINESS_SCHEMA, EMPLOYEES_TABLE, {id: entry.id, name: newName}, settings, dbActive);
-            await loadEmployeeTable();
-        });
+        const name = getTableDataWithText(entry.name);
+        name.onclick = () => {
+            showPrompt("Employee name", entry.name, async (newName) => {
+                await updateDBEntry(BUSINESS_SCHEMA, EMPLOYEES_TABLE, {id: entry.id, name: newName}, settings, dbActive);
+                await loadEmployeeTable();
+            });
+        }
+        name.style.cursor = "pointer";
 
-        const stations = getTableDataWithEditText(entry.stations, "Stations", async (newStations) => {
-            await updateDBEntry(BUSINESS_SCHEMA, EMPLOYEES_TABLE, {id: entry.id, stations: newStations}, settings, dbActive);
-            await loadEmployeeTable();
-        });
+        const stations = getTableDataWithText(entry.stations);
+        stations.onclick = () => {
+            showPrompt("Work stations", entry.stations, async (newStations) => {
+                await updateDBEntry(BUSINESS_SCHEMA, EMPLOYEES_TABLE, {id: entry.id, stations: newStations}, settings, dbActive);
+                await loadEmployeeTable();
+            });
+        }
+        stations.style.cursor = "pointer";
 
         const active = getTableDataWithCheckbox(
             entry.active,
@@ -847,6 +873,27 @@ function getLocalStorageValue(key) {
 
 function setLocalStorageValue(key, value) {
     window.localStorage.setItem(key, JSON.stringify(value));
+}
+
+function showPrompt(labelText, defaultText, OKCallback, cancelCallback) {
+    promptBackground.style.display = "flex";
+    promptLabel.textContent = labelText;
+    promptInput.value = defaultText;
+    promptInput.select();
+    promptInput.onkeypress = (event) => {
+        if (event.key === "Enter") {
+            OKCallback(promptInput.value);
+            promptBackground.style.display = "none";
+        }
+    }
+    promptOKBtn.onclick = () => {
+        OKCallback(promptInput.value);
+        promptBackground.style.display = "none";
+    }
+    promptCancelBtn.onclick = () => {
+        if (cancelCallback) cancelCallback(promptInput.value);
+        promptBackground.style.display = "none";
+    }
 }
 
 function dbActive(success) {
