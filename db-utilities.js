@@ -155,9 +155,31 @@ export async function describeDatabase(serverSettings, dbActiveCallback) {
 
     if (dbActiveCallback) dbActiveCallback(!response.error);
 
+    return response;
+}
+
+export async function getUniqueColumnValues(schema, table, column, serverSettings, dbActiveCallback) {
+    const response = await getDBEntrees(schema, table, column, "*", serverSettings);
     
-        return response;
+    if ((!response) || (response.error)) return;
+
+    if (dbActiveCallback) dbActiveCallback(!response.error);
     
+    response.sort((a, b) => {
+        const aString = String(a[column]).toUpperCase();
+        const bString = String(b[column]).toUpperCase();
+        if (aString < bString) return -1;
+        if (aString > bString) return 1;
+        return 0;
+    });
+    
+    const valuesList = [];
+    response.forEach((item) => {
+        if (valuesList.indexOf(String(item[column])) === -1) {
+            valuesList.push(String(item[column]));
+        }
+    });
+    return valuesList;
 }
 
 function getBasicHeaders(authorization) {
