@@ -6,7 +6,8 @@ import {
     createSchema,
     createTable,
     createAttributes,
-    describeDatabase
+    describeDatabase,
+    getUniqueColumnValues
 } from "../db-utilities.js";
 
 import {
@@ -652,11 +653,85 @@ async function loadOtherIssues() {
 }
 
 async function loadTimersTable() {
-    const filter = timersJobFilter.value || "*";
-
-    const response = await getDBEntrees(LOGS_SCHEMA, TIMER_TABLE, "jobName", filter, settings, dbActive);
+    const events = await getDBEntrees(LOGS_SCHEMA, TIMER_TABLE, "id", "*", settings, dbActive);
     
-    if ((!response) || (response.error)) return;
+    if ((!events) || (events.error)) return;
+
+    events.sort((a, b) => {return a.__createdtime__ - b.__createdtime__});
+
+    for (let index = 0; index < events.length; index++) {
+        const currentJobEmployeeTask = 
+            events[index].jobID + 
+            events[index].employeeID + 
+            events[index].task;
+            
+        if (events[index].eventType == "start") {
+            events[index].wasCompleted = false;
+
+            for (let startIndex = index + 1; startIndex < events.length; startIndex++) {
+                const nextJobEmployeeTask = 
+                    events[startIndex].jobID + 
+                    events[startIndex].employeeID + 
+                    events[startIndex].task;
+
+                if (nextJobEmployeeTask != currentJobEmployeeTask) continue;
+
+                if (events[startIndex].eventType == "start") {
+                    // Error
+                    break;
+                }
+                else if (events[startIndex].eventType == "stop") {
+                    const taskMS = events[startIndex].__createdtime__ - events[index].__createdtime__;
+                    events[index].taskTime = msToTime(taskMS);
+                    events[index].taskMS = taskMS;
+                    events[index].wasCompleted = true;
+                    break;
+                }
+            }
+        }
+    }
+
+    console.log(events);
+    function msToTime(s) {
+        var ms = s % 1000;
+        s = (s - ms) / 1000;
+        var secs = s % 60;
+        s = (s - secs) / 60;
+        var mins = s % 60;
+        var hrs = (s - mins) / 60;
+      
+        return hrs + ':' + mins + ':' + secs + '.' + ms;
+      }
+
+    return;
+    // const tasksList = await getUniqueColumnValues(LOGS_SCHEMA, TIMER_TABLE, "task", settings, dbActive);
+    // const jobsList = await getUniqueColumnValues(LOGS_SCHEMA, TIMER_TABLE, "jobName", settings, dbActive);
+    
+    // let totals = [];
+    // // Loop through job names
+    // for (const jobName of jobsList) {
+    //     const eventArray = await getDBEntrees(LOGS_SCHEMA, TIMER_TABLE, "jobName", jobName, settings, dbActive);
+    //     if ((!eventArray) || (eventArray.error)) continue;
+    //     eventArray.sort((a, b) => {return a.__createdtime__ - b.__createdtime__});
+
+
+
+    //     // Loop through events for each job
+    //     for (let eventIndex = 0; eventIndex < eventArray.length; eventIndex++) {
+    //         const element = eventArray[eventIndex];
+    //         console.log(jobName, element);
+
+    //         for (const task of tasksList) {
+                
+    //         }
+    //     }
+    // }
+
+    // const filter = timersJobFilter.value || "*";
+
+    // const response = await getDBEntrees(LOGS_SCHEMA, TIMER_TABLE, "jobName", filter, settings, dbActive);
+    
+    // if ((!response) || (response.error)) return;
 
     // response.sort((a, b) => {
     //     const jobNameA = String(a.jobName).toUpperCase();
@@ -666,46 +741,46 @@ async function loadTimersTable() {
     //     return 0;
     // });
 
-    let jobsListObject = {};
+    // let jobsListObject = {};
 
-    for (const job of response) {
-        if (jobsListObject[job.jobID]) {
-            jobsListObject[job.jobID].push(job);
-        }
-        else {
-            jobsListObject[job.jobID] = [];
-            jobsListObject[job.jobID].push(job);
-        }
-    }
+    // for (const job of response) {
+    //     if (jobsListObject[job.jobID]) {
+    //         jobsListObject[job.jobID].push(job);
+    //     }
+    //     else {
+    //         jobsListObject[job.jobID] = [];
+    //         jobsListObject[job.jobID].push(job);
+    //     }
+    // }
 
-    for (const jobID in jobsListObject) {
-        if (Object.hasOwnProperty.call(jobsListObject, jobID)) {
-            const jobTimerArray = jobsListObject[jobID];
-            console.log(jobTimerArray);
-        }
-    }
+    // for (const jobID in jobsListObject) {
+    //     if (Object.hasOwnProperty.call(jobsListObject, jobID)) {
+    //         const jobTimerArray = jobsListObject[jobID];
+    //         // console.log(jobTimerArray);
+    //     }
+    // }
 
     // console.log(jobs);
 
-    timersTable.innerHTML = getTableHeaderRow(["Job", "Sanding"]);
+    timersTable.innerHTML = getTableHeaderRow(["Job", ...tasksList]);
 
-    for (const entry of response) {
-        const row = document.createElement('tr');
-        row.addEventListener('click', async () => {
-            console.log(entry.jobID);
-        });
+    // for (const entry of response) {
+    //     const row = document.createElement('tr');
+    //     row.addEventListener('click', async () => {
+    //         console.log(entry.jobID);
+    //     });
 
-        const jobName = getTableDataWithText(entry.jobName);
+    //     const jobName = getTableDataWithText(entry.jobName);
 
-        const employeeName = getTableDataWithText(entry.employeeName);
+    //     const employeeName = getTableDataWithText(entry.employeeName);
 
-        const task = getTableDataWithText(entry.task);
+    //     const task = getTableDataWithText(entry.task);
 
-        const eventType = getTableDataWithText(entry.eventType);
+    //     const eventType = getTableDataWithText(entry.eventType);
 
-        appendChildren(row, [jobName, employeeName, task, eventType]);
-        timersTable.appendChild(row);
-    };
+    //     appendChildren(row, [jobName, employeeName, task, eventType]);
+    //     timersTable.appendChild(row);
+    // };
 }
 
 // Jobs Table
