@@ -1,6 +1,6 @@
 import { insertDBEntry, getDBEntrees } from "../db-utilities.js";
 
-const isDev = true;
+const isDev = false;
 
 const serverSettings = {
     url: "",
@@ -96,7 +96,10 @@ submitButton.addEventListener('click', async (event) => {
         event.preventDefault();
     }
     
-    if (!formFilled()) return;
+    if (!formFilled()) {
+        event.preventDefault();
+        return;
+    }
 
     const date = new Date();
     let data = {
@@ -117,6 +120,11 @@ submitButton.addEventListener('click', async (event) => {
             break;
 
         case "supplies":
+            if (itemList.length <= 0) {
+                showMessage("Add items to list first");
+                event.preventDefault();
+                return;
+            }
             for (const item of itemList) {
                 data.category = item.category;
                 data.item = item.name ;
@@ -360,7 +368,7 @@ function formFilled() {
             return !!jobNumberInput.value && !!cabinetNumberInput.value && !!partSelect.value;
 
         case "supplies":
-            if (itemList.length <= 0) showMessage("Remember to add item to list");
+            if (itemList.length <= 0) showMessage("Remember to add items to list");
             return itemList.length > 0;
 
         case "clock":
@@ -397,5 +405,5 @@ function showMessage(messageText) {
     errorMessage.textContent = messageText;
     setTimeout(() => {
         errorMessage.textContent = "";
-    }, 5000);
+    }, 6000);
 }
