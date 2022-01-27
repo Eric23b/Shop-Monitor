@@ -236,9 +236,11 @@ input{
 }
 
 #message{
-    display: none;
     border: 1px solid #555;
     border-radius: .5rem;
+    visibility: hidden;
+    width: 0;
+    height: 0;
 }
 .form-button{
     width: 100%;

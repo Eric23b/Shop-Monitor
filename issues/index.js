@@ -34,6 +34,7 @@ const clockFirstNameInput = document.querySelector("#first-name-input");
 const note = document.querySelector("#note");
 
 const message = document.querySelector("#message");
+const sendButton = document.querySelector("#send-button");
 const submitButton = document.querySelector("#submit-button");
 
 const partIssuesContainer = document.querySelector("#part-issues-container");
@@ -91,13 +92,14 @@ issuesSelect.addEventListener("change", updateContainer);
 categorySelect.addEventListener("change", updateCategoryItems);
 
 // Send Button Click
-submitButton.addEventListener('click', async (event) => {
-    if (isDev) {
+sendButton.addEventListener('click', async (event) => {
+    // if (isDev) {
+    //     console.log('is dev');
         event.preventDefault();
-    }
+    // }
     
     if (!formFilled()) {
-        event.preventDefault();
+        // event.preventDefault();
         return;
     }
 
@@ -117,6 +119,7 @@ submitButton.addEventListener('click', async (event) => {
             data.show = true;
             await insertDBEntry("issues_schema", "parts_issues", data, serverSettings);
             loadFormMessageForPartIssue();
+            console.log('Part Issue sent');
             break;
 
         case "supplies":
@@ -134,6 +137,7 @@ submitButton.addEventListener('click', async (event) => {
                 await insertDBEntry("issues_schema", "supply_issues", data, serverSettings);
             }
             loadFormMessageForSupplyIssue();
+            console.log('Supply Issue sent');
             break;
 
         case "clock":
@@ -143,23 +147,28 @@ submitButton.addEventListener('click', async (event) => {
             data.firstName = clockFirstNameInput.value;
             await insertDBEntry("issues_schema", "time_clock_issues", data, serverSettings);
             loadFormMessageForClockIssue();
+            console.log('Time Clock Issue sent');
             break;
 
         case "other":
             data.acknowledged = false;
             await insertDBEntry("issues_schema", "other_issues", data, serverSettings);
             loadFormMessageForOtherIssue();
+            console.log('Other Issue sent');
             break;
     
         default:
             break;
     }
 
-    if (isDev) {
-        const a = document.createElement('a');
-        a.href = "/success.html";
-        a.click();
-    }
+    // if (isDev) {
+    //     console.log('is dev');
+    //     const a = document.createElement('a');
+    //     a.href = "/success.html";
+    //     a.click();
+    // }
+
+    submitButton.click();
 });
 
 
@@ -213,7 +222,7 @@ function loadFormMessageForClockIssue() {
     const time = new Date(timeInput.value);
     const options = {weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: 'numeric', minute: 'numeric', hour12: true};
     const formattedTime = time.toLocaleString('en-US', options);
-    message.value += `${clockFirstNameInput.value} forgot to clock in/out at ${formattedTime}\n`;
+    message.value += `${clockFirstNameInput.value} forgot to clock in/out on ${formattedTime}\n`;
 }
 function loadFormMessageForOtherIssue() {
     message.value = "";
