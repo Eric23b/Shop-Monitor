@@ -12,6 +12,7 @@ import {
 
 import {
     getTableDataWithText,
+    getTableDataRow,
     getTableDataWithEditText,
     getTableHeaderRow,
     getTableDataWithCheckbox,
@@ -56,6 +57,7 @@ const otherIssuesTabBtn = document.querySelector("#other-issues-tab-btn");
 const timersTabBtn = document.querySelector("#timers-tab-btn");
 const jobsTabBtn = document.querySelector("#jobs-tab-btn");
 const employeesTabBtn = document.querySelector("#employees-tab-btn");
+const workStationsTabBtn = document.querySelector("#work-stations-tab-btn");
 const supplyListTabBtn = document.querySelector("#supply-list-tab-btn");
 const settingsTabBtn = document.querySelector("#settings-tab-btn");
 
@@ -73,7 +75,7 @@ const otherIssuesTabContainer = document.querySelector("#other-issues-container"
 const otherIssuesTable = document.querySelector("#other-issues-table");
 
 const timersTabContainer = document.querySelector("#timers-container");
-const timersJobFilter = document.querySelector("#timers-job-filter-input");
+// const timersJobFilter = document.querySelector("#timers-job-filter-input");
 const timersTable = document.querySelector("#timers-table");
 
 const jobsTabContainer = document.querySelector("#jobs-container");
@@ -85,6 +87,11 @@ const employeesTabContainer = document.querySelector("#employee-container");
 const employeeNameInput = document.querySelector("#employee-input");
 const addEmployeeButton = document.querySelector("#add-employee-btn");
 const employeesTable = document.querySelector("#employee-table");
+
+const workStationsTabContainer = document.querySelector("#work-stations-container");
+const workStationNameInput = document.querySelector("#work-station-input");
+const addWorkStationButton = document.querySelector("#add-work-stations-btn");
+const workStationsTable = document.querySelector("#work-stations-table");
 
 const supplyListTabContainer = document.querySelector("#supply-list-container");
 const supplyListCategoryInput = document.querySelector("#supply-list-category-input");
@@ -148,7 +155,7 @@ if (password !== "pw558") {
 
 settings.url = serverURL.value = getLocalStorageValue('serverURL') || "";
 settings.authorization = serverAuthorization.value = getLocalStorageValue('serverAuthorization') || "";
-// station = stationName.value = getLocalStorageValue('stationName') || "";
+stationName.value = getLocalStorageValue('stationName') || "";
 
 
 // showSettings();
@@ -217,6 +224,18 @@ addEmployeeButton.addEventListener('click', async () => {
 
     await insertDBEntry(BUSINESS_SCHEMA, EMPLOYEES_TABLE, data, settings, dbActive);
     await loadEmployeeTable();
+});
+
+// Add work station button
+addWorkStationButton.addEventListener('click', async () => {
+    const stationName = workStationNameInput.value.trim();
+
+    if (!stationName) return;
+
+    const data = {name: stationName, active: true};
+
+    await insertDBEntry(BUSINESS_SCHEMA, STATIONS_TABLE, data, settings, dbActive);
+    await loadWorkStationTable();
 });
 
 // Add Button
@@ -389,6 +408,11 @@ async function showTab(tab) {
             employeesTabContainer.style.display = "flex";
             employeesTabBtn.classList.add("active-tab");
             await loadEmployeeTable();
+            break;
+        case "work-stations":
+            workStationsTabContainer.style.display = "flex";
+            workStationsTabBtn.classList.add("active-tab");
+            await loadWorkStationTable();
             break;
         case "supply-list":
             supplyListTabContainer.style.display = "flex";
@@ -659,6 +683,9 @@ async function loadTimersTable() {
 
     events.sort((a, b) => {return a.__createdtime__ - b.__createdtime__});
 
+    const calculatedEvents = [];
+
+    // Calculate task durations
     for (let index = 0; index < events.length; index++) {
         const currentJobEmployeeTask = 
             events[index].jobID + 
@@ -677,110 +704,129 @@ async function loadTimersTable() {
                 if (nextJobEmployeeTask != currentJobEmployeeTask) continue;
 
                 if (events[startIndex].eventType == "start") {
-                    // Error
+                    // Error. Two starts
+                    const totaledJobTask = {
+                        jobID: events[startIndex].jobID,
+                        task: events[startIndex].task,
+                        duration: 0,
+                        completed: false,
+                    }
+                    calculatedEvents.push(totaledJobTask);
                     break;
                 }
                 else if (events[startIndex].eventType == "stop") {
                     const taskMS = events[startIndex].__createdtime__ - events[index].__createdtime__;
                     events[index].taskTime = msToTime(taskMS);
                     events[index].taskMS = taskMS;
-                    events[index].wasCompleted = true;
+                    // events[index].wasCompleted = true;
+
+                    const totaledJobTask = {
+                        jobID: events[startIndex].jobID,
+                        task: events[startIndex].task,
+                        duration: taskMS,
+                        completed: true,
+                    }
+                    calculatedEvents.push(totaledJobTask);
                     break;
                 }
             }
         }
     }
 
-    console.log(events);
+    // Total task for each job
+    const addedTasks = [];
+    calculatedEvents.forEach((event) => {
+        let foundJobTask = false;
+        addedTasks.forEach((task) => {
+            if ((task.jobID == event.jobID) && (task.task == event.task)) {
+                if (event.completed) {
+                    task.durationMS += event.duration;
+                    task.completedTaskCount++;
+                }
+                else {
+                    task.uncompletedTaskCount++;
+                }
+                foundJobTask = true;
+            }
+        });
+        if (!foundJobTask) {
+            addedTasks.push({
+                jobID: event.jobID,
+                task: event.task,
+                completedTaskCount: event.completed ? 1 : 0,
+                uncompletedTaskCount: event.completed ? 0 : 1,
+                durationMS: event.duration,
+            });
+        }
+    });
+
+    // Add job names
+    const jobs = await getDBEntrees(BUSINESS_SCHEMA, JOBS_TABLE, "id", "*", settings, dbActive);
+    addedTasks.forEach((task) => {
+        jobs.forEach((job) => {
+            if (task.jobID == job.id) {
+                task.jobName = job.name;
+            }
+        });
+    });
+
+    // Collect all task names (Sanding, Spraying, etc)
+    const tasksList = await getUniqueColumnValues(LOGS_SCHEMA, TIMER_TABLE, "task", settings, dbActive);
+    
+    const tableArray = [];
+
+    // Add job names to table array
+    const addedJobNames = [];
+    jobs.forEach(job => {
+        if (addedJobNames.indexOf(job.name) === -1) {
+            addedJobNames.push(job.name);
+            tableArray.push([job.name]);
+        }
+    });
+
+    // Build Table Array
+    for (const jobTask of addedTasks) {
+        let row = 0;
+        let column = 0;
+        for (let rowIndex = 0; rowIndex < tableArray.length; rowIndex++) {
+            // const tableArrayRow = tableArray[rowIndex];
+            if (tableArray[rowIndex][0] === jobTask.jobName) {
+                row = rowIndex;
+                break;
+            }
+        }
+        for (let columnIndex = 0; columnIndex < tasksList.length; columnIndex++) {
+            // const task = tasksList[columnIndex];
+            if (tasksList[columnIndex] === jobTask.task) {
+                column = columnIndex + 1;
+                break;
+            }
+        }
+        
+        tableArray[row][column] = `${msToTime(jobTask.durationMS)} ${jobTask.completedTaskCount}/${jobTask.uncompletedTaskCount}`;
+        // console.log(row, column, jobTask.task, jobTask.durationMS);
+    }
+
+    let rowsOfData = "";
+    tableArray.forEach((row) => {
+        rowsOfData += getTableDataRow(row);
+    });
+
+    timersTable.innerHTML = getTableHeaderRow(["Job", ...tasksList]) + rowsOfData;
+    
     function msToTime(s) {
-        var ms = s % 1000;
+        const ms = s % 1000;
         s = (s - ms) / 1000;
-        var secs = s % 60;
+        const secs = s % 60;
         s = (s - secs) / 60;
-        var mins = s % 60;
-        var hrs = (s - mins) / 60;
+        const mins = s % 60;
+        const hrs = (s - mins) / 60;
       
-        return hrs + ':' + mins + ':' + secs + '.' + ms;
+        return hrs + ':' + mins + ':' + secs;
+        // return hrs + ':' + mins + ':' + secs + '.' + ms;
       }
 
     return;
-    // const tasksList = await getUniqueColumnValues(LOGS_SCHEMA, TIMER_TABLE, "task", settings, dbActive);
-    // const jobsList = await getUniqueColumnValues(LOGS_SCHEMA, TIMER_TABLE, "jobName", settings, dbActive);
-    
-    // let totals = [];
-    // // Loop through job names
-    // for (const jobName of jobsList) {
-    //     const eventArray = await getDBEntrees(LOGS_SCHEMA, TIMER_TABLE, "jobName", jobName, settings, dbActive);
-    //     if ((!eventArray) || (eventArray.error)) continue;
-    //     eventArray.sort((a, b) => {return a.__createdtime__ - b.__createdtime__});
-
-
-
-    //     // Loop through events for each job
-    //     for (let eventIndex = 0; eventIndex < eventArray.length; eventIndex++) {
-    //         const element = eventArray[eventIndex];
-    //         console.log(jobName, element);
-
-    //         for (const task of tasksList) {
-                
-    //         }
-    //     }
-    // }
-
-    // const filter = timersJobFilter.value || "*";
-
-    // const response = await getDBEntrees(LOGS_SCHEMA, TIMER_TABLE, "jobName", filter, settings, dbActive);
-    
-    // if ((!response) || (response.error)) return;
-
-    // response.sort((a, b) => {
-    //     const jobNameA = String(a.jobName).toUpperCase();
-    //     const jobNameB = String(b.jobName).toUpperCase();
-    //     if (jobNameA < jobNameB) return -1;
-    //     if (jobNameA > jobNameB) return 1;
-    //     return 0;
-    // });
-
-    // let jobsListObject = {};
-
-    // for (const job of response) {
-    //     if (jobsListObject[job.jobID]) {
-    //         jobsListObject[job.jobID].push(job);
-    //     }
-    //     else {
-    //         jobsListObject[job.jobID] = [];
-    //         jobsListObject[job.jobID].push(job);
-    //     }
-    // }
-
-    // for (const jobID in jobsListObject) {
-    //     if (Object.hasOwnProperty.call(jobsListObject, jobID)) {
-    //         const jobTimerArray = jobsListObject[jobID];
-    //         // console.log(jobTimerArray);
-    //     }
-    // }
-
-    // console.log(jobs);
-
-    timersTable.innerHTML = getTableHeaderRow(["Job", ...tasksList]);
-
-    // for (const entry of response) {
-    //     const row = document.createElement('tr');
-    //     row.addEventListener('click', async () => {
-    //         console.log(entry.jobID);
-    //     });
-
-    //     const jobName = getTableDataWithText(entry.jobName);
-
-    //     const employeeName = getTableDataWithText(entry.employeeName);
-
-    //     const task = getTableDataWithText(entry.task);
-
-    //     const eventType = getTableDataWithText(entry.eventType);
-
-    //     appendChildren(row, [jobName, employeeName, task, eventType]);
-    //     timersTable.appendChild(row);
-    // };
 }
 
 // Jobs Table
@@ -877,8 +923,65 @@ async function loadEmployeeTable() {
             }
         );
 
-        appendChildren(row, [name, stations,active, deleteTD]);
+        appendChildren(row, [name, stations, active, deleteTD]);
         employeesTable.appendChild(row);
+    };
+}
+
+// Work Station Table
+async function loadWorkStationTable() {
+    const response = await getDBEntrees(BUSINESS_SCHEMA, STATIONS_TABLE, "__createdtime__", "*", settings, dbActive);
+    
+    if ((!response) || (response.error)) return;
+
+    response.sort((a, b) => {
+        const nameA = String(a.name).toUpperCase();
+        const nameB = String(b.name).toUpperCase();
+        if (nameA < nameB) return -1;
+        if (nameA > nameB) return 1;
+        return 0;
+    });
+
+    workStationsTable.innerHTML = getTableHeaderRow(["Name", "Tasks", "Active", "Delete"]);
+
+    for (const entry of response) {
+        const row = document.createElement('tr');
+
+        const name = getTableDataWithText(entry.name);
+        name.onclick = () => {
+            showPrompt("Station name", entry.name, async (newName) => {
+                await updateDBEntry(BUSINESS_SCHEMA, STATIONS_TABLE, {id: entry.id, name: newName}, settings, dbActive);
+                await loadWorkStationTable();
+            });
+        }
+        name.style.cursor = "pointer";
+
+        const tasks = getTableDataWithText(entry.tasks);
+        tasks.onclick = () => {
+            showPrompt("Tasks", entry.tasks, async (newTask) => {
+                await updateDBEntry(BUSINESS_SCHEMA, STATIONS_TABLE, {id: entry.id, tasks: newTask}, settings, dbActive);
+                await loadWorkStationTable();
+            });
+        }
+        tasks.style.cursor = "pointer";
+
+        const active = getTableDataWithCheckbox(
+            entry.active,
+            async (event) => {
+                const isChecked = event.target.checked;
+                await updateDBEntry(BUSINESS_SCHEMA, STATIONS_TABLE, {id: entry.id, active: isChecked}, settings, dbActive);
+            }
+        );
+
+        const deleteTD = getTableDataWithDeleteButton(
+            async () => {
+                await deleteDBEntry(BUSINESS_SCHEMA, STATIONS_TABLE, entry.id, settings, dbActive);
+                await loadWorkStationTable();
+            }
+        );
+
+        appendChildren(row, [name, tasks, active, deleteTD]);
+        workStationsTable.appendChild(row);
     };
 }
 
@@ -970,7 +1073,7 @@ function showPrompt(labelText, defaultText, OKCallback, cancelCallback) {
 
     promptLabel.textContent = labelText;
 
-    promptInput.value = defaultText;
+    promptInput.value = defaultText || "";
     promptInput.select();
     promptInput.onkeypress = (event) => {
         if (event.key === "Enter") okClick();

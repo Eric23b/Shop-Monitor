@@ -20,6 +20,7 @@
             <button id="timers-tab-btn" class="tab-btn" tabContainer="timers">Timers</button>
             <button id="jobs-tab-btn" class="tab-btn" tabContainer="jobs">Jobs</button>
             <button id="employees-tab-btn" class="tab-btn" tabContainer="employees">Employees</button>
+            <button id="work-stations-tab-btn" class="tab-btn" tabContainer="work-stations">Work stations</button>
             <button id="supply-list-tab-btn" class="tab-btn" tabContainer="supply-list">Supply list</button>
             <button id="settings-tab-btn" class="tab-btn" tabContainer="settings">Settings</button>
         </div>
@@ -52,16 +53,17 @@
         
         <!-- Timers -->
         <div id="timers-container" class="tab-container">
-            <label class="small-input-label">Job filter:
-                <input id="timers-job-filter-input" class="labeled-input" type="text" value="*" list="category-datalist">
-            </label>
+            <!-- <label class="small-input-label">Job filter:
+                <input id="timers-job-filter-input" class="labeled-input" type="text" value="*">
+            </label> -->
+            <label class="small-font">H:M:S Completed/Incomplete</label>
             <table id="timers-table" class="table"></table>
         </div>
         
         <!-- Jobs -->
         <div id="jobs-container" class="tab-container">
             <label class="small-input-label">New job name
-                <input id="job-input" class="labeled-input" type="text" list="category-datalist">
+                <input id="job-input" class="labeled-input" type="text">
             </label>
             <button id="add-job-btn" class="small-btn">Add</button>
             <table id="jobs-table" class="table"></table>
@@ -70,10 +72,19 @@
         <!-- Employees -->
         <div id="employee-container" class="tab-container">
             <label class="small-input-label">New employee name
-                <input id="employee-input" class="labeled-input" type="text" list="category-datalist">
+                <input id="employee-input" class="labeled-input" type="text">
             </label>
             <button id="add-employee-btn" class="small-btn">Add</button>
             <table id="employee-table" class="table"></table>
+        </div>
+        
+        <!-- Work Stations -->
+        <div id="work-stations-container" class="tab-container">
+            <label class="small-input-label">New work station name
+                <input id="work-station-input" class="labeled-input" type="text">
+            </label>
+            <button id="add-work-stations-btn" class="small-btn">Add</button>
+            <table id="work-stations-table" class="table"></table>
         </div>
         
         <!-- Supply List Editor -->
