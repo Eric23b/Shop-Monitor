@@ -7,6 +7,14 @@ export function getTableHeaderRow(headers) {
     htmlText += "</tr>";
     return htmlText;
 }
+export function getTableDataRow(dataArray) {
+    let htmlText = "<tr>";
+    for (const data of dataArray) {
+        htmlText += `<td>${data || ""}</td>`;
+    }
+    htmlText += "</tr>";
+    return htmlText;
+}
 
 export function getTableDataWithText(text, AddAlertText) {
     const td = document.createElement('td');
