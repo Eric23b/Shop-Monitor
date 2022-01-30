@@ -103,6 +103,7 @@ async function loadFromDB() {
     else {
         if (tasksResponse.length > 0) {
             const tasks = tasksResponse[0].tasks.split(',');
+            tasks.forEach(task => {task = task.trim();console.log();})
             loadSelectFromArray(taskSelect, "", false, tasks);
         }
         else {
@@ -127,12 +128,12 @@ function addEventToDB(event) {
         LOGS_SCHEMA, 
         TIMER_TABLE,
         {
-            employeeName: employeesSelect[employeesSelect.value].textContent,
+            employeeName: employeesSelect[employeesSelect.value].textContent.trim(),
             employeeID: employeesSelect[employeesSelect.value].getAttribute('db_id'),
-            jobName: jobsSelect[jobsSelect.value].textContent,
+            jobName: jobsSelect[jobsSelect.value].textContent.trim(),
             jobID: jobsSelect[jobsSelect.value].getAttribute('db_id'),
-            station: station,
-            task: taskSelect[taskSelect.value].textContent,
+            station: station.trim(),
+            task: taskSelect[taskSelect.value].textContent.trim(),
             eventType: event,
         }, 
         serverSettings
