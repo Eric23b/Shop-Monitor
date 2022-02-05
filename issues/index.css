@@ -73,8 +73,9 @@ body{
 
 #timer-btn {
     flex-shrink: 1;
+    align-self: flex-end;
     display: block;
-    margin-left: 1rem;
+    margin: 0 1rem 0 0;
     border: none;
     color: var(--color);
     background-color: transparent;
