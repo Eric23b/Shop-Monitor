@@ -73,17 +73,15 @@ body{
 
 #timer-btn {
     flex-shrink: 1;
-    align-self: flex-end;
     display: block;
     margin: 0 1rem 0 0;
     border: none;
     color: var(--color);
     background-color: transparent;
-    font-size: 3rem;
+    font-size: 2em;
     font-weight: bold;
     cursor: pointer;
     text-decoration: none;
-    /* transform: translate(0, -1.25rem); */
     opacity: 0.7;
 }
 #timer-btn:hover {
