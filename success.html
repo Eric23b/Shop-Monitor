@@ -13,6 +13,12 @@
         <a href="/issues.html" style="color: var(--color);text-decoration: none;font-size: x-large;">⇦ Back</a>
     </div>
     <script>
+        setTimeout(() => {
+            const a = document.createElement('a');
+            a.href = "./issues.html";
+            a.click();
+        }, 5000);
+
         const theme = getLocalStorageValue('theme') || "light";
         document.documentElement.setAttribute('data-color-theme', theme);
 
