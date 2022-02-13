@@ -135,6 +135,8 @@ function addEventToDB(event) {
             station: station.trim(),
             task: taskSelect[taskSelect.value].textContent.trim(),
             eventType: event,
+            date: (new Date()).toLocaleDateString(),
+            time: (new Date()).toLocaleTimeString(),
         }, 
         serverSettings
     );
