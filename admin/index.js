@@ -85,11 +85,13 @@ const employeeTable = document.querySelector("#jobs-table");
 
 const employeesTabContainer = document.querySelector("#employee-container");
 const employeeNameInput = document.querySelector("#employee-input");
+const employeeWorkStationsInput = document.querySelector("#employee-work-stations-input");
 const addEmployeeButton = document.querySelector("#add-employee-btn");
 const employeesTable = document.querySelector("#employee-table");
 
 const workStationsTabContainer = document.querySelector("#work-stations-container");
 const workStationNameInput = document.querySelector("#work-station-input");
+const workStationTasksInput = document.querySelector("#work-station-tasks-input");
 const addWorkStationButton = document.querySelector("#add-work-stations-btn");
 const workStationsTable = document.querySelector("#work-stations-table");
 
@@ -217,25 +219,32 @@ addJobButton.addEventListener('click', async () => {
 // Add employee button
 addEmployeeButton.addEventListener('click', async () => {
     const employeeName = employeeNameInput.value.trim();
+    const workStations = employeeWorkStationsInput.value.trim();
 
     if (!employeeName) return;
 
-    const data = {name: employeeName, active: true};
+    const data = {name: employeeName, stations: workStations, active: true};
 
     await insertDBEntry(BUSINESS_SCHEMA, EMPLOYEES_TABLE, data, settings, dbActive);
     await loadEmployeeTable();
+
+    employeeNameInput.value = "";
 });
 
 // Add work station button
 addWorkStationButton.addEventListener('click', async () => {
     const stationName = workStationNameInput.value.trim();
+    const tasks = workStationTasksInput.value.trim();
 
     if (!stationName) return;
 
-    const data = {name: stationName, active: true};
+    const data = {name: stationName, tasks: tasks, active: true};
 
     await insertDBEntry(BUSINESS_SCHEMA, STATIONS_TABLE, data, settings, dbActive);
     await loadWorkStationTable();
+
+    workStationNameInput.value = "";
+    workStationTasksInput.value = "";
 });
 
 // Add Button
