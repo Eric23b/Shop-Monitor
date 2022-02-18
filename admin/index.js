@@ -108,6 +108,7 @@ const darkThemeCheckbox = document.querySelector("#dark-theme-checkbox");
 const serverURL = document.querySelector("#server-url");
 const serverAuthorization = document.querySelector("#server-authorization");
 const stationName = document.querySelector("#station-name");
+const calendarURL = document.querySelector("#calendar-url");
 const saveDataBaseButton = document.querySelector("#save-db-backup-btn");
 const runDBSetupBtn = document.querySelector("#run-db-setup-btn");
 const removePasswordBtn = document.querySelector("#remove-password-btn");
@@ -158,6 +159,7 @@ if (password !== "pw558") {
 settings.url = serverURL.value = getLocalStorageValue('serverURL') || "";
 settings.authorization = serverAuthorization.value = getLocalStorageValue('serverAuthorization') || "";
 stationName.value = getLocalStorageValue('stationName') || "";
+calendarURL.value = getLocalStorageValue('calendarURL') || "";
 
 
 // showSettings();
@@ -167,7 +169,7 @@ if (serverURL.value && serverAuthorization.value) {
     } catch (error) {
         console.log(error);
     }
-    showTab("part-issue");
+    showTabContent("part-issue");
     await checkForUnresolvedIssues();
     
     setInterval(async () => {
@@ -176,7 +178,7 @@ if (serverURL.value && serverAuthorization.value) {
     }, 10000);
 }
 else {
-    showTab("settings");
+    showTabContent("settings");
 }
 
 
@@ -199,7 +201,7 @@ tabHeader.addEventListener('click', async (event) => {
     event.target.classList.add("active-tab");
 
     const containerID = event.target.attributes.tabContainer.value;
-    await showTab(containerID);
+    await showTabContent(containerID);
 
     await checkForUnresolvedIssues();
 });
@@ -369,12 +371,17 @@ stationName.addEventListener('blur', () => {
     // station = stationName.value;
 });
 
+// Save calendar URL on blur
+calendarURL.addEventListener('blur', () => {
+    setLocalStorageValue('calendarURL', calendarURL.value);
+});
+
 
 
 
 // ---FUNCTIONS---
 
-async function showTab(tab) {
+async function showTabContent(tab) {
     hideTabContainers();
 
     const buttons = document.querySelectorAll("#tab-header .tab-btn");
