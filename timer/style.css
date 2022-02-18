@@ -171,7 +171,7 @@ button:disabled{
     opacity: 1;
 }
 
-#send-issue-link{
+/* #send-issue-link{
     display: block;
     width: max-content;
     text-decoration: none;
@@ -181,13 +181,30 @@ button:disabled{
 }
 #send-issue-link:hover {
     opacity: 1;
+} */
+
+.link {
+    flex-shrink: 1;
+    display: block;
+    margin: 0 2rem 0 0;
+    border: none;
+    color: var(--color);
+    background-color: transparent;
+    font-size: 2em;
+    font-weight: bold;
+    cursor: pointer;
+    text-decoration: none;
+    opacity: 0.7;
+}
+.link:hover {
+    opacity: 1;
 }
 
 #message{
     /* color: var(--accent_color); */
     margin: 0;
     padding: 0;
-    /* width: 100%; */
+    width: 100%;
     text-align: center;
     /* flex-basis: 1; */
 }
