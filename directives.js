@@ -23,7 +23,7 @@ export const TABLE_ATTRIBUTES = {
     timeClockIssues: ["firstName", "date", "acknowledged", "missedTime", "note", "time"],
     otherIssues: ["date", "acknowledged", "note", "time"],
 
-    timer_logs: ["employeeName", "employeeID", "eventType", "jobName", "jobID", "station", "task"],
+    timer_logs: ["employeeName", "employeeID", "eventType", "jobName", "jobID", "station", "task", "time", "date"],
 
     employees: ["active", "name", "stations"],
     jobs: ["active", "finishType", "name"],
