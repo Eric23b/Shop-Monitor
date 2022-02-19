@@ -152,10 +152,12 @@ if (password !== "pw558") {
             const a = document.createElement('a');
             a.href = "/";
             a.click();
-        }
+        },
+        true
     );
 }
 
+// Retrieve settings values
 settings.url = serverURL.value = getLocalStorageValue('serverURL') || "";
 settings.authorization = serverAuthorization.value = getLocalStorageValue('serverAuthorization') || "";
 stationName.value = getLocalStorageValue('stationName') || "";
@@ -1083,8 +1085,9 @@ function setLocalStorageValue(key, value) {
     window.localStorage.setItem(key, JSON.stringify(value));
 }
 
-function showPrompt(labelText, defaultText, OKCallback, cancelCallback) {
+function showPrompt(labelText, defaultText, OKCallback, cancelCallback, hideBackground) {
     promptBackground.style.display = "flex";
+    promptBackground.style.backgroundColor = hideBackground ? "var(--background_color)" : "var(--background_transparent_color)";
     // promptBackground.onclick = cancelClick;
 
     promptLabel.textContent = labelText;
