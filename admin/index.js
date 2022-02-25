@@ -108,7 +108,6 @@ const darkThemeCheckbox = document.querySelector("#dark-theme-checkbox");
 const serverURL = document.querySelector("#server-url");
 const serverAuthorization = document.querySelector("#server-authorization");
 const stationName = document.querySelector("#station-name");
-const calendarURL = document.querySelector("#calendar-url");
 const saveDataBaseButton = document.querySelector("#save-db-backup-btn");
 const runDBSetupBtn = document.querySelector("#run-db-setup-btn");
 const removePasswordBtn = document.querySelector("#remove-password-btn");
@@ -161,7 +160,6 @@ if (password !== "pw558") {
 settings.url = serverURL.value = getLocalStorageValue('serverURL') || "";
 settings.authorization = serverAuthorization.value = getLocalStorageValue('serverAuthorization') || "";
 stationName.value = getLocalStorageValue('stationName') || "";
-calendarURL.value = getLocalStorageValue('calendarURL') || "";
 
 
 // showSettings();
@@ -371,11 +369,6 @@ serverAuthorization.addEventListener('blur', () => {
 stationName.addEventListener('blur', () => {
     setLocalStorageValue('stationName', stationName.value);
     // station = stationName.value;
-});
-
-// Save calendar URL on blur
-calendarURL.addEventListener('blur', () => {
-    setLocalStorageValue('calendarURL', calendarURL.value);
 });
 
 
