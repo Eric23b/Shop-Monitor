@@ -2,6 +2,7 @@
 :root{
     --color: #191d25;
     --background_color: #edeff3;
+    --background_color_transparent: rgba(237, 239, 243, 0.8);
     --background_hover_color: #b2b8c6;
     --border_color: #454750;
     --active: #191d25;
@@ -11,10 +12,11 @@
     --accent_color: #0ba27a;
 }
 /* @media (prefers-color-scheme: dark) { */
-/* [data-color-theme='dark']{ */
-    :root{
+[data-color-theme='dark']{
+    /* :root{ */
         --color: #e0e0eb;
         --background_color: #13131a;
+        --background_color_transparent: rgba(19, 19, 26, 0.8);
         --background_hover_color: #2b2b31;
         --border_color: #51525a;
         --active: #e0e0eb;
@@ -22,8 +24,8 @@
         --yes: springgreen;
         --no: tomato;
         --accent_color: rgb(44, 238, 186);
-    }
-/* } */
+    /* } */
+}
 
 ::-moz-selection{
     color: var(--background_color);
@@ -115,7 +117,7 @@ select{
 } */
 
 .add-check-item-button{
-    font-size: 1.25em;
+    font-size: large;
     width: 100%;
     /* height: 2rem; */
     border: 1px solid #555;
@@ -124,7 +126,7 @@ select{
     color: var(--color);
     background-color: var(--background_color);
 }
-.add-check-item-button:hover{
+.add-check-item-button:active{
     color: var(--background_color);
     background-color: var(--color);
 }
@@ -168,7 +170,7 @@ select{
 #refresh-page{
     display: block;
     text-decoration: none;
-    font-size: 3rem;
+    font-size: 2.5rem;
     font-weight: bold;
     color: var(--color);
     padding: 0;
@@ -186,7 +188,7 @@ select{
     border: none;
     color: var(--color);
     background-color: transparent;
-    font-size: 2em;
+    font-size: 1.5em;
     font-weight: bold;
     cursor: pointer;
     text-decoration: none;
@@ -221,16 +223,84 @@ select{
     margin: 0;
     text-align: center;
 }
-.due-date{
+.ship-date{
     text-align: center;
 }
 .notes{
 
 }
-.check-list-item{
-    display: block;
+.check-list-container{
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 0.25rem;
+}
+.check-container{
+    max-width: 10rem;
     margin: 0.25rem;
+    width: 100%;
+}
+.check-box{
+    margin: 0 0.5rem 0 0;
+}
+.check-list-item{
+    width: 10rem;
+    /* display: block; */
+    -ms-user-select:none;
+    -moz-user-select:none;
+    -webkit-user-select:none;
+    -webkit-touch-callout: none;
+    -khtml-user-select: none;
+     user-select:none;
 }
 .check-list-item input{
     margin: 0 0.5rem 0 0;
+}
+
+
+/* MODAL */
+.modal-background{
+    position: fixed;
+    inset: 0;
+    display: none;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    background: var(--background_color_transparent);
+    z-index: 10;
+}
+.modal-container{
+    padding: 0.5rem;
+    border: 1px solid var(--border_color);
+    border-radius: 0.5rem;
+    background: var(--background_color);
+}
+.modal-title{
+
+}
+.modal-input{
+    border: 1px solid var(--border_color);
+    border-radius: 0.25rem;
+    margin-bottom: 1rem;
+    font-size: larger;
+    color: var(--color);
+    background: var(--background_color);
+}
+.modal-buttons-container{
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-end;
+    gap: 1rem;
+}
+.modal-button{
+    cursor: pointer;
+    padding: 0.5rem;
+    font-size: larger;
+    border: 1px solid var(--border_color);
+    border-radius: 0.25rem;
+    color: var(--color);
+    background: var(--background_color);
+}
+.modal-button:active{
+    color: var(--background_color);
+    background: var(--color);
 }

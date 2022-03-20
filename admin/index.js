@@ -80,6 +80,8 @@ const timersTable = document.querySelector("#timers-table");
 
 const jobsTabContainer = document.querySelector("#jobs-container");
 const newJobNameInput = document.querySelector("#job-input");
+const newJobShipDateInput = document.querySelector("#job-ship-date-input");
+const newJobNoteInput = document.querySelector("#job-note-input");
 const addJobButton = document.querySelector("#add-job-btn");
 const employeeTable = document.querySelector("#jobs-table");
 
@@ -209,10 +211,12 @@ tabHeader.addEventListener('click', async (event) => {
 // Add job button
 addJobButton.addEventListener('click', async () => {
     const jobName = newJobNameInput.value.trim();
+    const jobShipDate = newJobShipDateInput.value;
+    const jobNote = newJobNoteInput.value;
 
     if (!jobName) return;
 
-    const data = {name: jobName, active: true};
+    const data = {name: jobName, shipDate: jobShipDate, note: jobNote, active: true};
 
     await insertDBEntry(BUSINESS_SCHEMA, JOBS_TABLE, data, settings, dbActive);
     await loadJobsTable();
@@ -848,7 +852,7 @@ async function loadJobsTable() {
 
     response.sort((a, b) => {return b.__createdtime__ - a.__createdtime__});
 
-    employeeTable.innerHTML = getTableHeaderRow(["Name", "Active", "Delete"]);
+    employeeTable.innerHTML = getTableHeaderRow(["Name", "Ship Date", "Note", "Active", "Delete"]);
 
     for (const entry of response) {
         const row = document.createElement('tr');
@@ -861,6 +865,27 @@ async function loadJobsTable() {
             });
         }
         name.style.cursor = "pointer";
+
+        const shipDate = getTableDataWithText(entry.shipDate);
+        shipDate.onclick = () => {
+            showPrompt("Ship Date", entry.shipDate, async (newShipDate) => {
+                    await updateDBEntry(BUSINESS_SCHEMA, JOBS_TABLE, {id: entry.id, shipDate: newShipDate}, settings, dbActive);
+                    await loadJobsTable();
+                },
+                async () => {},
+                false,
+                "date");
+        }
+        shipDate.style.cursor = "pointer";
+
+        const note = getTableDataWithText(entry.note);
+        note.onclick = () => {
+            showPrompt("Note", entry.note, async (newNote) => {
+                    await updateDBEntry(BUSINESS_SCHEMA, JOBS_TABLE, {id: entry.id, note: newNote}, settings, dbActive);
+                    await loadJobsTable();
+                });
+        }
+        note.style.cursor = "pointer";
 
         const active = getTableDataWithCheckbox(
             entry.active,
@@ -877,7 +902,7 @@ async function loadJobsTable() {
             }
         );
 
-        appendChildren(row, [name, active, deleteTD]);
+        appendChildren(row, [name, shipDate, note, active, deleteTD]);
         employeeTable.appendChild(row);
     };
 }
@@ -1078,7 +1103,7 @@ function setLocalStorageValue(key, value) {
     window.localStorage.setItem(key, JSON.stringify(value));
 }
 
-function showPrompt(labelText, defaultText, OKCallback, cancelCallback, hideBackground) {
+function showPrompt(labelText, defaultText, OKCallback, cancelCallback, hideBackground, inputType) {
     promptBackground.style.display = "flex";
     promptBackground.style.backgroundColor = hideBackground ? "var(--background_color)" : "var(--background_transparent_color)";
     // promptBackground.onclick = cancelClick;
@@ -1086,6 +1111,7 @@ function showPrompt(labelText, defaultText, OKCallback, cancelCallback, hideBack
     promptLabel.textContent = labelText;
 
     promptInput.value = defaultText || "";
+    promptInput.setAttribute('type', inputType ? inputType : "text");
     promptInput.select();
     promptInput.onkeypress = (event) => {
         if (event.key === "Enter") okClick();

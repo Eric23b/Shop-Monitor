@@ -26,6 +26,6 @@ export const TABLE_ATTRIBUTES = {
     timer_logs: ["employeeName", "employeeID", "eventType", "jobName", "jobID", "station", "task", "time", "date"],
 
     employees: ["active", "name", "stations"],
-    jobs: ["active", "finishType", "name"],
+    jobs: ["active", "finishType", "name", "checklist", "shipDate", "note"],
     stations: ["active", "name", "tasks"],
 }

@@ -10,75 +10,52 @@
 </head>
 <body>
     <div class="flex-row">
-        <a id="refresh-page" href="/timer.html" title="Reload page">↺</a>
+        <a id="refresh-page" href="/jobs.html" title="Reload page">↺</a>
         <h2 id="message"></h1>
-        <a class="link" id="send-issue-link" href="/issues.html" title="Send issue">Issue</a>
+        <a class="link" href="/issues.html" title="Send issue">Issue</a>
+        <a class="link" href="/timer.html" title="Send issue">Timer</a>
     </div>
 
-    <section class="flex-grid">
+    <section id="cards-container" class="flex-grid">
         <section class="card">
             <h2 class="card-title">#13625</h2>
-            <h3 class="due-date" title="Year Month Day">Ship: 2022-05-08</h3>
+            <h3 class="ship-date" title="Year Month Day">Ship: 2022-05-08</h3>
             <p class="notes">A really big job!</p>
-            <section class="check-list">
-                <label class="check-list-item"><input type="checkbox">Cut cabinet parts <button>-</button></label>
-                <label class="check-list-item"><input type="checkbox">Cut veneers</label>
-                <label class="check-list-item"><input type="checkbox">Band cabinet parts</label>
-                <label class="check-list-item"><input type="checkbox">Band veneers</label>
-                <label class="check-list-item"><input type="checkbox">Assemble cabinets</label>
+            <section class="check-list-container">
+                <div class="check-container"><input id="check-1" type="checkbox"><label class="check-list-item" for="check-1">Cut cabinet parts</label></div>
+                <div class="check-container"><input id="check-2" type="checkbox"><label class="check-list-item" for="check-2">Cut cabinet </label></div>
             </section>
             <button class="add-check-item-button">+</button>
         </section>
-        <section class="card">
-            <h2 class="card-title">#13625</h2>
-            <h3 class="due-date" title="Year Month Day">Ship: 2022-05-08</h3>
-            <p class="notes">A really big job!</p>
-            <section class="check-list">
-                <label class="check-list-item"><input type="checkbox">Cut cabinet parts <button>-</button></label>
-                <label class="check-list-item"><input type="checkbox">Cut veneers</label>
-                <label class="check-list-item"><input type="checkbox">Band cabinet parts</label>
-                <label class="check-list-item"><input type="checkbox">Band veneers</label>
-                <label class="check-list-item"><input type="checkbox">Assemble cabinets</label>
-            </section>
-            <button class="add-check-item-button">+</button>
-        </section>
-        <section class="card">
-            <h2 class="card-title">#13625</h2>
-            <h3 class="due-date" title="Year Month Day">Ship: 2022-05-08</h3>
-            <p class="notes">A really big job!</p>
-            <section class="check-list">
-                <label class="check-list-item"><input type="checkbox">Cut cabinet parts <button>-</button></label>
-                <label class="check-list-item"><input type="checkbox">Cut veneers</label>
-                <label class="check-list-item"><input type="checkbox">Assemble cabinets</label>
-            </section>
-            <button class="add-check-item-button">+</button>
-        </section>
-        <section class="card">
-            <h2 class="card-title">#13625</h2>
-            <h3 class="due-date" title="Year Month Day">Ship: 2022-05-08</h3>
-            <p class="notes">A really big job!</p>
-            <section class="check-list">
-                <label class="check-list-item"><input type="checkbox">Cut cabinet parts <button>-</button></label>
-                <label class="check-list-item"><input type="checkbox">Cut veneers</label>
-                <label class="check-list-item"><input type="checkbox">Band cabinet parts</label>
-                <label class="check-list-item"><input type="checkbox">Band veneers</label>
-                <label class="check-list-item"><input type="checkbox">Assemble cabinets</label>
-            </section>
-            <button class="add-check-item-button">+</button>
-        </section>
-        <section class="card">
-            <h2 class="card-title">#13625</h2>
-            <h3 class="due-date" title="Year Month Day">Ship: 2022-05-08</h3>
-            <p class="notes">A really big job!</p>
-            <section class="check-list">
-                <label class="check-list-item"><input type="checkbox">Cut cabinet parts <button>-</button></label>
-                <label class="check-list-item"><input type="checkbox">Cut veneers</label>
-                <label class="check-list-item"><input type="checkbox">Band cabinet parts</label>
-                <label class="check-list-item"><input type="checkbox">Band veneers</label>
-                <label class="check-list-item"><input type="checkbox">Assemble cabinets</label>
-            </section>
-            <button class="add-check-item-button">Add checkbox</button>
-        </section>
+    </section>
+
+    <datalist id="tasks">
+        <option value="Chocolate">
+        <option value="Coconut">
+        <option value="Mint">
+        <option value="Strawberry">
+        <option value="Vanilla">
+    </datalist>
+
+    <section id="add-check-item-modal" class="modal-background">
+        <div class="modal-container">
+            <h2 class="modal-title">Add check item</h2>
+            <input id="add-checkbox-input" class="modal-input" type="text" placeholder="task">
+            <div class="modal-buttons-container">
+                <button id="add-checkbox-cancel-btn" class="modal-button">Cancel</button>
+                <button id="add-checkbox-ok-btn" class="modal-button">OK</button>
+            </div>
+        </div>
+    </section>
+
+    <section id="yes-no-item-modal" class="modal-background">
+        <div class="modal-container">
+            <h2 class="modal-title">Delete check item?</h2>
+            <div class="modal-buttons-container">
+                <button id="no-btn" class="modal-button">No</button>
+                <button id="yes-btn" class="modal-button">Yes</button>
+            </div>
+        </div>
     </section>
 </body>
 </html>
