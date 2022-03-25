@@ -19,6 +19,8 @@ const settings = {
 
 const cardsContainer = document.querySelector("#cards-container");
 
+const sort = document.querySelector("#sort");
+
 const addCheckboxModal = document.querySelector("#add-check-item-modal");
 const addCheckboxModalInput = document.querySelector("#add-checkbox-input");
 const addCheckboxModalOk = document.querySelector("#add-checkbox-ok-btn");
@@ -30,6 +32,7 @@ const yesNoModalNoBtn = document.querySelector("#no-btn");
 
 const tasksDataList = document.querySelector("#tasks");
 
+// INIT CODE
 
 // Retrieve settings values
 settings.url = getLocalStorageValue('serverURL') || "";
@@ -40,15 +43,68 @@ setTheme();
 loadPartIssues();
 
 
+// EVENT LISTENERS
+
+window.onkeydown = (e) => {
+    if (e.key === "8" && e.ctrlKey) {
+        const adminLink = document.createElement('a');
+        adminLink.href = "admin.html";
+        adminLink.click();
+    }
+}
+
+sort.addEventListener('change', loadPartIssues);
+
 // Load Parts Issues Table
 async function loadPartIssues() {
     const response = await getDBEntrees(BUSINESS_SCHEMA, JOBS_TABLE, "__createdtime__", "*", settings);
     
     if ((!response) || (response.error)) return;
-    
-    response.sort((a, b) => {return b.__createdtime__ - a.__createdtime__});
 
-    console.log(response);
+    switch (sort.value) {
+        case "job-name-low-to-high":
+            response.sort((a, b) => {
+                const nameA = String(a.name).toUpperCase();
+                const nameB = String(b.name).toUpperCase();
+                if (nameA < nameB) return 1;
+                if (nameA > nameB) return -1;
+                return 0;
+            });
+            break;
+        case "job-name-high-to-low":
+            response.sort((a, b) => {
+                const nameA = String(a.name).toUpperCase();
+                const nameB = String(b.name).toUpperCase();
+                if (nameA < nameB) return -1;
+                if (nameA > nameB) return 1;
+                return 0;
+            });
+            break;
+        case "latest-ship-date":
+            response.sort((a, b) => {
+                const shipDateA = a.shipDate;
+                const shipDateB = b.shipDate;
+                if (shipDateA < shipDateB) return 1;
+                if (shipDateA > shipDateB) return -1;
+                return 0;
+            });
+            break;
+        case "earliest-ship-date":
+            response.sort((a, b) => {
+                const shipDateA = a.shipDate;
+                const shipDateB = b.shipDate;
+                if (shipDateA < shipDateB) return -1;
+                if (shipDateA > shipDateB) return 1;
+                return 0;
+            });
+            break;
+    
+        default:
+            break;
+    }
+    
+
+    // console.log(response);
 
     cardsContainer.innerHTML = "";
 
@@ -57,12 +113,15 @@ async function loadPartIssues() {
 
     let checkLabelID = 0;
 
+    // Loop through cards
     for (const entry of response) {
         if (!entry.active) continue;
 
         // console.log(entry);
-        const card = document.createElement('section');
-        card.classList.add('card')
+        const card = document.createElement('details');
+        card.classList.add('card');
+
+        const summary = document.createElement('summary');
         
         const cardTitle = document.createElement('h2');
         cardTitle.textContent = entry.name;
@@ -80,9 +139,19 @@ async function loadPartIssues() {
         checkListContainer.classList.add('check-list-container');
 
         const checkValues = [];
+
+        let jobDoneCheck = false;
         
+        // Loop through checks
         if (entry.checklist) {
+            // Set to true if checklist longer than 0
+            jobDoneCheck = (entry.checklist.length > 0);
+
             for (const checkItem of entry.checklist) {
+                if (!checkItem.checked) {
+                    jobDoneCheck = false;
+                }
+
                 let checkValuesIndex = 0;
                 const checkID = `check-${checkLabelID++}`;
 
@@ -126,6 +195,10 @@ async function loadPartIssues() {
                 }
             }
         }
+        if (jobDoneCheck) {
+            cardTitle.classList.add('card-title-checked');
+        }
+
 
         // const taskOption = document.createElement('option');
         // taskOption.value = checkItem.text;
@@ -147,7 +220,8 @@ async function loadPartIssues() {
                 });
         };
 
-        card.appendChild(cardTitle);
+        summary.appendChild(cardTitle);
+        card.appendChild(summary);
         card.appendChild(shipDate);
         card.appendChild(note);
         card.appendChild(checkListContainer);

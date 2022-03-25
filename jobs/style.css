@@ -56,6 +56,24 @@ body{
     background-color: var(--background_color);
 }
 
+main{
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    gap: 1rem;
+    margin-bottom: 5rem;
+}
+
+details summary::-webkit-details-marker,
+details summary::marker {
+ display: none; 
+ content: "";
+}
+
+summary{
+    cursor: pointer;
+}
+
 .view{
     display: flex;
     flex-direction: column;
@@ -102,12 +120,33 @@ label{
     background-color: var(--background_color);
 } */
 
-select{
+/* select{
+} */
+.sort-container{
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+}
+.sort-label{
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    gap: 1rem;
+    font-size: large;
+}
+.sort-select{
     width: max-content;
-    min-width: 100%;
     border: 1px solid #555;
     border-radius: .5rem;
+    font-size: large;
+    color: var(--color);
+    background-color: var(--background_color);
 }
+
 
 /* input{
     width: 7rem;
@@ -207,7 +246,11 @@ select{
     /* flex-basis: 1; */
 }
 
-
+/* details tag */
+.card[open] {
+    border-radius: 0.5rem;
+    border: 1px solid var(--border_color);
+}
 .card {
     width: max-content;
     min-width: 10rem;
@@ -215,13 +258,19 @@ select{
     height: max-content;
     padding: 1rem;
     border: 1px solid var(--border_color);
-    border-radius: 0.5rem;
+    border-radius: 0.5rem 0.5rem 0 0;
+    border-bottom: 3px solid var(--border_color);
+    /* border-bottom: 2px red solid; */
     /* color: red; */
     /* background-color: red; */
 }
 .card-title{
     margin: 0;
     text-align: center;
+}
+.card-title-checked::after{
+    color: var(--yes);
+    content: "✓";
 }
 .ship-date{
     text-align: center;
