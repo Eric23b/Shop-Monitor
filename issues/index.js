@@ -77,6 +77,13 @@ else {
 
 // ---EVENT LISTENERS---
 
+window.onkeydown = (event) => {
+    if (event.key === "8" && event.ctrlKey) {
+        const adminLink = document.createElement('a');
+        adminLink.href = "admin.html";
+        adminLink.click();
+    }
+}
 
 addItemToListBtn.addEventListener('click', () => {
     itemList.push({

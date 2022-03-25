@@ -23,6 +23,14 @@ const stopBtn = document.querySelector("#stop-btn");
 
 // ---Event Listeners---
 
+window.onkeydown = (event) => {
+    if (event.key === "8" && event.ctrlKey) {
+        const adminLink = document.createElement('a');
+        adminLink.href = "admin.html";
+        adminLink.click();
+    }
+}
+
 startBtn.addEventListener('click', () => {
     if (allFieldsSelected()) {
         try {
