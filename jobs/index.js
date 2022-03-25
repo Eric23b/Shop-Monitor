@@ -57,7 +57,7 @@ sort.addEventListener('change', loadJobs);
 
 // Load Parts Issues Table
 async function loadJobs() {
-    const response = await getDBEntrees(BUSINESS_SCHEMA, JOBS_TABLE, "__createdtime__", "*", settings);
+    const response = await getDBEntrees(BUSINESS_SCHEMA, JOBS_TABLE, "active", "true", settings);
     
     if ((!response) || (response.error)) return;
 
