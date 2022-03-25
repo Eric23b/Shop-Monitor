@@ -40,7 +40,7 @@ settings.authorization = getLocalStorageValue('serverAuthorization') || "";
 
 setTheme();
 
-loadPartIssues();
+loadJobs();
 
 
 // EVENT LISTENERS
@@ -53,10 +53,10 @@ window.onkeydown = (e) => {
     }
 }
 
-sort.addEventListener('change', loadPartIssues);
+sort.addEventListener('change', loadJobs);
 
 // Load Parts Issues Table
-async function loadPartIssues() {
+async function loadJobs() {
     const response = await getDBEntrees(BUSINESS_SCHEMA, JOBS_TABLE, "__createdtime__", "*", settings);
     
     if ((!response) || (response.error)) return;
@@ -168,7 +168,7 @@ async function loadPartIssues() {
                             checklistArray.push({checked: checkItem.checkBox.checked, text: checkItem.text});
                         });
                         await updateDBEntry(BUSINESS_SCHEMA, JOBS_TABLE, {id: entry.id, checklist: JSON.stringify(checklistArray)}, settings);
-                        loadPartIssues();
+                        loadJobs();
                     });
                 });
 
@@ -216,7 +216,7 @@ async function loadPartIssues() {
                     });
                     checklistArray.push({checked: false, text: inputText});
                     await updateDBEntry(BUSINESS_SCHEMA, JOBS_TABLE, {id: entry.id, checklist: JSON.stringify(checklistArray)}, settings);
-                    loadPartIssues();
+                    loadJobs();
                 });
         };
 
