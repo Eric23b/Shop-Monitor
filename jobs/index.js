@@ -158,7 +158,7 @@ async function loadJobs() {
                 const checkContainer = document.createElement('div');
                 checkContainer.setAttribute('title', "Right click to remove");
                 checkContainer.classList.add('check-container');
-                checkContainer.addEventListener('contextmenu', async (event) => {
+                checkContainer.addEventListener('dblclick', async (event) => {
                     event.preventDefault();
                     showYesNoModal( async () => {
                         checkValues.splice(checkValuesIndex, 1);
