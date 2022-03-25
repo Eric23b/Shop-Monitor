@@ -850,7 +850,13 @@ async function loadJobsTable() {
     
     if ((!response) || (response.error)) return;
 
-    response.sort((a, b) => {return b.__createdtime__ - a.__createdtime__});
+    response.sort((a, b) => {
+        const nameA = String(a.name).toUpperCase();
+        const nameB = String(b.name).toUpperCase();
+        if (nameA < nameB) return 1;
+        if (nameA > nameB) return -1;
+        return 0;
+    });
 
     employeeTable.innerHTML = getTableHeaderRow(["Name", "Ship Date", "Note", "Active", "Delete"]);
 
