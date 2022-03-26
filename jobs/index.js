@@ -20,6 +20,8 @@ const settings = {
 const cardsContainer = document.querySelector("#cards-container");
 
 const sort = document.querySelector("#sort");
+const openAll = document.querySelector("#open-all");
+const closeAll = document.querySelector("#close-all");
 
 const addCheckboxModal = document.querySelector("#add-check-item-modal");
 const addCheckboxModalInput = document.querySelector("#add-checkbox-input");
@@ -45,8 +47,8 @@ loadJobs();
 
 // EVENT LISTENERS
 
-window.onkeydown = (e) => {
-    if (e.key === "8" && e.ctrlKey) {
+window.onkeydown = (event) => {
+    if (event.key === "8" && event.ctrlKey) {
         const adminLink = document.createElement('a');
         adminLink.href = "admin.html";
         adminLink.click();
@@ -54,6 +56,20 @@ window.onkeydown = (e) => {
 }
 
 sort.addEventListener('change', loadJobs);
+
+openAll.addEventListener('click', () => {
+    const allCards = document.querySelectorAll('.card');
+    allCards.forEach((card) => {
+        card.setAttribute('open', 'true');
+    });
+});
+
+closeAll.addEventListener('click', () => {
+    const allCards = document.querySelectorAll('.card');
+    allCards.forEach((card) => {
+        card.removeAttribute('open');
+    });
+});
 
 // Load Parts Issues Table
 async function loadJobs() {
