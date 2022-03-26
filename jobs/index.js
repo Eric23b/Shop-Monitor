@@ -22,6 +22,8 @@ const cardsContainer = document.querySelector("#cards-container");
 const sort = document.querySelector("#sort");
 const openAll = document.querySelector("#open-all");
 const closeAll = document.querySelector("#close-all");
+const searchInput = document.querySelector("#search-input");
+const searchButton = document.querySelector("#search-button");
 
 const addCheckboxModal = document.querySelector("#add-check-item-modal");
 const addCheckboxModalInput = document.querySelector("#add-checkbox-input");
@@ -71,8 +73,21 @@ closeAll.addEventListener('click', () => {
     });
 });
 
+
+searchButton.addEventListener('click', search);
+searchInput.addEventListener('keypress', (event) => {
+    if (event.key === "Enter") search();
+});
+
+
+// FUNCTIONS
+
+function search() {
+    loadJobs(null, searchInput.value);
+}
+
 // Load Parts Issues Table
-async function loadJobs() {
+async function loadJobs(event, searchValue) {
     const response = await getDBEntrees(BUSINESS_SCHEMA, JOBS_TABLE, "active", "true", settings);
     
     if ((!response) || (response.error)) return;
@@ -118,9 +133,6 @@ async function loadJobs() {
         default:
             break;
     }
-    
-
-    // console.log(response);
 
     cardsContainer.innerHTML = "";
 
@@ -132,6 +144,11 @@ async function loadJobs() {
     // Loop through cards
     for (const entry of response) {
         if (!entry.active) continue;
+
+        console.log(searchValue);
+        if (searchValue) {
+            if (!String(entry.name).toUpperCase().includes(String(searchValue).toUpperCase())) continue;
+        }
 
         // console.log(entry);
         const card = document.createElement('details');
