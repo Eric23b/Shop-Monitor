@@ -146,6 +146,7 @@ label{
 .sort-select{
     max-width: max-content;
     width: 100%;
+    padding: 0.25rem;
     border: 1px solid #555;
     border-radius: .5rem;
     font-size: large;
@@ -218,8 +219,11 @@ label{
     /* border-width: 1px 1px  1px 0; */
     border-radius: 0 .5rem .5rem 0;
     /* font-size: large; */
-    color: var(--color);
+    color: var(--inactive);
     background-color: var(--background_color);
+}
+.search-button:hover{
+    color: var(--active);
 }
 .search-button:active{
     background-color: var(--background_hover_color);
