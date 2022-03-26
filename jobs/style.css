@@ -186,10 +186,28 @@ label{
     margin-right: 0;
     border: 1px solid #555;
     border-radius: 0.5rem 0 0 0.5rem;
+    border-width: 1px 0 1px 1px;
     /* outline: none; */
     font-size: large;
     color: var(--color);
     background-color: var(--background_color);
+}
+.search-clear-button{
+    display: inline-block;
+    cursor: pointer;
+    padding: 0.25rem 0.5rem;
+    margin-left: 0;
+    border: 1px solid #555;
+    border-width: 1px 0 1px 0;
+    /* font-size: large; */
+    color: var(--inactive);
+    background-color: var(--background_color);
+}
+.search-clear-button:hover{
+    color: var(--active);
+}
+.search-clear-button:active{
+    color: var(--no);
 }
 .search-button{
     display: inline-block;
@@ -197,6 +215,7 @@ label{
     padding: 0.25rem 0.5rem;
     margin-left: 0;
     border: 1px solid #555;
+    /* border-width: 1px 1px  1px 0; */
     border-radius: 0 .5rem .5rem 0;
     /* font-size: large; */
     color: var(--color);

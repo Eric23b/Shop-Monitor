@@ -23,6 +23,7 @@ const sort = document.querySelector("#sort");
 const openAll = document.querySelector("#open-all");
 const closeAll = document.querySelector("#close-all");
 const searchInput = document.querySelector("#search-input");
+const searchClearButton = document.querySelector("#search-clear-button");
 const searchButton = document.querySelector("#search-button");
 
 const addCheckboxModal = document.querySelector("#add-check-item-modal");
@@ -78,6 +79,10 @@ searchButton.addEventListener('click', search);
 searchInput.addEventListener('keypress', (event) => {
     if (event.key === "Enter") search();
 });
+searchClearButton.addEventListener('click', () => {
+    searchInput.value = '';
+    loadJobs();
+})
 
 
 // FUNCTIONS
