@@ -45,6 +45,7 @@ body{
     align-content: center;
     gap: 2rem;
     height: 100vh;
+    font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', 'Geneva', 'Verdana', 'sans-serif'; 
 }
 #main-container a{
     padding: 1rem;
