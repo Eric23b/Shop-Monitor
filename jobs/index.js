@@ -141,6 +141,7 @@ async function loadJobs(event, searchValue) {
 
     cardsContainer.innerHTML = "";
 
+    // Used for drop downs
     tasksDataList.innerHTML = "";
     const tasks = [];
 
@@ -150,7 +151,7 @@ async function loadJobs(event, searchValue) {
     for (const entry of response) {
         if (!entry.active) continue;
 
-        console.log(searchValue);
+        // console.log(searchValue);
         if (searchValue) {
             if (!String(entry.name).toUpperCase().includes(String(searchValue).toUpperCase())) continue;
         }
@@ -190,57 +191,19 @@ async function loadJobs(event, searchValue) {
                     jobDoneCheck = false;
                 }
 
-                let checkValuesIndex = 0;
-                const checkID = `check-${checkLabelID++}`;
+                const checkboxItem = getCheckboxItem(checkItem)
 
-                const checkContainer = document.createElement('div');
-                checkContainer.setAttribute('title', "Right click to remove");
-                checkContainer.classList.add('check-container');
-                checkContainer.addEventListener('dblclick', async (event) => {
-                    event.preventDefault();
-                    showYesNoModal( async () => {
-                        checkValues.splice(checkValuesIndex, 1);
-    
-                        let checklistArray = [];
-                        checkValues.forEach(checkItem => {
-                            checklistArray.push({checked: checkItem.checkBox.checked, text: checkItem.text});
-                        });
-                        await updateDBEntry(BUSINESS_SCHEMA, JOBS_TABLE, {id: entry.id, checklist: JSON.stringify(checklistArray)}, settings);
-                        loadJobs();
-                    });
-                });
-
-                const label = document.createElement('label');
-                label.classList.add('check-list-item');
-                label.setAttribute('for', checkID);
-                label.innerText = checkItem.text;
-
-                const checkBox = document.createElement('input');
-                checkBox.setAttribute('type', 'checkbox');
-                checkItem.checked ? checkBox.setAttribute('checked', 'true') : checkBox.removeAttribute('checked');
-                checkBox.setAttribute('id', checkID);
-                checkBox.classList.add('check-box');
-
-                checkValuesIndex = checkValues.push({checkBox: checkBox, text: checkItem.text}) - 1;
-
-                checkContainer.appendChild(checkBox);
-                checkContainer.appendChild(label);
-
-                checkListContainer.appendChild(checkContainer);
+                checkListContainer.appendChild(checkboxItem);
 
                 if (tasks.indexOf(checkItem.text) == -1) {
                     tasks.push(checkItem.text);
                 }
             }
         }
+
         if (jobDoneCheck) {
             cardTitle.classList.add('card-title-checked');
         }
-
-
-        // const taskOption = document.createElement('option');
-        // taskOption.value = checkItem.text;
-        // tasksDataList.appendChild(taskOption);
 
         const addCheckboxButton = document.createElement('button');
         addCheckboxButton.textContent = "Add checkbox";
@@ -253,8 +216,14 @@ async function loadJobs(event, searchValue) {
                         checklistArray.push({checked: checkItem.checkBox.checked, text: checkItem.text});
                     });
                     checklistArray.push({checked: false, text: inputText});
+                    const checkItem = {
+                        checkBox: {
+                            checked: false
+                        },
+                        text: inputText
+                    };
+                    checkListContainer.appendChild(getCheckboxItem(checkItem));
                     await updateDBEntry(BUSINESS_SCHEMA, JOBS_TABLE, {id: entry.id, checklist: JSON.stringify(checklistArray)}, settings);
-                    loadJobs();
                 });
         };
 
@@ -271,9 +240,49 @@ async function loadJobs(event, searchValue) {
                 checklistArray.push({checked: checkItem.checkBox.checked, text: checkItem.text});
             });
             await updateDBEntry(BUSINESS_SCHEMA, JOBS_TABLE, {id: entry.id, checklist: JSON.stringify(checklistArray)}, settings);
-            // loadPartIssues();
         }
+
         cardsContainer.appendChild(card);
+        
+        function getCheckboxItem(checkItem) {
+            let checkValuesIndex = 0;
+            const checkID = `check-${checkLabelID++}`;
+
+            const checkContainer = document.createElement('div');
+            checkContainer.setAttribute('title', "Double click to delete");
+            checkContainer.classList.add('check-container');
+            checkContainer.addEventListener('dblclick', async (event) => {
+                event.preventDefault();
+                showYesNoModal( async () => {
+                    checkValues.splice(checkValuesIndex, 1);
+
+                    let checklistArray = [];
+                    checkValues.forEach(checkItem => {
+                        checklistArray.push({checked: checkItem.checkBox.checked, text: checkItem.text});
+                    });
+                    await updateDBEntry(BUSINESS_SCHEMA, JOBS_TABLE, {id: entry.id, checklist: JSON.stringify(checklistArray)}, settings);
+                    loadJobs();
+                });
+            });
+
+            const label = document.createElement('label');
+            label.classList.add('check-list-item');
+            label.setAttribute('for', checkID);
+            label.innerText = checkItem.text;
+
+            const checkBox = document.createElement('input');
+            checkBox.setAttribute('type', 'checkbox');
+            checkItem.checked ? checkBox.setAttribute('checked', 'true') : checkBox.removeAttribute('checked');
+            checkBox.setAttribute('id', checkID);
+            checkBox.classList.add('check-box');
+
+            checkValuesIndex = checkValues.push({checkBox: checkBox, text: checkItem.text}) - 1;
+
+            checkContainer.appendChild(checkBox);
+            checkContainer.appendChild(label);
+
+            return checkContainer;
+        }
     };
 
     tasks.forEach(task => {
