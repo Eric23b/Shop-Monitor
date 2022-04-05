@@ -239,10 +239,26 @@ async function loadJobs(event, searchValue) {
             checkValues.forEach(checkItem => {
                 checklistArray.push({checked: checkItem.checkBox.checked, text: checkItem.text});
             });
+            updateCheckInTitles(checkListContainer, cardTitle);
             await updateDBEntry(BUSINESS_SCHEMA, JOBS_TABLE, {id: entry.id, checklist: JSON.stringify(checklistArray)}, settings);
         }
 
         cardsContainer.appendChild(card);
+
+        function updateCheckInTitles(checkListContainer, cardTitle) {
+            let allChecked = true;
+            const checkboxes = checkListContainer.querySelectorAll('.check-box');
+
+            checkboxes.forEach(checkbox => {
+                if (!checkbox.checked) {allChecked = false}
+            });
+
+            cardTitle.classList.remove('card-title-checked');
+
+            if (allChecked && checkboxes.length) {
+                cardTitle.classList.add('card-title-checked');
+            }
+        }
         
         function getCheckboxItem(checkItem) {
             let checkValuesIndex = 0;
