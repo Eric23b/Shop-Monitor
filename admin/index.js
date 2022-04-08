@@ -216,10 +216,28 @@ addJobButton.addEventListener('click', async () => {
 
     if (!jobName) return;
 
-    const data = {name: jobName, shipDate: jobShipDate, note: jobNote, active: true};
+    if (!await jobNameExists(jobName)) {
+        const data = {name: jobName, shipDate: jobShipDate, note: jobNote, active: true};
+    
+        await insertDBEntry(BUSINESS_SCHEMA, JOBS_TABLE, data, settings, dbActive);
+        await loadJobsTable();
+    }
+    else {
+        showAlert("Job name already exists", `Sorry, ${jobName} already exists.`);
+    }
 
-    await insertDBEntry(BUSINESS_SCHEMA, JOBS_TABLE, data, settings, dbActive);
-    await loadJobsTable();
+    async function jobNameExists(jobName) {
+        const response = await getDBEntrees(BUSINESS_SCHEMA, JOBS_TABLE, "__createdtime__", "*", settings, dbActive);
+        
+        if ((!response) || (response.error)) return;
+        
+        const jobsNameArray = [];
+        response.forEach((job) => {
+            jobsNameArray.push(String(job.name));
+        });
+
+        return jobsNameArray.indexOf(jobName) > -1;
+    }
 });
 
 // Add employee button
