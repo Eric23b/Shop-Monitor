@@ -91,6 +91,13 @@ async function loadFromDB() {
         showMessage("Error loading employees", true);
     }
     else {
+        employeeResponse.sort((a, b) => {
+            const nameA = String(a.name).toUpperCase();
+            const nameB = String(b.name).toUpperCase();
+            if (nameA < nameB) return -1;
+            if (nameA > nameB) return 1;
+            return 0;
+        });
         loadSelectFromArray(employeesSelect, "name", true, employeeResponse);
     }
 
@@ -100,6 +107,13 @@ async function loadFromDB() {
         showMessage("Error loading jobs", true);
     }
     else {
+        jobsResponse.sort((a, b) => {
+            const nameA = String(a.name).toUpperCase();
+            const nameB = String(b.name).toUpperCase();
+            if (nameA < nameB) return 1;
+            if (nameA > nameB) return -1;
+            return 0;
+        });
         loadSelectFromArray(jobsSelect, "name", true, jobsResponse);
     }
     
