@@ -234,7 +234,9 @@ async function loadTasks() {
     else {
         if (tasksResponse.length > 0) {
             const tasks = tasksResponse[0].tasks.split(',');
-            tasks.forEach(task => {task = task.trim();console.log();})
+            tasks.forEach(task => {
+                task = task.trim();
+            });
             loadSelectFromArray(taskSelect, "", false, tasks);
         }
         else {
