@@ -37,6 +37,8 @@ const yesNoModalNoBtn = document.querySelector("#no-btn");
 
 const tasksDataList = document.querySelector("#tasks");
 
+const dateLabel = document.querySelector("#date");
+
 // INIT CODE
 
 // Retrieve settings values
@@ -46,6 +48,9 @@ settings.authorization = getLocalStorageValue('serverAuthorization') || "";
 setTheme();
 
 loadJobs();
+
+// Update the date/time at the bottom of the page
+setInterval(updateDataTime, 1000);
 
 
 // EVENT LISTENERS
@@ -350,4 +355,8 @@ function setTheme() {
     const theme = getLocalStorageValue('theme') || "light";
     document.documentElement.setAttribute('data-color-theme', theme);
     // darkThemeCheckbox.checked = theme == "dark" ? true : false;
+}
+
+function updateDataTime() {
+    dateLabel.textContent = `${(new Date()).toLocaleDateString()} ${(new Date()).toLocaleTimeString()}`;
 }

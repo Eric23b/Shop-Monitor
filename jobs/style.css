@@ -309,7 +309,7 @@ label{
     border: none;
     color: var(--color);
     background-color: transparent;
-    font-size: 1.5em;
+    font-size: 2em;
     font-weight: bold;
     cursor: pointer;
     text-decoration: none;
@@ -439,4 +439,15 @@ label{
 .modal-button:active{
     color: var(--background_color);
     background: var(--color);
+}
+
+
+.date{
+    position: fixed;
+    bottom: 1rem;
+    right: 1rem;
+    color: var(--inactive);
+    font-size: large;
+    background: transparent;
+    pointer-events: none;
 }
