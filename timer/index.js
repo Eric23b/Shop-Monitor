@@ -95,6 +95,8 @@ async function loadRunningTimers() {
     runningTimersContainer.appendChild(title);
 
     runningTimersResponse.forEach((runningTimer) => {
+        if (runningTimer.station != getLocalStorageValue("stationName")) return;
+
         const card = document.createElement('card');
         card.classList.add('card');
 
