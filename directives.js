@@ -9,6 +9,8 @@ export const OTHER_ISSUES_TABLE = "other_issues";
 
 export const LOGS_SCHEMA = "logs_schema";
 export const TIMER_TABLE = "timer_table";
+export const COMPLETED_TIMER_TABLE = "completed_timers";
+export const RUNNING_TIMER_TABLE = "running_timers";
 
 export const BUSINESS_SCHEMA = "business_schema";
 export const EMPLOYEES_TABLE = "employees";
@@ -24,6 +26,8 @@ export const TABLE_ATTRIBUTES = {
     otherIssues: ["date", "acknowledged", "note", "time"],
 
     timer_logs: ["employeeName", "employeeID", "eventType", "jobName", "jobID", "station", "task", "time", "date"],
+    running_timers: ["employeeName", "employeeID", "jobName", "jobID", "station", "task", "time", "date"],
+    completed_timers: ["employeeName", "employeeID", "jobName", "jobID", "station", "task", "durationMS", "durationTime", "timerStart", "timerEnd", "date"],
 
     employees: ["active", "name", "stations"],
     jobs: ["active", "finishType", "name", "checklist", "shipDate", "note"],

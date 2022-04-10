@@ -28,6 +28,8 @@ import {
     TIME_CLOCK_ISSUES_TABLE,
     OTHER_ISSUES_TABLE,
     LOGS_SCHEMA,
+    RUNNING_TIMER_TABLE,
+    COMPLETED_TIMER_TABLE,
     TIMER_TABLE,
     BUSINESS_SCHEMA,
     EMPLOYEES_TABLE,
@@ -42,6 +44,8 @@ const settings = {
     url: "",
     authorization: ""
 }
+
+let timerLogCSV = "";
 
 // let station = "";
 
@@ -76,6 +80,7 @@ const otherIssuesTable = document.querySelector("#other-issues-table");
 
 const timersTabContainer = document.querySelector("#timers-container");
 // const timersJobFilter = document.querySelector("#timers-job-filter-input");
+const saveTimerLogsBtn = document.querySelector("#save-timer-log-btn");
 const timersTable = document.querySelector("#timers-table");
 
 const jobsTabContainer = document.querySelector("#jobs-container");
@@ -206,6 +211,11 @@ tabHeader.addEventListener('click', async (event) => {
     await showTabContent(containerID);
 
     await checkForUnresolvedIssues();
+});
+
+// Save timer logs
+saveTimerLogsBtn.addEventListener('click', () => {
+    saveTextFile(timerLogCSV, `Timer Logs ${(new Date()).toLocaleDateString()}`, "csv");
 });
 
 // Add job button
@@ -358,6 +368,12 @@ runDBSetupBtn.addEventListener('click', async () => {
     message += await createSchema(LOGS_SCHEMA, settings, dbActive) + "\n";
     message += await createTable(TIMER_TABLE, LOGS_SCHEMA, settings, dbActive) + "\n";
     message += await createAttributes(TABLE_ATTRIBUTES.timer_logs, TIMER_TABLE, LOGS_SCHEMA, settings, dbActive) + "\n";
+    
+    message += await createTable(RUNNING_TIMER_TABLE, LOGS_SCHEMA, settings, dbActive) + "\n";
+    message += await createAttributes(TABLE_ATTRIBUTES.running_timers, RUNNING_TIMER_TABLE, LOGS_SCHEMA, settings, dbActive) + "\n";
+
+    message += await createTable(COMPLETED_TIMER_TABLE, LOGS_SCHEMA, settings, dbActive) + "\n";
+    message += await createAttributes(TABLE_ATTRIBUTES.completed_timers, COMPLETED_TIMER_TABLE, LOGS_SCHEMA, settings, dbActive) + "\n";
 
     // Business
     message += await createSchema(BUSINESS_SCHEMA, settings, dbActive) + "\n";
@@ -709,7 +725,7 @@ async function loadOtherIssues() {
     };
 }
 
-async function loadTimersTable() {
+async function OLDloadTimersTable() {
     const events = await getDBEntrees(LOGS_SCHEMA, TIMER_TABLE, "id", "*", settings, dbActive);
     
     if ((!events) || (events.error)) return;
@@ -846,20 +862,110 @@ async function loadTimersTable() {
     });
 
     timersTable.innerHTML = getTableHeaderRow(["Job", ...tasksList]) + rowsOfData;
-    
-    function msToTime(s) {
-        const ms = s % 1000;
-        s = (s - ms) / 1000;
-        const secs = s % 60;
-        s = (s - secs) / 60;
-        const mins = s % 60;
-        const hrs = (s - mins) / 60;
-      
-        return hrs + ':' + mins + ':' + secs;
-        // return hrs + ':' + mins + ':' + secs + '.' + ms;
-      }
 
     return;
+}
+
+async function loadTimersTable() {
+    // Get all completed tasks
+    const completedTasks = await getDBEntrees(LOGS_SCHEMA, COMPLETED_TIMER_TABLE, "__createdtime__", "*", settings);
+    if ((!completedTasks) || (completedTasks.error)) return;
+    completedTasks.sort((a, b) => {return a.__createdtime__ - b.__createdtime__});
+
+    // Get all active jobs
+    const activeJobs = await getDBEntrees(BUSINESS_SCHEMA, JOBS_TABLE, "active", "true", settings, dbActive);
+    if ((!activeJobs) || (activeJobs.error)) return;
+    activeJobs.sort((a, b) => {
+        const nameA = String(a.name).toUpperCase();
+        const nameB = String(b.name).toUpperCase();
+        if (nameA < nameB) return 1;
+        if (nameA > nameB) return -1;
+        return 0;
+    });
+
+    // Find all unique tasks
+    const taskArray = [];
+    completedTasks.forEach((task) => {
+        if (taskArray.indexOf(task.task) === -1) {
+            taskArray.push(task.task);
+        }
+    });
+    
+    // Setup header
+    const tableData = [["Job", ...taskArray, "Total"]];
+
+    // Add jobs to tableData
+    activeJobs.forEach((job) => {
+        tableData.push([String(job.id)]);
+    });
+
+    for (const task of completedTasks) {
+        // console.log(task);
+        for (const row of tableData) {
+            // Find jobID in tableData
+            if (task.jobID == row[0]) {
+                for (let taskIndex = 0; taskIndex < taskArray.length; taskIndex++) {
+                    const taskName = taskArray[taskIndex];
+                    const column = taskIndex + 1;
+                    
+                    if (task.task == taskName) {
+                        if (!row[column]) row[column] = 0;
+                        row[column] += task.durationMS;
+                    }
+                }
+            }
+        }
+    }
+
+    // Replace jobIDs with their names
+    tableData.forEach((row) => {
+        activeJobs.forEach((job) => {
+            if (job.id === row[0]) {
+                row[0] = String(job.name);
+            }
+        });
+    });
+
+    // Find the number of columns in the table
+    let maxRowLength = 1;
+    for (const row of tableData) {
+        maxRowLength = Math.max(maxRowLength, row.length);
+    }
+
+    // Total rows
+    for (let rowIndex = 1; rowIndex < tableData.length; rowIndex++) {
+        const row = tableData[rowIndex];
+        row.length = maxRowLength;
+        let rowTotal = 0;
+        for (let colIndex = 1; colIndex < row.length; colIndex++) {
+            const cell = row[colIndex];
+            rowTotal += cell || 0;
+        }
+        row[maxRowLength - 1] = rowTotal;
+    }
+
+    // Total rows
+    for (let rowIndex = 1; rowIndex < tableData.length; rowIndex++) {
+        const row = tableData[rowIndex];
+        for (let colIndex = 1; colIndex < row.length; colIndex++) {
+            if (row[colIndex]) {
+                row[colIndex] = msToTime(row[colIndex]);
+            }
+        }
+    }
+
+    let rowsOfData = "";
+    for (let rowIndex = 1; rowIndex < tableData.length; rowIndex++) {
+        const row = tableData[rowIndex];
+        rowsOfData += getTableDataRow(row);
+    }
+
+    timersTable.innerHTML = getTableHeaderRow(tableData[0]) + rowsOfData;
+
+    timerLogCSV = "";
+    tableData.forEach((row) => {
+        timerLogCSV += row.join(",") + "\n";
+    });
 }
 
 // Jobs Table
@@ -1102,6 +1208,19 @@ function yesterday() {
     return today.toLocaleDateString();
 }
 
+function msToTime(s) {
+    const ms = s % 1000;
+    s = (s - ms) / 1000;
+    const secs = s % 60;
+    s = (s - secs) / 60;
+    const mins = s % 60;
+    const hrs = (s - mins) / 60;
+  
+    // return hrs + ':' + mins;
+    return hrs + ':' + mins + ':' + secs;
+    // return hrs + ':' + mins + ':' + secs + '.' + ms;
+  }
+
 async function loadDataListWithItemCategories(dataList) {
     dataList.innerHTML = "";
     const categories = await getItemCategories(INVENTORY_SCHEMA, SUPPLY_LIST_TABLE);
@@ -1201,3 +1320,14 @@ function saveTextFile(data, fileName, fileType) {
     hiddenElement.download = `${fileName}.${fileType}`;
     hiddenElement.click();
 }
+
+// function saveTextFile(data, fileName, fileType) {
+//     let jsonData = new Blob([data], {type: `text/${fileType}`});  
+//     let jsonURL = URL.createObjectURL(jsonData);
+
+//     let hiddenElement = document.createElement('a');
+//     hiddenElement.href = jsonURL;
+//     hiddenElement.target = '_blank';
+//     hiddenElement.download = `${fileName}.${fileType}`;
+//     hiddenElement.click();
+// }

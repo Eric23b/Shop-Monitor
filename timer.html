@@ -10,29 +10,56 @@
 </head>
 <body>
     <div class="flex-row">
-        <a id="reset" href="/timer.html" title="Reload page">↺</a>
+        <a id="reset" href="/timer.html" title="Reload page">&#x21bb</a>
         <h2 id="message"></h1>
             <a class="link" id="send-issue-link" href="/issues.html" title="Send issue">Issue</a>
             <a class="link" id="send-issue-link" href="/jobs.html" title="Jobs">Jobs</a>
         </div>
 
-    <div id="main-view" class="view">
-        <label class="flex-column">Employee
-            <select id="employees">
-            </select>
-        </label>
-        <label class="flex-column">Jobs
-            <select id="jobs">
-            </select>
-        </label>
-        <label class="flex-column">Task
-            <select id="tasks">
-            </select>
-        </label>
-        <div class="flex-row">
-            <button id="start-btn" class="start-stop">Start</button>
-            <button id="stop-btn" class="start-stop">Stop</button>
-        </div>
+    <div id="main-view" class="main-view">
+        <!-- Timer -->
+        <section class="view">
+            <label class="flex-column">Employee
+                <select id="employees">
+                </select>
+            </label>
+            <label class="flex-column">Jobs
+                <select id="jobs">
+                </select>
+            </label>
+            <label class="flex-column">Task
+                <select id="tasks">
+                </select>
+            </label>
+                <button id="start-btn" class="start-stop start-btn" disabled="disabled">Start</button>
+                <!-- <button id="stop-btn" class="start-stop">Stop</button> -->
+        </section>
+
+        <!-- Running timers -->
+        <section id="running-timers-container" class="running-timers-container">
+            <h2 class="running-timers-title">Running timers</h2>
+            <card class="card">
+                <label class="card-label">Bill - Cutting Cutting - 13625</label>
+                <button class="stop-btn">Stop</button>
+                <button class="cancel-btn">Cancel</button>
+            </card>
+            <card class="card">
+                <label class="card-label">Bob - Cutting - 13625</label>
+                <button class="stop-btn">Stop</button>
+                <button class="cancel-btn">Cancel</button>
+            </card>
+        </section>
     </div>
+
+    <!-- Yes/No modal -->
+    <section id="yes-no-item-modal" class="modal-background">
+        <div class="modal-container">
+            <h2 class="modal-title">Cancel timer?</h2>
+            <div class="modal-buttons-container">
+                <button id="no-btn" class="modal-button">No</button>
+                <button id="yes-btn" class="modal-button">Yes</button>
+            </div>
+        </div>
+    </section>
 </body>
 </html>
