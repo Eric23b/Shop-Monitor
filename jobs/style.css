@@ -446,7 +446,7 @@ label{
     position: fixed;
     bottom: 1rem;
     right: 1rem;
-    color: var(--inactive);
+    color: var(--color);
     font-size: large;
     background: transparent;
     pointer-events: none;
