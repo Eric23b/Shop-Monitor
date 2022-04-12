@@ -88,6 +88,7 @@ const newJobNameInput = document.querySelector("#job-input");
 const newJobShipDateInput = document.querySelector("#job-ship-date-input");
 const newJobNoteInput = document.querySelector("#job-note-input");
 const addJobButton = document.querySelector("#add-job-btn");
+const sort = document.querySelector("#sort");
 const employeeTable = document.querySelector("#jobs-table");
 
 const employeesTabContainer = document.querySelector("#employee-container");
@@ -191,6 +192,8 @@ else {
 
 
 // ---EVENT LISTENERS---
+
+sort.addEventListener('change', loadJobsTable);
 
 darkThemeCheckbox.addEventListener('change', () => {
     setLocalStorageValue('theme', darkThemeCheckbox.checked ? "dark" : "light");
@@ -834,13 +837,54 @@ async function loadJobsTable() {
     
     if ((!response) || (response.error)) return;
 
-    response.sort((a, b) => {
-        const nameA = String(a.name).toUpperCase();
-        const nameB = String(b.name).toUpperCase();
-        if (nameA < nameB) return 1;
-        if (nameA > nameB) return -1;
-        return 0;
-    });
+    switch (sort.value) {
+        case "job-name-low-to-high":
+            response.sort((a, b) => {
+                const nameA = String(a.name).toUpperCase();
+                const nameB = String(b.name).toUpperCase();
+                if (nameA < nameB) return 1;
+                if (nameA > nameB) return -1;
+                return 0;
+            });
+            break;
+        case "job-name-high-to-low":
+            response.sort((a, b) => {
+                const nameA = String(a.name).toUpperCase();
+                const nameB = String(b.name).toUpperCase();
+                if (nameA < nameB) return -1;
+                if (nameA > nameB) return 1;
+                return 0;
+            });
+            break;
+        case "latest-ship-date":
+            response.sort((a, b) => {
+                const shipDateA = a.shipDate;
+                const shipDateB = b.shipDate;
+                if (shipDateA < shipDateB) return 1;
+                if (shipDateA > shipDateB) return -1;
+                return 0;
+            });
+            break;
+        case "earliest-ship-date":
+            response.sort((a, b) => {
+                const shipDateA = a.shipDate;
+                const shipDateB = b.shipDate;
+                if (shipDateA < shipDateB) return -1;
+                if (shipDateA > shipDateB) return 1;
+                return 0;
+            });
+            break;
+    
+        default:
+            break;
+    }
+    // response.sort((a, b) => {
+    //     const nameA = String(a.name).toUpperCase();
+    //     const nameB = String(b.name).toUpperCase();
+    //     if (nameA < nameB) return 1;
+    //     if (nameA > nameB) return -1;
+    //     return 0;
+    // });
 
     employeeTable.innerHTML = getTableHeaderRow(["Name", "Ship Date", "Note", "Active", "Delete"]);
 

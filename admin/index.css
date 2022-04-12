@@ -317,12 +317,12 @@ td{
     align-items: flex-start;
 }
 
-select{
+/* select{
     width: max-content;
     min-width: 100%;
     border: 1px solid #555;
     border-radius: .5rem;
-}
+} */
 
 input{
     border: 1px solid #555;
@@ -443,4 +443,28 @@ input{
 
 .small-font{
     font-size: smaller;
+}
+
+
+.sort-container{
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: center;
+    gap: 1rem;
+}
+.sort-label{
+    font-size: large;
+    white-space: nowrap;
+}
+.sort-select{
+    max-width: max-content;
+    width: 100%;
+    padding: 0.25rem;
+    border: 1px solid #555;
+    border-radius: .5rem;
+    font-size: large;
+    color: var(--color);
+    background-color: var(--background_color);
 }

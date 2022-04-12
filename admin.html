@@ -73,6 +73,17 @@
                 <input id="job-note-input" class="labeled-input" type="text">
             </label>
             <button id="add-job-btn" class="small-btn">Add</button>
+            <section class="sort-container">
+                <label class="sort-label">
+                    Sort by
+                    <select id="sort" class="sort-select">
+                        <option value="earliest-ship-date">Earliest ship date</option>
+                        <option value="latest-ship-date">Latest ship date</option>
+                        <option value="job-name-low-to-high">Job name ↓</option>
+                        <option value="job-name-high-to-low">Job name ↑</option>
+                    </select>
+                </label>
+            </section>
             <table id="jobs-table" class="table"></table>
         </div>
         
