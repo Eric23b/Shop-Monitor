@@ -48,7 +48,7 @@
 } */
 
 body{
-    padding: 0;
+    padding: 0 0 2rem 0;
     margin: 0;
     box-sizing: border-box; 
     font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', 'Geneva', 'Verdana', 'sans-serif';    
@@ -57,11 +57,22 @@ body{
 }
 
 main{
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
     display: flex;
     flex-direction: column;
     justify-content: flex-start;
-    gap: 1rem;
-    margin-bottom: 5rem;
+    /* gap: 1rem; */
+    padding-bottom: 1rem;
+    background-color: var(--background_color_transparent);
+    border-width: 0 0 1px 0;
+    border-style: solid;
+    border-color: var(--border_color);
+}
+
+header{
 }
 
 details summary::-webkit-details-marker,
@@ -227,6 +238,11 @@ label{
 }
 .search-button:active{
     background-color: var(--background_hover_color);
+}
+
+
+.cards-container{
+    margin-top: 10rem;
 }
 
 
