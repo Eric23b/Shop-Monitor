@@ -358,5 +358,5 @@ function setTheme() {
 }
 
 function updateDataTime() {
-    dateLabel.textContent = `${(new Date()).toLocaleDateString()} ${(new Date()).toLocaleTimeString()}`;
+    dateLabel.textContent = `${(new Date()).toLocaleDateString()} ${(new Date()).toLocaleTimeString('en-US')}`;
 }
