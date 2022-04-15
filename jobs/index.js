@@ -228,6 +228,7 @@ async function loadJobs(event, searchValue) {
                         text: inputText
                     };
                     checkListContainer.appendChild(getCheckboxItem(checkItem));
+                    updateCheckInTitles(checkListContainer, cardTitle);
                     await updateDBEntry(BUSINESS_SCHEMA, JOBS_TABLE, {id: entry.id, checklist: JSON.stringify(checklistArray)}, settings);
                 });
         };
