@@ -45,12 +45,46 @@ const dateLabel = document.querySelector("#date");
 settings.url = getLocalStorageValue('serverURL') || "";
 settings.authorization = getLocalStorageValue('serverAuthorization') || "";
 
+const cardOpenCloseState = {};
+
 setTheme();
 
 loadJobs();
 
 // Update the date/time at the bottom of the page
 setInterval(updateDataTime, 1000);
+
+class Timer {
+    constructor(callback, duration) {
+        let timerObj = setInterval(callback, duration);
+
+        this.stop = function () {
+            if (timerObj) {
+                clearInterval(timerObj);
+                timerObj = null;
+            }
+            return this;
+        };
+
+        // start timer using current settings (if it's not already running)
+        this.start = function () {
+            if (!timerObj) {
+                this.stop();
+                timerObj = setInterval(callback, duration);
+            }
+            return this;
+        };
+
+        // start with new or original interval, stop current interval
+        this.reset = function (newT = duration) {
+            duration = newT;
+            return this.stop().start();
+        };
+    }
+}
+const timer = new Timer(() => {
+    loadJobs();
+}, 1000 * 60 * 1);
 
 
 // EVENT LISTENERS
@@ -65,19 +99,21 @@ window.onkeydown = (event) => {
 
 sort.addEventListener('change', loadJobs);
 
-openAll.addEventListener('click', () => {
+openAll.addEventListener('click', openAllCards);
+function openAllCards() {
     const allCards = document.querySelectorAll('.card');
     allCards.forEach((card) => {
         card.setAttribute('open', 'true');
     });
-});
+};
 
-closeAll.addEventListener('click', () => {
+closeAll.addEventListener('click', closeAllCards);
+function closeAllCards() {
     const allCards = document.querySelectorAll('.card');
     allCards.forEach((card) => {
         card.removeAttribute('open');
     });
-});
+};
 
 
 searchButton.addEventListener('click', search);
@@ -87,7 +123,15 @@ searchInput.addEventListener('keypress', (event) => {
 searchClearButton.addEventListener('click', () => {
     searchInput.value = '';
     loadJobs();
-})
+});
+
+// document.addEventListener('click', (event) => {
+//     console.log(event);
+//     // const cards = document.querySelectorAll('.card');
+//     // cards.forEach(card => {
+//     //     console.log(card.jobid.value);
+//     // });
+// });
 
 
 // FUNCTIONS
@@ -161,9 +205,14 @@ async function loadJobs(event, searchValue) {
             if (!String(entry.name).toUpperCase().includes(String(searchValue).toUpperCase())) continue;
         }
 
-        // console.log(entry);
         const card = document.createElement('details');
         card.classList.add('card');
+        card.setAttribute('jobID', entry.id);
+        card.addEventListener('toggle', (event) => {
+            cardOpenCloseState[entry.id] = event.target.open;
+        });
+        // Open/Close cards
+        cardOpenCloseState[entry.id] ? card.setAttribute('open', 'open') : card.removeAttribute('open');
 
         const summary = document.createElement('summary');
         
@@ -307,11 +356,19 @@ async function loadJobs(event, searchValue) {
         }
     };
 
+    // Update data
     tasks.forEach(task => {
         const taskOption = document.createElement('option');
         taskOption.value = task;
         tasksDataList.appendChild(taskOption);
-    })
+    });
+
+    // if (cardsAreOpen) {
+    //     openAllCards();
+    // }
+    // else {
+    //     closeAllCards();
+    // }
 }
 
 async function showAddCheckboxModal(okCallback) {
