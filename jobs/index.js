@@ -35,6 +35,10 @@ const yesNoModal = document.querySelector("#yes-no-item-modal");
 const yesNoModalYesBtn = document.querySelector("#yes-btn");
 const yesNoModalNoBtn = document.querySelector("#no-btn");
 
+// const yesNoModal = document.querySelector("#yes-no-item-modal");
+// const yesNoModalYesBtn = document.querySelector("#yes-btn");
+// const yesNoModalNoBtn = document.querySelector("#no-btn");
+
 const tasksDataList = document.querySelector("#tasks");
 
 const dateLabel = document.querySelector("#date");
@@ -83,7 +87,10 @@ class Timer {
     }
 }
 const timer = new Timer(() => {
-    loadJobs();
+    if (noModalsAreOpen()) {
+        console.log('Load');
+        loadJobs();
+    }
 }, 1000 * 60 * 1);
 
 
@@ -95,6 +102,11 @@ window.onkeydown = (event) => {
         adminLink.href = "/";
         adminLink.click();
     }
+    timer.reset();
+}
+
+window.onmousedown = () => {
+    timer.reset();
 }
 
 sort.addEventListener('change', loadJobs);
@@ -245,7 +257,7 @@ async function loadJobs(event, searchValue) {
                     jobDoneCheck = false;
                 }
 
-                const checkboxItem = getCheckboxItem(checkItem)
+                const checkboxItem = getCheckboxItem(checkItem);
 
                 checkListContainer.appendChild(checkboxItem);
 
@@ -267,14 +279,22 @@ async function loadJobs(event, searchValue) {
                 async (inputText) => {
                     let checklistArray = [];
                     checkValues.forEach(checkItem => {
-                        checklistArray.push({checked: checkItem.checkBox.checked, text: checkItem.text});
+                        checklistArray.push({
+                            checked: checkItem.checkBox.checked,
+                            text: checkItem.text, 
+                            stationName: checkItem.stationName,
+                        });
                     });
-                    checklistArray.push({checked: false, text: inputText});
+
+                    const stationName = getLocalStorageValue('stationName');
+                    console.log(stationName);
+                    checklistArray.push({checked: false, text: inputText, stationName});
                     const checkItem = {
                         checkBox: {
                             checked: false
                         },
-                        text: inputText
+                        text: inputText,
+                        stationName,
                     };
                     checkListContainer.appendChild(getCheckboxItem(checkItem));
                     updateCheckInTitles(checkListContainer, cardTitle);
@@ -292,7 +312,11 @@ async function loadJobs(event, searchValue) {
         checkListContainer.onchange = async () => {
             let checklistArray = [];
             checkValues.forEach(checkItem => {
-                checklistArray.push({checked: checkItem.checkBox.checked, text: checkItem.text});
+                checklistArray.push({
+                    checked: checkItem.checkBox.checked,
+                    text: checkItem.text, 
+                    stationName: checkItem.stationName,
+                });
             });
             updateCheckInTitles(checkListContainer, cardTitle);
             await updateDBEntry(BUSINESS_SCHEMA, JOBS_TABLE, {id: entry.id, checklist: JSON.stringify(checklistArray)}, settings);
@@ -321,6 +345,7 @@ async function loadJobs(event, searchValue) {
 
             const checkContainer = document.createElement('div');
             checkContainer.setAttribute('title', "Double click to delete");
+            checkContainer.setAttribute('station', checkItem.stationName);
             checkContainer.classList.add('check-container');
             checkContainer.addEventListener('dblclick', async (event) => {
                 event.preventDefault();
@@ -329,7 +354,11 @@ async function loadJobs(event, searchValue) {
 
                     let checklistArray = [];
                     checkValues.forEach(checkItem => {
-                        checklistArray.push({checked: checkItem.checkBox.checked, text: checkItem.text});
+                        checklistArray.push({
+                            checked: checkItem.checkBox.checked,
+                            text: checkItem.text, 
+                            stationName: checkItem.stationName,
+                        });
                     });
                     await updateDBEntry(BUSINESS_SCHEMA, JOBS_TABLE, {id: entry.id, checklist: JSON.stringify(checklistArray)}, settings);
                     loadJobs();
@@ -347,7 +376,11 @@ async function loadJobs(event, searchValue) {
             checkBox.setAttribute('id', checkID);
             checkBox.classList.add('check-box');
 
-            checkValuesIndex = checkValues.push({checkBox: checkBox, text: checkItem.text}) - 1;
+            checkValuesIndex = checkValues.push({
+                checkBox: checkBox,
+                text: checkItem.text, 
+                stationName: checkItem.stationName,
+            }) - 1;
 
             checkContainer.appendChild(checkBox);
             checkContainer.appendChild(label);
@@ -387,9 +420,6 @@ async function showAddCheckboxModal(okCallback) {
 
 
 async function showYesNoModal(yesCallback) {
-    const yesNoModal = document.querySelector("#yes-no-item-modal");
-    const yesNoModalYesBtn = document.querySelector("#yes-btn");
-    const yesNoModalNoBtn = document.querySelector("#no-btn");
     yesNoModal.style.display = 'flex';
     yesNoModalYesBtn.onclick = () => {
         yesCallback();
@@ -398,6 +428,12 @@ async function showYesNoModal(yesCallback) {
     yesNoModalNoBtn.onclick = () => {
         yesNoModal.style.display = 'none';
     };
+}
+
+function noModalsAreOpen() {
+    console.log(addCheckboxModal.style.display == 'flex');
+    console.log(yesNoModal.style.display == 'flex');
+    return !((addCheckboxModal.style.display == 'flex') || (yesNoModal.style.display == 'flex'));
 }
 
 function getLocalStorageValue(key) {
