@@ -88,7 +88,6 @@ class Timer {
 }
 const timer = new Timer(() => {
     if (noModalsAreOpen()) {
-        console.log('Load');
         loadJobs();
     }
 }, 1000 * 60 * 1);
@@ -137,19 +136,22 @@ searchClearButton.addEventListener('click', () => {
     loadJobs();
 });
 
-// document.addEventListener('click', (event) => {
-//     console.log(event);
-//     // const cards = document.querySelectorAll('.card');
-//     // cards.forEach(card => {
-//     //     console.log(card.jobid.value);
-//     // });
-// });
 
 
 // FUNCTIONS
 
 function search() {
     loadJobs(null, searchInput.value);
+}
+
+function differenceInDays(dateOne, dateTwo) {
+    const date1 = new Date(dateOne);
+    const date2 = new Date(dateTwo);
+
+    const differenceInTime = date2.getTime() - date1.getTime();
+    const differenceInDays = differenceInTime / (1000 * 3600 * 24);
+    
+    return Math.floor(differenceInDays);
 }
 
 // Load Parts Issues Table
@@ -212,7 +214,6 @@ async function loadJobs(event, searchValue) {
     for (const entry of response) {
         if (!entry.active) continue;
 
-        // console.log(searchValue);
         if (searchValue) {
             if (!String(entry.name).toUpperCase().includes(String(searchValue).toUpperCase())) continue;
         }
@@ -245,18 +246,9 @@ async function loadJobs(event, searchValue) {
 
         const checkValues = [];
 
-        let jobDoneCheck = false;
-        
         // Loop through checks
         if (entry.checklist) {
-            // Set to true if checklist longer than 0
-            jobDoneCheck = (entry.checklist.length > 0);
-
             for (const checkItem of entry.checklist) {
-                if (!checkItem.checked) {
-                    jobDoneCheck = false;
-                }
-
                 const checkboxItem = getCheckboxItem(checkItem);
 
                 checkListContainer.appendChild(checkboxItem);
@@ -267,9 +259,7 @@ async function loadJobs(event, searchValue) {
             }
         }
 
-        if (jobDoneCheck) {
-            cardTitle.classList.add('card-title-checked');
-        }
+        updateColorAndCheckInTitle(checkListContainer, cardTitle, entry.shipDate);
 
         const addCheckboxButton = document.createElement('button');
         addCheckboxButton.textContent = "Add checkbox";
@@ -287,7 +277,6 @@ async function loadJobs(event, searchValue) {
                     });
 
                     const stationName = getLocalStorageValue('stationName');
-                    console.log(stationName);
                     checklistArray.push({checked: false, text: inputText, stationName});
                     const checkItem = {
                         checkBox: {
@@ -297,7 +286,7 @@ async function loadJobs(event, searchValue) {
                         stationName,
                     };
                     checkListContainer.appendChild(getCheckboxItem(checkItem));
-                    updateCheckInTitles(checkListContainer, cardTitle);
+                    updateColorAndCheckInTitle(checkListContainer, cardTitle, entry.shipDate);
                     await updateDBEntry(BUSINESS_SCHEMA, JOBS_TABLE, {id: entry.id, checklist: JSON.stringify(checklistArray)}, settings);
                 });
         };
@@ -318,13 +307,13 @@ async function loadJobs(event, searchValue) {
                     stationName: checkItem.stationName,
                 });
             });
-            updateCheckInTitles(checkListContainer, cardTitle);
+            updateColorAndCheckInTitle(checkListContainer, cardTitle, entry.shipDate);
             await updateDBEntry(BUSINESS_SCHEMA, JOBS_TABLE, {id: entry.id, checklist: JSON.stringify(checklistArray)}, settings);
         }
 
         cardsContainer.appendChild(card);
 
-        function updateCheckInTitles(checkListContainer, cardTitle) {
+        function updateColorAndCheckInTitle(checkListContainer, cardTitle, shipDate) {
             let allChecked = true;
             const checkboxes = checkListContainer.querySelectorAll('.check-box');
 
@@ -336,6 +325,16 @@ async function loadJobs(event, searchValue) {
 
             if (allChecked && checkboxes.length) {
                 cardTitle.classList.add('card-title-checked');
+            }
+
+            if ((differenceInDays((new Date()).toLocaleDateString(), shipDate) < 7) && !allChecked) {
+                cardTitle.style.color = 'var(--no)';
+            }
+            else {
+                cardTitle.style.color = 'var(--color)';
+            }
+            if (checkboxes.length == -1) {
+                cardTitle.style.color = 'var(--color)';
             }
         }
         
@@ -431,8 +430,6 @@ async function showYesNoModal(yesCallback) {
 }
 
 function noModalsAreOpen() {
-    console.log(addCheckboxModal.style.display == 'flex');
-    console.log(yesNoModal.style.display == 'flex');
     return !((addCheckboxModal.style.display == 'flex') || (yesNoModal.style.display == 'flex'));
 }
 
