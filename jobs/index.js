@@ -328,7 +328,7 @@ async function loadJobs(event, searchValue) {
             }
 
             if ((differenceInDays((new Date()).toLocaleDateString(), shipDate) < 7) && !allChecked) {
-                cardTitle.style.color = 'var(--no)';
+                // cardTitle.style.color = 'var(--no)';
             }
             else {
                 cardTitle.style.color = 'var(--color)';
