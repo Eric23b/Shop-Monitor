@@ -1,4 +1,21 @@
-import { insertDBEntry, getDBEntrees } from "../db-utilities.js";
+import { 
+    insertDBEntry, 
+    getDBEntrees,
+    updateDBEntry,
+} from "../db-utilities.js";
+
+import {
+    LOGS_SCHEMA,
+    // TIMER_TABLE,
+    RUNNING_TIMER_TABLE,
+    COMPLETED_TIMER_TABLE,
+    BUSINESS_SCHEMA,
+    INVENTORY_SCHEMA,
+    SUPPLY_LIST_TABLE,
+    EMPLOYEES_TABLE,
+    STATIONS_TABLE,
+    JOBS_TABLE,
+} from "../directives.js";
 
 const isDev = false;
 
@@ -33,6 +50,10 @@ const clockFirstNameInput = document.querySelector("#first-name-input");
 
 const note = document.querySelector("#note");
 
+const additionalSuppliesContainer = document.querySelector("#additional-supplies-container");
+const additionalSuppliesJob = document.querySelector("#additional-supplies-job-number");
+const additionalSuppliesSupply = document.querySelector("#additional-supplies-supply-number");
+
 const message = document.querySelector("#message");
 const sendButton = document.querySelector("#send-button");
 const submitButton = document.querySelector("#submit-button");
@@ -42,6 +63,11 @@ const partIssuesTableData = document.querySelector("#part-issues-table");
 
 const supplyIssuesContainer = document.querySelector("#supply-issues-container");
 const supplyIssuesTableData = document.querySelector("#supply-issues-table");
+
+// const jobNamesSelect = document.querySelector("#job-name-select");
+
+const suppliesDataList = document.querySelector("#supply-datalist");
+
 
 let itemsArray = [];
 
@@ -58,6 +84,8 @@ if (serverSettings.url && serverSettings.authorization) {
         loadPartIssues();
         loadSuppliesIssues();
         loadCategoriesSelect();
+        loadJobs();
+        loadDataListWithSupplies();
     } catch (error) {
         showMessage(error);
     }
@@ -117,6 +145,8 @@ sendButton.addEventListener('click', async (event) => {
         note: note.value,
     };
 
+    let sendEmail = false;
+
     switch (issuesSelect.value) {
         case "part":
             data.jobName = jobNumberInput.value;
@@ -127,6 +157,7 @@ sendButton.addEventListener('click', async (event) => {
             await insertDBEntry("issues_schema", "parts_issues", data, serverSettings);
             loadFormMessageForPartIssue();
             console.log('Part Issue sent');
+            sendEmail = true;
             break;
 
         case "supplies":
@@ -145,6 +176,7 @@ sendButton.addEventListener('click', async (event) => {
             }
             loadFormMessageForSupplyIssue();
             console.log('Supply Issue sent');
+            sendEmail = true;
             break;
 
         case "clock":
@@ -155,6 +187,7 @@ sendButton.addEventListener('click', async (event) => {
             await insertDBEntry("issues_schema", "time_clock_issues", data, serverSettings);
             loadFormMessageForClockIssue();
             console.log('Time Clock Issue sent');
+            sendEmail = true;
             break;
 
         case "other":
@@ -162,8 +195,26 @@ sendButton.addEventListener('click', async (event) => {
             await insertDBEntry("issues_schema", "other_issues", data, serverSettings);
             loadFormMessageForOtherIssue();
             console.log('Other Issue sent');
+            sendEmail = true;
             break;
-    
+
+        case "additional":
+            const jobID = additionalSuppliesJob.children[additionalSuppliesJob.value].getAttribute("db_id");
+            console.log(jobID)
+            const currentJob = await getDBEntrees(BUSINESS_SCHEMA, "jobs", "id", jobID, serverSettings);
+            console.log(currentJob);
+            if (!currentJob.additionalSupplies) {
+                currentJob.additionalSupplies = [];
+            }
+            currentJob.additionalSupplies.append(additionalSuppliesSupply.value)
+            const additionalSuppliesData = {};
+            additionalSuppliesData.additionalSupplies = currentJob
+            await updateDBEntry("business_schema", "jobs", additionalSuppliesData, serverSettings);
+            loadFormMessageForAdditionalSupplies();
+            console.log('Additional supplies sent');
+            sendEmail = false;
+            break;
+
         default:
             break;
     }
@@ -175,7 +226,15 @@ sendButton.addEventListener('click', async (event) => {
     //     a.click();
     // }
 
-    submitButton.click();
+    if (sendEmail) {
+        submitButton.click();
+    }
+    else {
+        // const a = document.createElement('a');
+        // a.href = "/issues.html";
+        // a.click();
+    }
+
 });
 
 
@@ -231,7 +290,12 @@ function loadFormMessageForClockIssue() {
     const formattedTime = time.toLocaleString('en-US', options);
     message.value += `${clockFirstNameInput.value} forgot to clock in/out on ${formattedTime}\n`;
 }
+
 function loadFormMessageForOtherIssue() {
+    message.value = "";
+}
+
+function loadFormMessageForAdditionalSupplies() {
     message.value = "";
 }
 
@@ -302,6 +366,7 @@ function updateContainer() {
     if (issuesSelect.value === "part") partContainer.style.display = "flex";
     if (issuesSelect.value === "supplies") suppliesContainer.style.display = "flex";
     if (issuesSelect.value === "clock") clockContainer.style.display = "flex";
+    if (issuesSelect.value === "additional") additionalSuppliesContainer.style.display = "flex";
 }
 
 async function loadPartIssues() {
@@ -379,7 +444,7 @@ function formFilled() {
 
     switch (issuesSelect.value) {
         case "part":
-            if (!jobNumberInput.value) showMessage("Missing name");
+            if (!jobNumberInput.value) showMessage("Missing job name");
             else if (!cabinetNumberInput.value) showMessage("Missing cabinet number");
             return !!jobNumberInput.value && !!cabinetNumberInput.value && !!partSelect.value;
 
@@ -396,6 +461,12 @@ function formFilled() {
             if (!note.value) showMessage("Add a note");
             return !!note.value;
 
+        case "additional":
+            const jobName = additionalSuppliesJob.children[additionalSuppliesJob.value].textContent;
+            if (!jobName) showMessage("Missing job name");
+            else if (!additionalSuppliesSupply.value) showMessage("Missing supply name");
+            return !!jobName && !!additionalSuppliesSupply.value;
+
         default:
             showMessage("Select an Issue from the drop-down");
             return false;
@@ -406,6 +477,7 @@ function hideContainers() {
     partContainer.style.display = "none";
     suppliesContainer.style.display = "none";
     clockContainer.style.display = "none";
+    additionalSuppliesContainer.style.display = "none";
 }
 
 function getLocalStorageValue(key) {
@@ -422,4 +494,64 @@ function showMessage(messageText) {
     setTimeout(() => {
         errorMessage.textContent = "";
     }, 6000);
+}
+
+async function loadJobs() {
+    const jobsResponse = await getDBEntrees(BUSINESS_SCHEMA, JOBS_TABLE, "active", true, serverSettings);
+    if ((!jobsResponse) || (jobsResponse.error)) {
+        showMessage("Error loading jobs", true);
+    }
+    else {
+        jobsResponse.sort((a, b) => {
+            const nameA = String(a.name).toUpperCase();
+            const nameB = String(b.name).toUpperCase();
+            if (nameA < nameB) return 1;
+            if (nameA > nameB) return -1;
+            return 0;
+        });
+        loadSelectFromArray(additionalSuppliesJob, "name", true, jobsResponse);
+    }
+}
+
+function loadSelectFromArray(selectElement, textAttribute, setID, array, addBlank) {
+    selectElement.innerHTML = "";
+
+    if (addBlank) {
+        const option = document.createElement("option");
+        option.setAttribute("disabled", true);
+        option.setAttribute("selected", true);
+        option.textContent = "";
+        option.value = "";
+        selectElement.appendChild(option);
+    }
+
+    array.forEach((element, index) => {
+        const option = document.createElement("option");
+        option.textContent = element[textAttribute] || element;
+        if (setID) option.setAttribute('db_id', element.id);
+        option.value = index;
+        selectElement.appendChild(option);
+    });
+}
+
+async function loadDataListWithSupplies() {
+    // const filter = categoryFilterInput.value || "*";
+    
+    const response = await getDBEntrees(INVENTORY_SCHEMA, SUPPLY_LIST_TABLE, "__createdtime__", "*", serverSettings);
+    
+    if ((!response) || (response.error)) return;
+    
+    response.sort((a, b) => {
+        const categoryA = a.category.toUpperCase();
+        const categoryB = b.category.toUpperCase();
+        if (categoryA < categoryB) return -1;
+        if (categoryA > categoryB) return 1;
+        return 0;
+    });
+
+    response.forEach((supply) => {
+        const option = document.createElement("option");
+        option.value = supply.item;
+        suppliesDataList.appendChild(option);
+    });
 }

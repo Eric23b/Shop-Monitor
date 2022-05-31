@@ -84,6 +84,17 @@
             <div id="other-issues-container" class="container flex-column">
                 <label class="flex-column">First Name<input id="other-issues-first-name-input" type="text"></label>
             </div>
+
+            <!-- Additional Supplies -->
+            <div id="additional-supplies-container" class="container flex-column">
+                <label class="flex-column">Job name
+                    <select id="additional-supplies-job-number">
+                    </select>
+                </label>
+                <label class="flex-column">Supplies name
+                    <input id="additional-supplies-supply-number" list="supply-datalist" type="text">
+                </label>
+            </div>
             
             <!-- Form -->
             <form id="form" class="flex-column" name="shop-issue" method="POST" data-netlify="true" action="/success.html">
@@ -93,6 +104,9 @@
                 <button id="send-button" class="form-button">Send</button>
                 <button id="submit-button" class="form-button" type="submit" style="display: none;"></button>
             </form>
+
+            <datalist id="job-name-datalist"></datalist>
+            <datalist id="supply-datalist"></datalist>
         </div>
 
         <!-- Part Issues -->
