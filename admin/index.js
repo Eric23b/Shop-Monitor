@@ -916,7 +916,7 @@ async function loadJobsTable() {
 
         // Additional Supplies
         let additionalSuppliesText = "";
-        if (entry.additionalSupplies !== null) {
+        if (entry.additionalSupplies) {
             for (const additionalSuppliesLine of entry.additionalSupplies) {
                 additionalSuppliesText += additionalSuppliesLine.supplies + ":" + additionalSuppliesLine.note + "\n";
             }
