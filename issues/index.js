@@ -200,16 +200,18 @@ sendButton.addEventListener('click', async (event) => {
 
         case "additional":
             const jobID = additionalSuppliesJob.children[additionalSuppliesJob.value].getAttribute("db_id");
-            console.log(jobID)
-            const currentJob = await getDBEntrees(BUSINESS_SCHEMA, "jobs", "id", jobID, serverSettings);
-            console.log(currentJob);
-            if (!currentJob.additionalSupplies) {
-                currentJob.additionalSupplies = [];
+            // console.log(jobID)
+            const jobs = await getDBEntrees(BUSINESS_SCHEMA, JOBS_TABLE, "id", jobID, serverSettings);
+            // console.log(currentJob);
+            if (jobs[0].additionalSupplies == null) {
+                jobs[0].additionalSupplies = [];
+                console.log(jobs[0])
             }
-            currentJob.additionalSupplies.append(additionalSuppliesSupply.value)
-            const additionalSuppliesData = {};
-            additionalSuppliesData.additionalSupplies = currentJob
-            await updateDBEntry("business_schema", "jobs", additionalSuppliesData, serverSettings);
+            // console.log( currentJob.additionalSupplies)
+            jobs[0].additionalSupplies.push({supplies: additionalSuppliesSupply.value, note: note.value});
+            // const additionalSuppliesData = {};
+            // additionalSuppliesData.additionalSupplies = jobs
+            await updateDBEntry(BUSINESS_SCHEMA, JOBS_TABLE, jobs[0], serverSettings);
             loadFormMessageForAdditionalSupplies();
             console.log('Additional supplies sent');
             sendEmail = false;

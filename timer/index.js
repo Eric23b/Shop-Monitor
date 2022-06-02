@@ -42,7 +42,6 @@ window.onkeydown = (event) => {
 
 employeesSelect.addEventListener('change', updateStartBtn);
 
-
 startBtn.addEventListener('click', async () => {
     if (allFieldsSelected()) {
         try {

@@ -735,8 +735,8 @@ async function loadTimersTable() {
     if ((!completedTasks) || (completedTasks.error)) return;
     completedTasks.sort((a, b) => {return a.__createdtime__ - b.__createdtime__});
 
-    // Get all active jobs
-    const activeJobs = await getDBEntrees(BUSINESS_SCHEMA, JOBS_TABLE, "active", "true", settings, dbActive);
+    // Get all jobs
+    const activeJobs = await getDBEntrees(BUSINESS_SCHEMA, JOBS_TABLE, "__createdtime__", "*", settings, dbActive);
     if ((!activeJobs) || (activeJobs.error)) return;
     activeJobs.sort((a, b) => {
         const nameA = String(a.name).toUpperCase();
@@ -886,11 +886,12 @@ async function loadJobsTable() {
     //     return 0;
     // });
 
-    employeeTable.innerHTML = getTableHeaderRow(["Name", "Ship Date", "Note", "Active", "Delete"]);
+    employeeTable.innerHTML = getTableHeaderRow(["Name", "Ship Date", "Additional Supplies", "Note", "Active", "Delete"]);
 
     for (const entry of response) {
         const row = document.createElement('tr');
 
+        // Job name
         const name = getTableDataWithText(entry.name);
         name.onclick = () => {
             showPrompt("Job name", entry.name, async (newName) => {
@@ -900,6 +901,7 @@ async function loadJobsTable() {
         }
         name.style.cursor = "pointer";
 
+        // Ship date
         const shipDate = getTableDataWithText(entry.shipDate);
         shipDate.onclick = () => {
             showPrompt("Ship Date", entry.shipDate, async (newShipDate) => {
@@ -912,6 +914,24 @@ async function loadJobsTable() {
         }
         shipDate.style.cursor = "pointer";
 
+        // Additional Supplies
+        let additionalSuppliesText = "";
+        if (entry.additionalSupplies !== null) {
+            for (const additionalSuppliesLine of entry.additionalSupplies) {
+                additionalSuppliesText += additionalSuppliesLine.supplies + ":" + additionalSuppliesLine.note + "\n";
+            }
+        }
+        const additionalSupplies = getTableDataWithText(additionalSuppliesText);
+        additionalSupplies.onclick = () => {
+            showAlert("Additional Supplies", additionalSuppliesText, null);
+            // showPrompt("Additional Supplies", entry.additionalSupplies, async (newNote) => {
+                    // await updateDBEntry(BUSINESS_SCHEMA, JOBS_TABLE, {id: entry.id, note: newNote}, settings, dbActive);
+                    // await loadJobsTable();
+                // });
+        }
+        additionalSupplies.style.cursor = "pointer";
+
+        // Notes
         const note = getTableDataWithText(entry.note);
         note.onclick = () => {
             showPrompt("Note", entry.note, async (newNote) => {
@@ -921,6 +941,7 @@ async function loadJobsTable() {
         }
         note.style.cursor = "pointer";
 
+        // Active jobs
         const active = getTableDataWithCheckbox(
             entry.active,
             async (event) => {
@@ -929,6 +950,7 @@ async function loadJobsTable() {
             }
         );
 
+        // Delete button
         const deleteTD = getTableDataWithDeleteButton(
             async () => {
                 await deleteDBEntry(BUSINESS_SCHEMA, JOBS_TABLE, entry.id, settings, dbActive);
@@ -936,7 +958,7 @@ async function loadJobsTable() {
             }
         );
 
-        appendChildren(row, [name, shipDate, note, active, deleteTD]);
+        appendChildren(row, [name, shipDate, additionalSupplies, note, active, deleteTD]);
         employeeTable.appendChild(row);
     };
 }
