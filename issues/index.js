@@ -232,9 +232,9 @@ sendButton.addEventListener('click', async (event) => {
         submitButton.click();
     }
     else {
-        // const a = document.createElement('a');
-        // a.href = "/issues.html";
-        // a.click();
+        const a = document.createElement('a');
+        a.href = "/issues.html";
+        a.click();
     }
 
 });
