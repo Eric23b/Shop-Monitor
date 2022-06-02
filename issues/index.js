@@ -203,7 +203,6 @@ sendButton.addEventListener('click', async (event) => {
             const jobs = await getDBEntrees(BUSINESS_SCHEMA, JOBS_TABLE, "id", jobID, serverSettings);
             if (jobs[0].additionalSupplies == null) {
                 jobs[0].additionalSupplies = [];
-                console.log(jobs[0])
             }
             jobs[0].additionalSupplies.push({supplies: additionalSuppliesSupply.value, note: note.value});
             await updateDBEntry(BUSINESS_SCHEMA, JOBS_TABLE, jobs[0], serverSettings);
