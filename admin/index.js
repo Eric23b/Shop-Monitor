@@ -131,6 +131,11 @@ const alertLabel = document.querySelector("#alert-label");
 const alertMessage = document.querySelector("#alert-message");
 const alertOKBtn = document.querySelector("#alert-ok-btn");
 
+const tableModalBackground = document.querySelector("#tableModal");
+const tableModalLabel = document.querySelector("#table-modal-label");
+// const tableModalMessage = document.querySelector("#table-modal-message");
+const tableModalOKBtn = document.querySelector("#table-modal-ok-btn");
+
 const dbActivityLight = document.querySelector("#db-activity-light");
 
 
@@ -923,7 +928,7 @@ async function loadJobsTable() {
         }
         const additionalSupplies = getTableDataWithText(additionalSuppliesText);
         additionalSupplies.onclick = () => {
-            showAlert("Additional Supplies", additionalSuppliesText, null);
+            showTableModal("Additional Supplies", additionalSuppliesText, null);
             // showPrompt("Additional Supplies", entry.additionalSupplies, async (newNote) => {
                     // await updateDBEntry(BUSINESS_SCHEMA, JOBS_TABLE, {id: entry.id, note: newNote}, settings, dbActive);
                     // await loadJobsTable();
@@ -1220,6 +1225,22 @@ function showAlert(labelText, messageText, OKCallback) {
     function okClick() {
         if (OKCallback) OKCallback();
         alertBackground.style.display = "none";
+    }
+}
+
+function showTableModal(labelText, messageText, OKCallback) {
+    tableModalBackground.style.display = "flex";
+    // alertBackground.onclick = okClick;
+
+    tableModalLabel.textContent = labelText;
+
+    // tableModalMessage.textContent = messageText;
+
+    tableModalOKBtn.onclick = okClick;
+
+    function okClick() {
+        if (OKCallback) OKCallback();
+        tableModalBackground.style.display = "none";
     }
 }
 
