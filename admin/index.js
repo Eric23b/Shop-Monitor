@@ -133,7 +133,7 @@ const alertOKBtn = document.querySelector("#alert-ok-btn");
 
 const tableModalBackground = document.querySelector("#tableModal");
 const tableModalLabel = document.querySelector("#table-modal-label");
-// const tableModalMessage = document.querySelector("#table-modal-message");
+const tableModalTable = document.querySelector("#table-modal-table");
 const tableModalOKBtn = document.querySelector("#table-modal-ok-btn");
 
 const dbActivityLight = document.querySelector("#db-activity-light");
@@ -894,8 +894,6 @@ async function loadJobsTable() {
     employeeTable.innerHTML = getTableHeaderRow(["Name", "Ship Date", "Additional Supplies", "Note", "Active", "Delete"]);
 
     for (const entry of response) {
-        const row = document.createElement('tr');
-
         // Job name
         const name = getTableDataWithText(entry.name);
         name.onclick = () => {
@@ -920,18 +918,79 @@ async function loadJobsTable() {
         shipDate.style.cursor = "pointer";
 
         // Additional Supplies
-        let additionalSuppliesText = "";
-        if (entry.additionalSupplies) {
-            for (const additionalSuppliesLine of entry.additionalSupplies) {
-                additionalSuppliesText += additionalSuppliesLine.supplies + ":" + additionalSuppliesLine.note + "\n";
+        let additionalSupplies = getTableDataWithText("");
+        if (entry.additionalSupplies && entry.additionalSupplies.length > 0) {
+            let additionalSuppliesText = "";
+            for (const suppliesText of entry.additionalSupplies) {
+                additionalSuppliesText += suppliesText.supplies + " : " + suppliesText.note + "\n";
             }
+            additionalSupplies.onclick = () => {
+                tableModalTable.innerHTML = getTableHeaderRow(["Supplies", "Note", "Delete"]);
+                
+                for (let supplyIndex = 0; supplyIndex < entry.additionalSupplies.length; supplyIndex++) {
+                    const additionalSuppliesLine = entry.additionalSupplies[supplyIndex];
+                    additionalSuppliesText += additionalSuppliesLine.supplies + ":" + additionalSuppliesLine.note + "\n";
+                    
+                    const supplyName = getTableDataWithText(additionalSuppliesLine.supplies);
+                    supplyName.onclick = () => {
+                        tableModalBackground.style.display = "none";
+                        showPrompt("Additional Supplies Name",
+                            // OK click
+                            additionalSuppliesLine.supplies, async (newSupplyName) => {
+                                entry.additionalSupplies[supplyIndex].supplies = newSupplyName;
+                                supplyName.innerText = newSupplyName;
+                                await updateDBEntry(BUSINESS_SCHEMA, JOBS_TABLE, entry, settings, dbActive);
+                                await loadJobsTable();
+
+                                tableModalBackground.style.display = "flex";
+                            },
+                            // cancel Click
+                            async (newSupplyName) => {
+                                tableModalBackground.style.display = "flex";
+                            }
+                        );
+                    }
+
+                    const supplyNote = getTableDataWithText(additionalSuppliesLine.note);
+                    supplyNote.onclick = () => {
+                        tableModalBackground.style.display = "none";
+                        showPrompt("Additional Supplies Note",
+                            // OK click
+                            additionalSuppliesLine.note, async (newSupplyNote) => {
+                                entry.additionalSupplies[supplyIndex].note = newSupplyNote;
+                                supplyNote.innerText = newSupplyNote;
+                                await updateDBEntry(BUSINESS_SCHEMA, JOBS_TABLE, entry, settings, dbActive);
+                                await loadJobsTable();
+
+                                tableModalBackground.style.display = "flex";
+                            },
+                            // cancel Click
+                            async (newSupplyName) => {
+                                tableModalBackground.style.display = "flex";
+                            }
+                        );
+                    }
+
+                    // Delete supply button
+                    const deleteSupplyTD = getTableDataWithDeleteButton(
+                        async () => {
+                            entry.additionalSupplies.splice(supplyIndex, 1);
+                            console.log(entry.additionalSupplies);
+                            tableModalTable.removeChild(supplyRow);
+                            await updateDBEntry(BUSINESS_SCHEMA, JOBS_TABLE, entry, settings, dbActive);
+                            await loadJobsTable();
+                        }
+                    );
+
+                    const supplyRow = document.createElement('tr');
+                    appendChildren(supplyRow, [supplyName, supplyNote, deleteSupplyTD]);
+                    tableModalTable.appendChild(supplyRow);
+                }
+                showTableModal("Additional Supplies");
+            }
+            additionalSupplies.textContent = additionalSuppliesText;
+            additionalSupplies.style.cursor = "pointer";
         }
-        const additionalSupplies = getTableDataWithText(additionalSuppliesText);
-        additionalSupplies.onclick = () => {
-            // showTableModal("Additional Supplies", additionalSuppliesText, null);
-            showAlert("Additional", additionalSuppliesText);
-        }
-        additionalSupplies.style.cursor = "pointer";
 
         // Notes
         const note = getTableDataWithText(entry.note);
@@ -960,6 +1019,7 @@ async function loadJobsTable() {
             }
         );
 
+        const row = document.createElement('tr');
         appendChildren(row, [name, shipDate, additionalSupplies, note, active, deleteTD]);
         employeeTable.appendChild(row);
     };
@@ -1225,7 +1285,7 @@ function showAlert(labelText, messageText, OKCallback) {
     }
 }
 
-function showTableModal(labelText, messageText, OKCallback) {
+function showTableModal(labelText) {
     tableModalBackground.style.display = "flex";
     // alertBackground.onclick = okClick;
 
@@ -1236,7 +1296,7 @@ function showTableModal(labelText, messageText, OKCallback) {
     tableModalOKBtn.onclick = okClick;
 
     function okClick() {
-        if (OKCallback) OKCallback();
+        // if (OKCallback) OKCallback();
         tableModalBackground.style.display = "none";
     }
 }
