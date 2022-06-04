@@ -928,11 +928,8 @@ async function loadJobsTable() {
         }
         const additionalSupplies = getTableDataWithText(additionalSuppliesText);
         additionalSupplies.onclick = () => {
-            showTableModal("Additional Supplies", additionalSuppliesText, null);
-            // showPrompt("Additional Supplies", entry.additionalSupplies, async (newNote) => {
-                    // await updateDBEntry(BUSINESS_SCHEMA, JOBS_TABLE, {id: entry.id, note: newNote}, settings, dbActive);
-                    // await loadJobsTable();
-                // });
+            // showTableModal("Additional Supplies", additionalSuppliesText, null);
+            showAlert("Additional", additionalSuppliesText);
         }
         additionalSupplies.style.cursor = "pointer";
 
