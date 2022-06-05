@@ -94,6 +94,8 @@ const employeeTable = document.querySelector("#jobs-table");
 const employeesTabContainer = document.querySelector("#employee-container");
 const employeeNameInput = document.querySelector("#employee-input");
 const employeeWorkStationsInput = document.querySelector("#employee-work-stations-input");
+const employeeShiftStart = document.querySelector("#employee-shift-start-input");
+const employeeShiftEnd = document.querySelector("#employee-shift-end-input");
 const addEmployeeButton = document.querySelector("#add-employee-btn");
 const employeesTable = document.querySelector("#employee-table");
 
@@ -262,10 +264,18 @@ addJobButton.addEventListener('click', async () => {
 addEmployeeButton.addEventListener('click', async () => {
     const employeeName = employeeNameInput.value.trim();
     const workStations = employeeWorkStationsInput.value.trim();
+    const shiftStart = employeeShiftStart.value;
+    const shiftEnd = employeeShiftEnd.value;
 
     if (!employeeName) return;
 
-    const data = {name: employeeName, stations: workStations, active: true};
+    const data = {
+        name: employeeName,
+        stations: workStations,
+        shiftStart: shiftStart,
+        shiftEnd: shiftEnd,
+        active: true,
+    };
 
     await insertDBEntry(BUSINESS_SCHEMA, EMPLOYEES_TABLE, data, settings, dbActive);
     await loadEmployeeTable();
@@ -1039,7 +1049,7 @@ async function loadEmployeeTable() {
         return 0;
     });
 
-    employeesTable.innerHTML = getTableHeaderRow(["Name", "Stations", "Active", "Delete"]);
+    employeesTable.innerHTML = getTableHeaderRow(["Name", "Stations", "Shift Start", "Shift End", "Active", "Delete"]);
 
     for (const entry of response) {
         const row = document.createElement('tr');
@@ -1062,6 +1072,32 @@ async function loadEmployeeTable() {
         }
         stations.style.cursor = "pointer";
 
+        const shiftStartTime = hours24To12(entry.shiftStart);
+        const shiftStart = getTableDataWithText(shiftStartTime);
+        shiftStart.onclick = () => {
+            showPrompt("Shift Start", entry.shiftStart, async (newShiftStart) => {
+                await updateDBEntry(BUSINESS_SCHEMA, EMPLOYEES_TABLE, {id: entry.id, shiftStart: newShiftStart}, settings, dbActive);
+                await loadEmployeeTable();
+            },
+            async () => {},
+            false,
+            "time");
+        }
+        shiftStart.style.cursor = "pointer";
+
+        const shiftEndTime = hours24To12(entry.shiftEnd);
+        const shiftEnd = getTableDataWithText(shiftEndTime);
+        shiftEnd.onclick = () => {
+            showPrompt("Shift End", entry.shiftEnd, async (newsShiftEnd) => {
+                await updateDBEntry(BUSINESS_SCHEMA, EMPLOYEES_TABLE, {id: entry.id, shiftEnd: newsShiftEnd}, settings, dbActive);
+                await loadEmployeeTable();
+            },
+            async () => {},
+            false,
+            "time");
+        }
+        shiftEnd.style.cursor = "pointer";
+
         const active = getTableDataWithCheckbox(
             entry.active,
             async (event) => {
@@ -1077,7 +1113,7 @@ async function loadEmployeeTable() {
             }
         );
 
-        appendChildren(row, [name, stations, active, deleteTD]);
+        appendChildren(row, [name, stations, shiftStart, shiftEnd, active, deleteTD]);
         employeesTable.appendChild(row);
     };
 }
@@ -1323,6 +1359,29 @@ function saveTextFile(data, fileName, fileType) {
     hiddenElement.target = '_blank';
     hiddenElement.download = `${fileName}.${fileType}`;
     hiddenElement.click();
+}
+
+function hours24To12(time) {
+    if (time) {
+        let hours = time.split(':')[0];
+        const mins = time.split(':')[1];
+
+        console.log(time)
+        //it is pm if hours from 12 onwards
+        const suffix = (hours >= 12) ? 'p.m.' : 'a.m.';
+        console.log(suffix);
+
+        //only -12 from hours if it is greater than 12 (if not back at mid night)
+        hours = (hours > 12)? hours -12 : hours;
+
+        //if 00 then it is 12 am
+        hours = (hours == '00')? 12 : hours;
+
+        return hours + ":" + mins + " " + suffix;
+    }
+    else {
+        return "";
+    }
 }
 
 // function saveTextFile(data, fileName, fileType) {
