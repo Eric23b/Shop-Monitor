@@ -985,7 +985,6 @@ async function loadJobsTable() {
                     const deleteSupplyTD = getTableDataWithDeleteButton(
                         async () => {
                             entry.additionalSupplies.splice(supplyIndex, 1);
-                            console.log(entry.additionalSupplies);
                             tableModalTable.removeChild(supplyRow);
                             await updateDBEntry(BUSINESS_SCHEMA, JOBS_TABLE, entry, settings, dbActive);
                             await loadJobsTable();
@@ -1366,10 +1365,8 @@ function hours24To12(time) {
         let hours = time.split(':')[0];
         const mins = time.split(':')[1];
 
-        console.log(time)
         //it is pm if hours from 12 onwards
         const suffix = (hours >= 12) ? 'p.m.' : 'a.m.';
-        console.log(suffix);
 
         //only -12 from hours if it is greater than 12 (if not back at mid night)
         hours = (hours > 12)? hours -12 : hours;
