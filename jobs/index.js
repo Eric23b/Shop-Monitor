@@ -12,6 +12,10 @@ import {
     JOBS_TABLE
 } from "../directives.js";
 
+import {
+    Timer,
+} from "../timer-utilities.js";
+
 const settings = {
     url: "",
     authorization: ""
@@ -58,34 +62,6 @@ loadJobs();
 // Update the date/time at the bottom of the page
 setInterval(updateDataTime, 1000);
 
-class Timer {
-    constructor(callback, duration) {
-        let timerObj = setInterval(callback, duration);
-
-        this.stop = function () {
-            if (timerObj) {
-                clearInterval(timerObj);
-                timerObj = null;
-            }
-            return this;
-        };
-
-        // start timer using current settings (if it's not already running)
-        this.start = function () {
-            if (!timerObj) {
-                this.stop();
-                timerObj = setInterval(callback, duration);
-            }
-            return this;
-        };
-
-        // start with new or original interval, stop current interval
-        this.reset = function (newT = duration) {
-            duration = newT;
-            return this.stop().start();
-        };
-    }
-}
 const timer = new Timer(() => {
     if (noModalsAreOpen()) {
         loadJobs();
@@ -328,6 +304,7 @@ async function loadJobs(event, searchValue) {
             }
 
             if ((differenceInDays((new Date()).toLocaleDateString(), shipDate) < 7) && !allChecked) {
+                // Color card titles red if close to ship date
                 // cardTitle.style.color = 'var(--no)';
             }
             else {
