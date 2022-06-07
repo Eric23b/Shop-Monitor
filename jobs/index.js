@@ -215,6 +215,21 @@ async function loadJobs(event, searchValue) {
         shipDate.textContent = `Ship: ${entry.shipDate ? entry.shipDate : ""}`;
         shipDate.classList.add('ship-date');
         
+        const dueInDays = document.createElement('p');
+        const dueInDaysFromNow = differenceInDays((new Date()).toLocaleDateString(), entry.shipDate);
+        if (dueInDaysFromNow > 0) {
+            const dueInDaysPlural = (dueInDaysFromNow > 1) ? "s" : "";
+            dueInDays.textContent = `Due in ${dueInDaysFromNow} day${dueInDaysPlural}`;
+        }
+        else if (dueInDaysFromNow < 0) {
+            const dueInDaysPlural = (Math.abs(dueInDaysFromNow) > 1) ? "s" : "";
+            dueInDays.textContent = `Due ${Math.abs(dueInDaysFromNow)} day${dueInDaysPlural} ago`;
+        }
+        else {
+            dueInDays.textContent = `Due today`;
+        }
+        dueInDays.classList.add('notes');
+        
         const note = document.createElement('p');
         note.textContent = entry.note;
         note.classList.add('notes');
@@ -271,6 +286,7 @@ async function loadJobs(event, searchValue) {
         summary.appendChild(cardTitle);
         card.appendChild(summary);
         card.appendChild(shipDate);
+        card.appendChild(dueInDays);
         card.appendChild(note);
         card.appendChild(checkListContainer);
         card.appendChild(addCheckboxButton);
@@ -304,8 +320,10 @@ async function loadJobs(event, searchValue) {
                 cardTitle.classList.add('card-title-checked');
             }
 
+            console.log(differenceInDays((new Date()).toLocaleDateString(), shipDate));
             if ((differenceInDays((new Date()).toLocaleDateString(), shipDate) < lateJobsDays) && !allChecked) {
                 // cardTitle.style.color = 'var(--no)';
+
             }
             else {
                 cardTitle.style.color = 'var(--color)';

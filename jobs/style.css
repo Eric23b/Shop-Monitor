@@ -377,9 +377,10 @@ label{
 }
 .ship-date{
     text-align: center;
+    margin-bottom: 0.5rem;
 }
 .notes{
-
+    margin: 0.25rem;
 }
 .check-list-container{
     display: flex;
