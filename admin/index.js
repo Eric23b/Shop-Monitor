@@ -176,7 +176,7 @@ if (password !== "pw558") {
 settings.url = serverURL.value = getLocalStorageValue('serverURL') || "";
 settings.authorization = serverAuthorization.value = getLocalStorageValue('serverAuthorization') || "";
 stationName.value = getLocalStorageValue('stationName') || "";
-lateJobsDays.value = getLocalStorageValue('lateJobsDays') || "";
+lateJobsDays.value = getLocalStorageValue('lateJobsDays') || "7";
 
 
 // showSettings();
@@ -430,7 +430,7 @@ stationName.addEventListener('blur', () => {
 });
 
 // Save late days on blur
-lateJobsDays.addEventListener('blur', () => {
+lateJobsDays.addEventListener('change', () => {
     setLocalStorageValue('lateJobsDays', lateJobsDays.value);
 });
 
