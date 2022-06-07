@@ -53,6 +53,9 @@ const dateLabel = document.querySelector("#date");
 settings.url = getLocalStorageValue('serverURL') || "";
 settings.authorization = getLocalStorageValue('serverAuthorization') || "";
 
+const lateJobsDays = getLocalStorageValue('lateJobsDays') || 7;
+console.log(lateJobsDays)
+
 const cardOpenCloseState = {};
 
 setTheme();
@@ -123,9 +126,13 @@ function search() {
 function differenceInDays(dateOne, dateTwo) {
     const date1 = new Date(dateOne);
     const date2 = new Date(dateTwo);
-
+    console.log("date 1", dateOne)
+    console.log("date 2", dateTwo)
+    
     const differenceInTime = date2.getTime() - date1.getTime();
     const differenceInDays = differenceInTime / (1000 * 3600 * 24);
+    console.log("diff", differenceInDays)
+
     
     return Math.floor(differenceInDays);
 }
@@ -234,7 +241,7 @@ async function loadJobs(event, searchValue) {
                 }
             }
         }
-
+        console.log(entry.name)
         updateColorAndCheckInTitle(checkListContainer, cardTitle, entry.shipDate);
 
         const addCheckboxButton = document.createElement('button');
@@ -303,9 +310,11 @@ async function loadJobs(event, searchValue) {
                 cardTitle.classList.add('card-title-checked');
             }
 
-            if ((differenceInDays((new Date()).toLocaleDateString(), shipDate) < 7) && !allChecked) {
+            if ((differenceInDays((new Date()).toLocaleDateString(), shipDate) < lateJobsDays) && !allChecked) {
                 // Color card titles red if close to ship date
-                // cardTitle.style.color = 'var(--no)';
+                // console.log(differenceInDays((new Date()).toLocaleDateString(), shipDate))
+                // console.log(differenceInDays((new Date()).toLocaleDateString(), shipDate) < lateJobsDays)
+                cardTitle.style.color = 'var(--no)';
             }
             else {
                 cardTitle.style.color = 'var(--color)';

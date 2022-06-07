@@ -118,6 +118,7 @@ const darkThemeCheckbox = document.querySelector("#dark-theme-checkbox");
 const serverURL = document.querySelector("#server-url");
 const serverAuthorization = document.querySelector("#server-authorization");
 const stationName = document.querySelector("#station-name");
+const lateJobsDays = document.querySelector("#late-job-days");
 const saveDataBaseButton = document.querySelector("#save-db-backup-btn");
 const runDBSetupBtn = document.querySelector("#run-db-setup-btn");
 const removePasswordBtn = document.querySelector("#remove-password-btn");
@@ -175,6 +176,7 @@ if (password !== "pw558") {
 settings.url = serverURL.value = getLocalStorageValue('serverURL') || "";
 settings.authorization = serverAuthorization.value = getLocalStorageValue('serverAuthorization') || "";
 stationName.value = getLocalStorageValue('stationName') || "";
+lateJobsDays.value = getLocalStorageValue('lateJobsDays') || "";
 
 
 // showSettings();
@@ -425,6 +427,11 @@ serverAuthorization.addEventListener('blur', () => {
 stationName.addEventListener('blur', () => {
     setLocalStorageValue('stationName', stationName.value);
     // station = stationName.value;
+});
+
+// Save late days on blur
+lateJobsDays.addEventListener('blur', () => {
+    setLocalStorageValue('lateJobsDays', lateJobsDays.value);
 });
 
 
