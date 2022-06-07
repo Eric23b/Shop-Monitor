@@ -320,7 +320,6 @@ async function loadJobs(event, searchValue) {
                 cardTitle.classList.add('card-title-checked');
             }
 
-            console.log(differenceInDays((new Date()).toLocaleDateString(), shipDate));
             if ((differenceInDays((new Date()).toLocaleDateString(), shipDate) < lateJobsDays) && !allChecked) {
                 // cardTitle.style.color = 'var(--no)';
 
