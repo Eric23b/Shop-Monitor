@@ -227,7 +227,7 @@ async function loadJobs(event, searchValue) {
         shipDate.classList.add('ship-date');
         
         const dueInDays = document.createElement('p');
-        const dueInDaysFromNow = differenceInDays((new Date()).toLocaleDateString(), entry.shipDate);
+        const dueInDaysFromNow = differenceInDays((new Date()).toLocaleDateString('en-CA'), entry.shipDate);
         if (dueInDaysFromNow > 0) {
             const dueInDaysPlural = (dueInDaysFromNow > 1) ? "s" : "";
             dueInDays.textContent = `Due in ${dueInDaysFromNow} day${dueInDaysPlural}`;
