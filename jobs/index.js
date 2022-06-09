@@ -14,12 +14,15 @@ import {
 
 import {
     Timer,
+    stopRunningTimer,
+    startOverTimeTimer,
 } from "../timer-utilities.js";
 
 const settings = {
     url: "",
     authorization: ""
 }
+let station = "";
 
 const cardsContainer = document.querySelector("#cards-container");
 
@@ -52,6 +55,7 @@ const dateLabel = document.querySelector("#date");
 // Retrieve settings values
 settings.url = getLocalStorageValue('serverURL') || "";
 settings.authorization = getLocalStorageValue('serverAuthorization') || "";
+station = getLocalStorageValue('stationName') || "";
 
 const lateJobsDays = getLocalStorageValue('lateJobsDays') || 7;
 
@@ -62,13 +66,20 @@ setTheme();
 loadJobs();
 
 // Update the date/time at the bottom of the page
-setInterval(updateDataTime, 1000);
+setInterval(updateDateTime, 1000);
 
 const timer = new Timer(() => {
     if (noModalsAreOpen()) {
         loadJobs();
     }
 }, 1000 * 60 * 1);
+
+startOverTimeTimer(station, settings, stopRunningTimer);
+
+// await checkOverTimers(station, settings, stopRunningTimer);
+// setInterval( async () => {
+//     await checkOverTimers(station, settings, stopRunningTimer);
+// }, 30000);
 
 
 // EVENT LISTENERS
@@ -442,6 +453,6 @@ function setTheme() {
     // darkThemeCheckbox.checked = theme == "dark" ? true : false;
 }
 
-function updateDataTime() {
+function updateDateTime() {
     dateLabel.textContent = `${(new Date()).toLocaleDateString()} ${(new Date()).toLocaleTimeString('en-US')}`;
 }

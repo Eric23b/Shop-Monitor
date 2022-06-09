@@ -17,6 +17,11 @@ import {
     JOBS_TABLE,
 } from "../directives.js";
 
+import {
+    stopRunningTimer,
+    startOverTimeTimer,
+} from "../timer-utilities.js";
+
 const isDev = false;
 
 const serverSettings = {
@@ -99,6 +104,7 @@ else {
     showMessage("Missing server settings");
 }
 
+startOverTimeTimer(station, settings, stopRunningTimer);
 
 
 

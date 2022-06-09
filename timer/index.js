@@ -2,6 +2,7 @@ import {getDBEntrees,
     insertDBEntry,
     deleteDBEntry,
 } from "../db-utilities.js";
+
 import {
     LOGS_SCHEMA,
     // TIMER_TABLE,
@@ -12,6 +13,12 @@ import {
     STATIONS_TABLE,
     JOBS_TABLE,
 } from "../directives.js";
+
+import {
+    stopRunningTimer,
+    startOverTimeTimer,
+} from "../timer-utilities.js";
+
 
 const serverSettings = {}
 let station = "";
@@ -76,45 +83,46 @@ else {
     if (!serverSettings.authorization) showMessage("Missing server Authorization");
     if (!station) showMessage("Missing station name");
 }
-
-checkOverTimers();
-setInterval( async () => {
-    checkOverTimers();
-}, 30000);
-
+startOverTimeTimer(station, serverSettings, stopRunningTimer, loadRunningTimers);
+// async function startOverTimeTimer() {
+//     await checkOverTimers(station, serverSettings, stopRunningTimer, loadRunningTimers);
+//     setInterval( async () => {
+//         await checkOverTimers(station, serverSettings, stopRunningTimer, loadRunningTimers);
+//     }, 1000);
+// }
 
 
 
 // ---Functions---
 
-async function checkOverTimers() {
-    const employeeResponse = await getDBEntrees(BUSINESS_SCHEMA, EMPLOYEES_TABLE, "stations", `*${station}*`, serverSettings);
-    if ((!employeeResponse) || (employeeResponse.error) || (employeeResponse.length == 0)) return true;
+// async function checkOverTimers(station, serverSettings, callback) {
+//     const employeeResponse = await getDBEntrees(BUSINESS_SCHEMA, EMPLOYEES_TABLE, "stations", `*${station}*`, serverSettings);
+//     if ((!employeeResponse) || (employeeResponse.error) || (employeeResponse.length == 0)) return true;
     
-    const runningTimersResponse = await getDBEntrees(LOGS_SCHEMA, RUNNING_TIMER_TABLE, "station", station, serverSettings);
-    if ((!runningTimersResponse) || (runningTimersResponse.error || (runningTimersResponse.length == 0))) return true;
+//     const runningTimersResponse = await getDBEntrees(LOGS_SCHEMA, RUNNING_TIMER_TABLE, "station", station, serverSettings);
+//     if ((!runningTimersResponse) || (runningTimersResponse.error || (runningTimersResponse.length == 0))) return true;
 
-    runningTimersResponse.forEach(async runningTimer => {
-        employeeResponse.forEach(async employee => {
-            if (runningTimer.employeeID == employee.id) {
-                if (employee.shiftEnd && employee.shiftEnd.includes(":")) {
-                    const theTime = timeToDecimal((new Date()).toLocaleTimeString());
-                    const shiftEnd = timeToDecimal(employee.shiftEnd);
-                    if (theTime >= shiftEnd) {
-                        stopRunningTimer(runningTimer, serverSettings);
-                    }
-                }
-            }
-        });
-    });
-}
+//     runningTimersResponse.forEach(async runningTimer => {
+//         employeeResponse.forEach(async employee => {
+//             if (runningTimer.employeeID == employee.id) {
+//                 if (employee.shiftEnd && employee.shiftEnd.includes(":")) {
+//                     const theTime = timeToDecimal((new Date()).toLocaleTimeString());
+//                     const shiftEnd = timeToDecimal(employee.shiftEnd);
+//                     if (theTime >= shiftEnd) {
+//                         await callback(runningTimer, serverSettings);
+//                     }
+//                 }
+//             }
+//         });
+//     });
+// }
 
-function timeToDecimal(time) {
-    const hours24 = (time.includes("p") || time.includes("P")) ? 12 : 0;
-    const nowHours = Number(time.split(':')[0]) + hours24;
-    const nowMins = time.split(':')[1];
-    return Number(nowHours + nowMins);
-}
+// function timeToDecimal(time) {
+//     const hours24 = (time.includes("p") || time.includes("P")) ? 12 : 0;
+//     const nowHours = Number(time.split(':')[0]) + hours24;
+//     const nowMins = time.split(':')[1];
+//     return Number(nowHours + nowMins);
+// }
 
 async function loadRunningTimers() {
     const runningTimersResponse = await getDBEntrees(LOGS_SCHEMA, RUNNING_TIMER_TABLE, "__createdtime__", "*", serverSettings);
@@ -160,44 +168,44 @@ async function loadRunningTimers() {
         runningTimersContainer.appendChild(card);
     });
 }
-async function stopRunningTimer(runningTimer, serverSettings) {
-    const runningTimersResponse = await getDBEntrees(LOGS_SCHEMA, RUNNING_TIMER_TABLE, "id", runningTimer.id, serverSettings);
-    if ((!runningTimersResponse) || (runningTimersResponse.error)) return true;
+// async function stopRunningTimer(runningTimer, serverSettings) {
+//     const runningTimersResponse = await getDBEntrees(LOGS_SCHEMA, RUNNING_TIMER_TABLE, "id", runningTimer.id, serverSettings);
+//     if ((!runningTimersResponse) || (runningTimersResponse.error)) return true;
     
-    insertDBEntry(
-        LOGS_SCHEMA,
-        COMPLETED_TIMER_TABLE,
-        {
-            employeeName: runningTimer.employeeName,
-            employeeID: runningTimer.employeeID,
-            jobName: runningTimer.jobName,
-            jobID: runningTimer.jobID,
-            station: station,
-            task: runningTimer.task,
-            date: (new Date()).toLocaleDateString(),
-            timeStart: runningTimer.time,
-            timeEnd: (new Date()).toLocaleTimeString(),
-            durationMS: Date.now() - runningTimersResponse[0].__createdtime__,
-            durationTime: msToTime(Date.now() - runningTimersResponse[0].__createdtime__),
-        }, 
-        serverSettings
-    );
-    // showMessage("Stopped");
-    await deleteDBEntry(LOGS_SCHEMA, RUNNING_TIMER_TABLE, runningTimer.id, serverSettings);
-    await loadRunningTimers();
-}
+//     insertDBEntry(
+//         LOGS_SCHEMA,
+//         COMPLETED_TIMER_TABLE,
+//         {
+//             employeeName: runningTimer.employeeName,
+//             employeeID: runningTimer.employeeID,
+//             jobName: runningTimer.jobName,
+//             jobID: runningTimer.jobID,
+//             station: station,
+//             task: runningTimer.task,
+//             date: (new Date()).toLocaleDateString(),
+//             timeStart: runningTimer.time,
+//             timeEnd: (new Date()).toLocaleTimeString(),
+//             durationMS: Date.now() - runningTimersResponse[0].__createdtime__,
+//             durationTime: msToTime(Date.now() - runningTimersResponse[0].__createdtime__),
+//         }, 
+//         serverSettings
+//     );
+//     // showMessage("Stopped");
+//     await deleteDBEntry(LOGS_SCHEMA, RUNNING_TIMER_TABLE, runningTimer.id, serverSettings);
+//     await loadRunningTimers();
+// }
 
-function msToTime(s) {
-    const ms = s % 1000;
-    s = (s - ms) / 1000;
-    const secs = s % 60;
-    s = (s - secs) / 60;
-    const mins = s % 60;
-    const hrs = (s - mins) / 60;
+// function msToTime(s) {
+//     const ms = s % 1000;
+//     s = (s - ms) / 1000;
+//     const secs = s % 60;
+//     s = (s - secs) / 60;
+//     const mins = s % 60;
+//     const hrs = (s - mins) / 60;
   
-    return hrs + ':' + mins + ':' + secs;
-    // return hrs + ':' + mins + ':' + secs + '.' + ms;
-  }
+//     return hrs + ':' + mins + ':' + secs;
+//     // return hrs + ':' + mins + ':' + secs + '.' + ms;
+//   }
 
 async function updateStartBtn() {
     const employeeID = employeesSelect[Number(employeesSelect.value) + 1].getAttribute('db_id');
