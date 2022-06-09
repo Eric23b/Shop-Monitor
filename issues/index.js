@@ -28,6 +28,7 @@ const serverSettings = {
     url: "",
     authorization: ""
 }
+let station = "";
 
 const itemList = [];
 
@@ -83,6 +84,7 @@ setTheme();
 
 serverSettings.url = getLocalStorageValue('serverURL') || "";
 serverSettings.authorization = getLocalStorageValue('serverAuthorization') || "";
+station = getLocalStorageValue('stationName') || "";
 
 if (serverSettings.url && serverSettings.authorization) {
     try {
@@ -104,7 +106,7 @@ else {
     showMessage("Missing server settings");
 }
 
-startOverTimeTimer(station, settings, stopRunningTimer);
+startOverTimeTimer(station, serverSettings, stopRunningTimer);
 
 
 
