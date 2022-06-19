@@ -73,8 +73,7 @@ export async function checkOverTimers(station, serverSettings, stopRunningTimers
 }
 export async function stopRunningTimer(runningTimer, station, serverSettings, refreshTimersUICallback) {
     const runningTimersResponse = await getDBEntrees(LOGS_SCHEMA, RUNNING_TIMER_TABLE, "id", runningTimer.id, serverSettings);
-    if ((!runningTimersResponse) || (runningTimersResponse.error)) return true;
-    
+    if ((!runningTimersResponse) || (runningTimersResponse.error || (runningTimersResponse.length == 0))) return true;
     insertDBEntry(
         LOGS_SCHEMA,
         COMPLETED_TIMER_TABLE,
@@ -101,7 +100,7 @@ export async function stopRunningTimer(runningTimer, station, serverSettings, re
     }
 }
 
-function timeToDecimal(time) {
+export function timeToDecimal(time) {
     const hours24 = (time.includes("p") || time.includes("P")) ? 12 : 0;
     const nowHours = Number(time.split(':')[0]) + hours24;
     const nowMins = time.split(':')[1];

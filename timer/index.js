@@ -17,6 +17,7 @@ import {
 import {
     stopRunningTimer,
     startOverTimeTimer,
+    timeToDecimal,
 } from "../timer-utilities.js";
 
 
@@ -149,7 +150,7 @@ async function loadRunningTimers() {
         stopBtn.classList.add('stop-btn');
         stopBtn.textContent = "Stop";
         stopBtn.addEventListener('click', async () => {
-            stopRunningTimer(runningTimer, serverSettings);
+            stopRunningTimer(runningTimer, station, serverSettings, loadRunningTimers);
         });
 
         const cancelBtn = document.createElement('button');
