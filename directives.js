@@ -17,6 +17,9 @@ export const EMPLOYEES_TABLE = "employees";
 export const JOBS_TABLE = "jobs";
 export const STATIONS_TABLE = "stations";
 
+export const SYSTEM_SCHEMA = "system_schema";
+export const MESSAGES_TABLE = "message";
+
 export const TABLE_ATTRIBUTES = {
     supplyList: ["category", "item"],
 

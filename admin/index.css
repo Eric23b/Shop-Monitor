@@ -67,6 +67,21 @@ body *{
     accent-color: var(--accent_color);
 }
 
+select{
+    width: max-content;
+    min-width: 100%;
+    border: 1px solid #555;
+    border-radius: .5rem;
+}
+
+textarea{
+    width: max-content;
+    min-width: 100%;
+    height: 10rem;
+    border: 1px solid #555;
+    border-radius: .5rem;
+}
+
 #main-header-container{
     display: flex;
     flex-direction: row;
@@ -114,6 +129,32 @@ body *{
 }
 #home-tab-btn a:hover{
     color: var(--active);
+}
+
+
+
+.icon-button{
+    padding: 0;
+    margin: 0;
+    border: none;
+    transform: translate(0px, -1rem);
+}
+.icon-button svg{
+    text-decoration: none;
+    font-size: 3rem;
+    margin: 0;
+    padding: 0;
+    stroke: var(--inactive);
+    color: var(--inactive);
+    transform: translateY(0.5rem);
+}
+.icon-button svg:hover{
+    stroke: var(--active);
+    color: var(--active);
+}
+.icon-button svg:active{
+    stroke: var(--accent_color);
+    color: var(--accent_color);
 }
 
 #main{

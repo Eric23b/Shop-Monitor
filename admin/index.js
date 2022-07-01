@@ -35,7 +35,9 @@ import {
     EMPLOYEES_TABLE,
     JOBS_TABLE,
     STATIONS_TABLE,
-    TABLE_ATTRIBUTES
+    TABLE_ATTRIBUTES,
+    SYSTEM_SCHEMA,
+    MESSAGES_TABLE,
 } from "../directives.js";
 
 const pageTitle = "Admin";
@@ -51,6 +53,8 @@ let timerLogCSV = "";
 
 // const homeBtn = document.querySelector("#home-btn");
 // const errorMessage = document.querySelector("#error-message");
+
+const sendMessageButton = document.querySelector("#message");
 
 const tabHeader = document.querySelector("#tab-header");
 
@@ -122,6 +126,13 @@ const lateJobsDays = document.querySelector("#late-job-days");
 const saveDataBaseButton = document.querySelector("#save-db-backup-btn");
 const runDBSetupBtn = document.querySelector("#run-db-setup-btn");
 const removePasswordBtn = document.querySelector("#remove-password-btn");
+
+const messageBackground = document.querySelector("#send-message-background");
+const messageLabel = document.querySelector("#send-message-label");
+const messageStationsSelect = document.querySelector("#send-message-stations");
+const messageInput = document.querySelector("#send-message-textarea");
+const messageCancelBtn = document.querySelector("#send-message-cancel-btn");
+const messageOKBtn = document.querySelector("#send-message-ok-btn");
 
 const promptBackground = document.querySelector("#prompt");
 const promptLabel = document.querySelector("#prompt-label");
@@ -201,6 +212,24 @@ else {
 
 
 // ---EVENT LISTENERS---
+
+sendMessageButton.addEventListener("click", () => {
+    showSendMessagePrompt(
+        "Message",
+        "",
+        async () => {
+            console.log(messageStationsSelect);
+            const data = {
+                station: messageStationsSelect.value,
+                text: messageInput.value,
+                displayed: false,
+            };
+            await insertDBEntry(SYSTEM_SCHEMA, MESSAGES_TABLE, data, settings, dbActive);
+        },
+        null,
+        false
+    );
+});
 
 sort.addEventListener('change', loadJobsTable);
 
@@ -403,6 +432,9 @@ runDBSetupBtn.addEventListener('click', async () => {
     message += await createAttributes(TABLE_ATTRIBUTES.jobs, JOBS_TABLE, BUSINESS_SCHEMA, settings, dbActive) + "\n";
     message += await createTable(STATIONS_TABLE, BUSINESS_SCHEMA, settings, dbActive) + "\n";
     message += await createAttributes(TABLE_ATTRIBUTES.stations, STATIONS_TABLE, BUSINESS_SCHEMA, settings, dbActive) + "\n";
+    
+    message += await createSchema(SYSTEM_SCHEMA, settings, dbActive) + "\n";
+    message += await createTable(MESSAGES_TABLE, SYSTEM_SCHEMA, settings, dbActive) + "\n";
 
     showAlert("Database message", message);
 });
@@ -1261,6 +1293,26 @@ async function loadDataListWithItemCategories(dataList) {
     });
 }
 
+async function loadSelectWithOptions(select, schema, table, column, filter) {
+    const categories = [];
+    const stationResponse = await getDBEntrees(schema, table, column, filter, settings, dbActive);
+    if ((stationResponse)) {
+        stationResponse.forEach((item) => {
+            if (categories.indexOf(item.name) === -1) {
+                categories.push(item.name);
+            }
+        });
+        select.innerHTML = "";
+        categories.forEach((category) => {
+            const option = document.createElement("option");
+            option.value = category;
+            option.textContent = category;
+            select.appendChild(option);
+        });
+        return categories;
+    }
+}
+
 function appendChildren(parent, childList) {
     childList.forEach((childElement) => {
         parent.appendChild(childElement);
@@ -1274,6 +1326,35 @@ function getLocalStorageValue(key) {
 
 function setLocalStorageValue(key, value) {
     window.localStorage.setItem(key, JSON.stringify(value));
+}
+
+async function showSendMessagePrompt(labelText, defaultText, OKCallback, cancelCallback, hideBackground) {
+    messageBackground.style.display = "flex";
+    messageBackground.style.backgroundColor = hideBackground ? "var(--background_color)" : "var(--background_transparent_color)";
+
+    messageLabel.textContent = labelText;
+
+    await loadSelectWithOptions(messageStationsSelect, BUSINESS_SCHEMA, STATIONS_TABLE, "__createdtime__", "*");
+
+    messageInput.value = defaultText || "";
+    messageInput.select();
+    messageInput.onkeypress = (event) => {
+        if (event.key === "Enter") okClick();
+    }
+    
+    messageOKBtn.onclick = okClick;
+
+    messageCancelBtn.onclick = cancelClick;
+
+    function cancelClick() {
+        if (cancelCallback) cancelCallback(messageInput.value);
+        messageBackground.style.display = "none";
+    }
+
+    function okClick() {
+        OKCallback(messageInput.value);
+        messageBackground.style.display = "none";
+    }
 }
 
 function showPrompt(labelText, defaultText, OKCallback, cancelCallback, hideBackground, inputType) {
