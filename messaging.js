@@ -34,12 +34,12 @@ setInterval(async () => {
         const buttonGroup = document.createElement("div");
         const OKButton = document.createElement("button");
 
-        messageBackground.classList.add("modal-background");
-        messageWindow.classList.add("modal-window");
-        messageLabel.classList.add("modal-alert-label");
-        messageText.classList.add("alert-message");
-        buttonGroup.classList.add("modal-button-group");
-        OKButton.classList.add("modal-button");
+        messageBackground.classList.add("message-modal-background");
+        messageWindow.classList.add("message-modal-window");
+        messageLabel.classList.add("message-modal-alert-label");
+        messageText.classList.add("message-alert-message");
+        buttonGroup.classList.add("message-modal-button-group");
+        OKButton.classList.add("message-modal-button");
 
         messageLabel.textContent = "Message";
         messageText.textContent = message.text;
