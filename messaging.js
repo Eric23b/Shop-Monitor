@@ -1,41 +1,9 @@
 import {
     getDBEntrees,
-    insertDBEntry,
-    updateDBEntry,
     deleteDBEntry,
-    createSchema,
-    createTable,
-    createAttributes,
-    describeDatabase,
-    getUniqueColumnValues
 } from "../db-utilities.js";
 
 import {
-    getTableDataWithText,
-    getTableDataRow,
-    getTableDataWithEditText,
-    getTableHeaderRow,
-    getTableDataWithCheckbox,
-    getTableDataWithDeleteButton
-} from "../table-utilities.js";
-
-import {
-    INVENTORY_SCHEMA,
-    SUPPLY_LIST_TABLE,
-    ISSUE_SCHEMA,
-    PARTS_ISSUES_TABLE,
-    SUPPLY_ISSUES_TABLE,
-    TIME_CLOCK_ISSUES_TABLE,
-    OTHER_ISSUES_TABLE,
-    LOGS_SCHEMA,
-    RUNNING_TIMER_TABLE,
-    COMPLETED_TIMER_TABLE,
-    TIMER_TABLE,
-    BUSINESS_SCHEMA,
-    EMPLOYEES_TABLE,
-    JOBS_TABLE,
-    STATIONS_TABLE,
-    TABLE_ATTRIBUTES,
     SYSTEM_SCHEMA,
     MESSAGES_TABLE,
 } from "../directives.js";
@@ -56,7 +24,7 @@ stationName = getLocalStorageValue('stationName') || "";
 setInterval(async () => {
     const messageResponse = await getDBEntrees(SYSTEM_SCHEMA, MESSAGES_TABLE, "station", stationName, serverSettings);
     if ((!messageResponse) || (messageResponse.error) || (messageResponse.length < 1)) return true;
-    console.log(messageResponse);
+  
     messageResponse.forEach(async (message) => {
         const body = document.querySelector('body');
         const messageBackground = document.createElement("div");
