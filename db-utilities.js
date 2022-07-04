@@ -68,7 +68,7 @@ export async function createSchema(schema, serverSettings, dbActiveCallback) {
     const requestOptions = buildRequestOptions(headers, raw);
     const response = await sendDBRequest(serverSettings.url, requestOptions);
 
-    if (dbActiveCallback) dbActiveCallback(!response.error);
+    if (dbActiveCallback) dbActiveCallback(!response.error || "error");
 
     if (response.message) {
         return response.message;
@@ -153,7 +153,7 @@ export async function describeDatabase(serverSettings, dbActiveCallback) {
     const requestOptions = buildRequestOptions(headers, raw);
     const response = await sendDBRequest(serverSettings.url, requestOptions);
 
-    if (dbActiveCallback) dbActiveCallback(!response.error);
+    if (dbActiveCallback) dbActiveCallback(!response.error || "error");
 
     return response;
 }

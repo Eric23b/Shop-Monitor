@@ -215,8 +215,6 @@ else {
 
 sendMessageButton.addEventListener("click", () => {
     showSendMessagePrompt(
-        "Message",
-        "",
         async () => {
             console.log(messageStationsSelect);
             const data = {
@@ -1328,15 +1326,13 @@ function setLocalStorageValue(key, value) {
     window.localStorage.setItem(key, JSON.stringify(value));
 }
 
-async function showSendMessagePrompt(labelText, defaultText, OKCallback, cancelCallback, hideBackground) {
+async function showSendMessagePrompt(OKCallback, cancelCallback, hideBackground) {
     messageBackground.style.display = "flex";
     messageBackground.style.backgroundColor = hideBackground ? "var(--background_color)" : "var(--background_transparent_color)";
 
-    messageLabel.textContent = labelText;
-
     await loadSelectWithOptions(messageStationsSelect, BUSINESS_SCHEMA, STATIONS_TABLE, "__createdtime__", "*");
 
-    messageInput.value = defaultText || "";
+    messageInput.value = "";
     messageInput.select();
     messageInput.onkeypress = (event) => {
         if (event.key === "Enter") okClick();
