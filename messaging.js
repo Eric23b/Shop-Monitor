@@ -1,5 +1,6 @@
 import {
     getDBEntrees,
+    updateDBEntry,
     deleteDBEntry,
 } from "../db-utilities.js";
 
@@ -21,11 +22,15 @@ serverSettings.url = getLocalStorageValue('serverURL') || "";
 serverSettings.authorization = getLocalStorageValue('serverAuthorization') || "";
 stationName = getLocalStorageValue('stationName') || "";
 
-setInterval(async () => {
+getMessages();
+setInterval(getMessages, 10000);
+async function getMessages() {
     const messageResponse = await getDBEntrees(SYSTEM_SCHEMA, MESSAGES_TABLE, "station", stationName, serverSettings);
     if ((!messageResponse) || (messageResponse.error) || (messageResponse.length < 1)) return true;
   
     messageResponse.forEach(async (message) => {
+        if (message.displayed) return;
+
         const body = document.querySelector('body');
         const messageBackground = document.createElement("div");
         const messageWindow = document.createElement("div");
@@ -57,11 +62,12 @@ setInterval(async () => {
         body.appendChild(messageBackground);
         
         OKButton.focus();
-
-        await deleteDBEntry(SYSTEM_SCHEMA, MESSAGES_TABLE, message.id, serverSettings);
+ 
+        message.displayed = true;
+        await updateDBEntry(SYSTEM_SCHEMA, MESSAGES_TABLE, message, serverSettings);
     });
     
-}, 10000);
+}
 
 function getLocalStorageValue(key) {
     if (window.localStorage[key])
