@@ -27,6 +27,36 @@
     /* } */
 }
 
+.message-icon-button{
+    display: block;
+    padding: 0;
+    margin: 0;
+    border: none;
+    transform: translate(0px, -0.5rem);
+    box-sizing: border-box;
+    accent-color: var(--accent_color);
+    color: var(--color);
+    background-color: var(--background_color);
+}
+.message-icon-button svg{
+    display: block;
+    text-decoration: none;
+    /* font-size: 3rem; */
+    margin: 0;
+    padding: 0;
+    stroke: var(--inactive);
+    color: var(--inactive);
+    transform: translateY(0.5rem);
+}
+.message-icon-button svg:hover{
+    stroke: var(--active);
+    color: var(--active);
+}
+.message-icon-button svg:active{
+    stroke: var(--accent_color);
+    color: var(--accent_color);
+}
+
 .message-modal-background *::-webkit-scrollbar-thumb:hover {
     background-color: var(--message-color);
 }
@@ -85,7 +115,7 @@
     font-size: large;
     overflow-wrap: break-word;
     white-space: pre-line;
-    overflow-y: scroll;
+    overflow-y: auto;
 }
 .message-modal-button-group{
     display: flex;
