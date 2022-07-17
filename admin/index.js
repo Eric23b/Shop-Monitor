@@ -216,10 +216,12 @@ else {
 sendMessageButton.addEventListener("click", () => {
     showSendMessagePrompt(
         async () => {
-            console.log(messageStationsSelect);
             const data = {
                 station: messageStationsSelect.value,
                 text: messageInput.value,
+                date: (new Date()).toLocaleDateString('en-CA'),
+                time: (new Date()).toLocaleTimeString('en-CA'),
+                sender: getLocalStorageValue('stationName') || "",
                 displayed: false,
             };
             await insertDBEntry(SYSTEM_SCHEMA, MESSAGES_TABLE, data, settings, dbActive);
@@ -1334,9 +1336,9 @@ async function showSendMessagePrompt(OKCallback, cancelCallback, hideBackground)
 
     messageInput.value = "";
     messageInput.select();
-    messageInput.onkeypress = (event) => {
-        if (event.key === "Enter") okClick();
-    }
+    // messageInput.onkeypress = (event) => {
+    //     if (event.key === "Enter") okClick();
+    // }
     
     messageOKBtn.onclick = okClick;
 
