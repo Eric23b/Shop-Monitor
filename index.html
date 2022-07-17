@@ -5,11 +5,21 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link defer rel="stylesheet" href="./index.css">
-    <link rel="stylesheet" href="messaging.css">
-    <script defer type="module" src="messaging.js"></script>
+    <script defer type="module" src="./index.js"></script>
+    <link rel="stylesheet" href="./messaging.css">
+    <script defer type="module" src="./messaging.js"></script>
     <title>Home</title>
 </head>
 <body>
+    <button id="messages" class="message-icon-button" title="Show messages">
+        <svg xmlns="http://www.w3.org/2000/svg" width="44" height="44" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
+            <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+            <path d="M3 20l1.3 -3.9a9 8 0 1 1 3.4 2.9l-4.7 1" />
+            <line x1="12" y1="12" x2="12" y2="12.01" />
+            <line x1="8" y1="12" x2="8" y2="12.01" />
+            <line x1="16" y1="12" x2="16" y2="12.01" />
+        </svg>
+    </button>
     <section id="main-container">
         <a href="./admin.html">Admin</a>
         <a href="./issues.html">Issues</a>
@@ -17,13 +27,6 @@
         <a href="./jobs.html">Jobs</a>
     </section>
     <script>
-        const theme = getLocalStorageValue('theme') || "light";
-        document.documentElement.setAttribute('data-color-theme', theme);
-
-        function getLocalStorageValue(key) {
-            if (window.localStorage[key])
-                return JSON.parse(window.localStorage.getItem(key));
-        }
     </script>
 </body>
 </html>

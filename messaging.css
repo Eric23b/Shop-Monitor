@@ -28,6 +28,7 @@
 }
 
 .message-icon-button{
+    position: absolute;
     display: block;
     padding: 0;
     margin: 0;
@@ -140,4 +141,43 @@
 .message-modal-button:active{
     color: var(--message-color);
     background-color: var(--message-background_color);
+}
+
+
+/* TABLE */
+.message-table{
+    display: block;
+    overflow-x: auto;
+    table-layout:fixed;
+    font-size: large;
+    font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', 'Geneva', 'Verdana', 'sans-serif';
+    color: var(--message-color);
+    background-color: var(--message-background_color);
+    box-sizing: border-box;
+    accent-color: var(--message-accent_color);
+    border-collapse: collapse;
+}
+.message-table-row{
+    cursor: pointer;
+    padding: 0.5rem;
+    overflow: scroll;
+}
+.message-table-row:hover{
+    cursor: pointer;
+    background-color: var(--message-background_hover_color);
+}
+.message-table-row:first-child{
+    cursor: auto;
+}
+.message-table-header{
+    font-size: large;
+    
+    padding: 0.25rem 0.5rem;
+}
+.message-table-data{
+    font-size: large;
+    background: transparent;
+    padding: 0.25rem 0.5rem;
+    max-height: 1rem;
+    overflow: hidden;
 }
