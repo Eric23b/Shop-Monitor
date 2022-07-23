@@ -1,4 +1,41 @@
 
+
+
+
+
+
+
+// export async function listAll(serverSettings) {    
+//     const headers = getBasicHeaders(serverSettings.authorization);
+//     const raw = JSON.stringify({
+//         operation: "list_roles",
+//     });
+//     const requestOptions = buildRequestOptions(headers, raw);
+//     const response = await sendDBRequest(serverSettings.url, requestOptions);
+
+//     return response[0];
+// }
+
+
+
+
+
+
+
+
+
+
+export async function isSuperUser(serverSettings) {    
+    const headers = getBasicHeaders(serverSettings.authorization);
+    const raw = JSON.stringify({
+        operation: "user_info",
+    });
+    const requestOptions = buildRequestOptions(headers, raw);
+    const response = await sendDBRequest(serverSettings.url, requestOptions);
+
+    return response.role.permission.super_user || false;
+}
+
 export async function getDBEntrees(schema, table, searchColumn, searchValue, serverSettings, dbActiveCallback) {    
     const headers = getBasicHeaders(serverSettings.authorization);
     const raw = JSON.stringify({

@@ -1,3 +1,8 @@
+
+import  {
+    showAllMessages,
+} from "../messaging.js";
+
 import {
     getDBEntrees,
     insertDBEntry,
@@ -54,7 +59,8 @@ let timerLogCSV = "";
 // const homeBtn = document.querySelector("#home-btn");
 // const errorMessage = document.querySelector("#error-message");
 
-const sendMessageButton = document.querySelector("#message");
+const sendMessageButton = document.querySelector("#send-message");
+const showMessagesButton = document.querySelector("#show-messages");
 
 const tabHeader = document.querySelector("#tab-header");
 
@@ -230,6 +236,8 @@ sendMessageButton.addEventListener("click", () => {
         false
     );
 });
+
+showMessagesButton.onclick = showAllMessages;
 
 sort.addEventListener('change', loadJobsTable);
 
@@ -1296,6 +1304,9 @@ async function loadDataListWithItemCategories(dataList) {
 async function loadSelectWithOptions(select, schema, table, column, filter) {
     const categories = [];
     const stationResponse = await getDBEntrees(schema, table, column, filter, settings, dbActive);
+
+    if ((!stationResponse) || (stationResponse.error)) return;
+
     if ((stationResponse)) {
         stationResponse.forEach((item) => {
             if (categories.indexOf(item.name) === -1) {
@@ -1350,8 +1361,13 @@ async function showSendMessagePrompt(OKCallback, cancelCallback, hideBackground)
     }
 
     function okClick() {
-        OKCallback(messageInput.value);
-        messageBackground.style.display = "none";
+        if (messageInput.value) {
+            OKCallback(messageInput.value);
+            messageBackground.style.display = "none";
+        }
+        else {
+            showAlert("Add a message.");
+        }
     }
 }
 

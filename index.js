@@ -11,5 +11,5 @@ function getLocalStorageValue(key) {
         return JSON.parse(window.localStorage.getItem(key));
 }
 
-const messagesIcon = document.querySelector('#messages');
+const messagesIcon = document.querySelector('#show-messages');
 messagesIcon.onclick = showAllMessages;

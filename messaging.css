@@ -148,7 +148,8 @@
 .message-table{
     display: block;
     overflow-x: auto;
-    table-layout:fixed;
+    table-layout: fixed;
+    padding-right: 0.75rem;
     font-size: large;
     font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', 'Geneva', 'Verdana', 'sans-serif';
     color: var(--message-color);
@@ -180,4 +181,10 @@
     padding: 0.25rem 0.5rem;
     max-height: 1rem;
     overflow: hidden;
+}
+.message-table-delete{
+    color: var(--message-inactive);
+}
+.message-table-delete:hover{
+    color: var(--no);
 }

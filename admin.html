@@ -6,20 +6,37 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link defer rel="stylesheet" href="./admin/index.css">
     <script defer type="module" src="./admin/index.js"></script>
+    <link rel="stylesheet" href="./messaging.css">
     <title>Admin</title>
 </head>
 <body>
     <!-- Header -->
     <div id="main-header-container">
-        <button id="home-tab-btn" tabContainer="part-issue"><a href="/">⌂</a></button>
-        <button id="message" class="icon-button">
+        <button class="icon-button"  tabContainer="part-issue" title="Home">
+            <a href="/">
+                <svg xmlns="http://www.w3.org/2000/svg" width="36" height="36" viewBox="0 0 24 24" stroke-width="1.5" stroke="#2c3e50" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                    <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                    <polyline points="5 12 3 12 12 3 21 12 19 12" />
+                    <path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2 -2v-7" />
+                    <path d="M9 21v-6a2 2 0 0 1 2 -2h2a2 2 0 0 1 2 2v6" />
+                </svg>
+            </a>
+        </button>
+        <button id="send-message" class="icon-button" title="Send Message">
             <svg xmlns="http://www.w3.org/2000/svg" width="44" height="44" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" fill="none" stroke-linecap="round" stroke-linejoin="round">
                 <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
-                <path d="M3 20l1.3 -3.9a9 8 0 1 1 3.4 2.9l-4.7 1" />
-                <line x1="12" y1="12" x2="12" y2="12.01" />
-                <line x1="8" y1="12" x2="8" y2="12.01" />
-                <line x1="16" y1="12" x2="16" y2="12.01" />
-            </svg>
+                <path d="M4 21v-13a3 3 0 0 1 3 -3h10a3 3 0 0 1 3 3v6a3 3 0 0 1 -3 3h-9l-4 4" />
+                <line x1="10" y1="11" x2="14" y2="11" />
+                <line x1="12" y1="9" x2="12" y2="13" />
+                </svg>
+        </button>
+        <button id="show-messages" class="icon-button" title="Show Messages">
+            <svg xmlns="http://www.w3.org/2000/svg" width="44" height="44" viewBox="0 0 24 24" stroke-width="1.5" stroke="#2c3e50" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                <path d="M4 21v-13a3 3 0 0 1 3 -3h10a3 3 0 0 1 3 3v6a3 3 0 0 1 -3 3h-9l-4 4" />
+                <line x1="8" y1="9" x2="16" y2="9" />
+                <line x1="8" y1="13" x2="14" y2="13" />
+              </svg>
         </button>
         <div id="tab-header" class="flex-row">
             <button id="parts-tab-btn" class="active-tab tab-btn" tabContainer="part-issue">Part issues</button>
