@@ -128,7 +128,8 @@ const darkThemeCheckbox = document.querySelector("#dark-theme-checkbox");
 const serverURL = document.querySelector("#server-url");
 const serverAuthorization = document.querySelector("#server-authorization");
 const stationName = document.querySelector("#station-name");
-const lateJobsDays = document.querySelector("#late-job-days");
+const stationNamesDatalist = document.querySelector("#station-names-data-list");
+// const lateJobsDays = document.querySelector("#late-job-days");
 const saveDataBaseButton = document.querySelector("#save-db-backup-btn");
 const runDBSetupBtn = document.querySelector("#run-db-setup-btn");
 const removePasswordBtn = document.querySelector("#remove-password-btn");
@@ -193,7 +194,7 @@ if (password !== "pw558") {
 settings.url = serverURL.value = getLocalStorageValue('serverURL') || "";
 settings.authorization = serverAuthorization.value = getLocalStorageValue('serverAuthorization') || "";
 stationName.value = getLocalStorageValue('stationName') || "";
-lateJobsDays.value = getLocalStorageValue('lateJobsDays') || "7";
+// lateJobsDays.value = getLocalStorageValue('lateJobsDays') || "7";
 
 
 // showSettings();
@@ -466,13 +467,12 @@ serverAuthorization.addEventListener('blur', () => {
 // Save station name on blur
 stationName.addEventListener('blur', () => {
     setLocalStorageValue('stationName', stationName.value);
-    // station = stationName.value;
 });
 
 // Save late days on blur
-lateJobsDays.addEventListener('change', () => {
-    setLocalStorageValue('lateJobsDays', lateJobsDays.value);
-});
+// lateJobsDays.addEventListener('change', () => {
+//     setLocalStorageValue('lateJobsDays', lateJobsDays.value);
+// });
 
 
 
@@ -536,6 +536,8 @@ async function showTabContent(tab) {
         case "settings":
             settingsContainer.style.display = "flex";
             settingsTabBtn.classList.add("active-tab");
+            await loadDataListWithItemOptions(stationNamesDatalist, BUSINESS_SCHEMA, STATIONS_TABLE, "__createdtime__", "*");
+            stationName.value = getLocalStorageValue('stationName') || "";
             break;
     
         default:
@@ -563,7 +565,7 @@ async function checkForUnresolvedIssues() {
 
 async function getEntryCountWithValue(schema, table, column, value) {
     const response = await getDBEntrees(schema, table, column, value, settings);
-    if (!response) return 0;
+    if ((!response) || (response.error)) return 0;
     return response.length;
 }
 
@@ -1289,7 +1291,7 @@ function msToTime(s) {
     // return hrs + ':' + mins;
     return hrs + ':' + mins + ':' + secs;
     // return hrs + ':' + mins + ':' + secs + '.' + ms;
-  }
+}
 
 async function loadDataListWithItemCategories(dataList) {
     dataList.innerHTML = "";
@@ -1298,6 +1300,19 @@ async function loadDataListWithItemCategories(dataList) {
         const option = document.createElement("option");
         option.value = category;
         dataList.appendChild(option);
+    });
+}
+
+async function loadDataListWithItemOptions(dataList, schema, table, column, filter) {
+    const optionsResponse = await getDBEntrees(schema, table, column, filter, settings, dbActive);
+    if ((!optionsResponse) || (optionsResponse.error)) return;
+    
+    dataList.innerHTML = "";
+    optionsResponse.forEach((option) => {
+        const optionElement = document.createElement("option");
+        optionElement.value = option.name;
+        optionElement.textContent = option.name;
+        dataList.appendChild(optionElement);
     });
 }
 
