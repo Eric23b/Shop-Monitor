@@ -51,8 +51,9 @@ export async function showAllMessages() {
     const tableSearchParameter = superUser ? "*" : stationName;
 
     const messageResponse = await getDBEntrees(SYSTEM_SCHEMA, MESSAGES_TABLE, "station", tableSearchParameter, serverSettings);
-    if ((!messageResponse) || (messageResponse.error) || (messageResponse.length < 1)) return true;
+    if ((!messageResponse) || (messageResponse.error)) return true;
 
+    // if (messageResponse.length < 1) console.log("poo")
 
     messageResponse.sort((a, b) => {
         const nameA = String(a.date).toUpperCase();
@@ -83,7 +84,7 @@ export async function showAllMessages() {
     messageHeaderMessage.classList.add("message-table-header");
     closeButton.classList.add("message-modal-button");
 
-    messageLabel.textContent = "Messages";
+    messageLabel.textContent = `Messages (${messageResponse.length})`;
     messageHeaderDate.textContent = "Date";
     messageHeaderFromTo.textContent = superUser ? "From/To" : "From";
     messageHeaderMessage.textContent = "Message";
