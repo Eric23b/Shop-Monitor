@@ -89,6 +89,7 @@ export async function stopRunningTimer(runningTimer, station, serverSettings, re
             timeEnd: (new Date()).toLocaleTimeString(),
             durationMS: Date.now() - runningTimersResponse[0].__createdtime__,
             durationTime: msToTime(Date.now() - runningTimersResponse[0].__createdtime__),
+            submitType: "timed",
         }, 
         serverSettings
     );

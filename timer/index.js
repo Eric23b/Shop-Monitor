@@ -52,14 +52,14 @@ employeesSelect.addEventListener('change', updateStartBtn);
 
 startBtn.addEventListener('click', async () => {
     if (allFieldsSelected()) {
-        try {
-            await addRunningTimerToDB();
-            await loadFromDB();
-            await updateStartBtn();
-            // showMessage("Started");
-        } catch (error) {
-            console.error(error);
-        }
+        manuallyAddTimeToDB();
+        // try {
+        //     await addRunningTimerToDB();
+        //     await loadFromDB();
+        //     await updateStartBtn();
+        // } catch (error) {
+        //     console.error(error);
+        // }
     }
     else {
         showMessage("Missing info.", true);
@@ -324,6 +324,36 @@ async function addRunningTimerToDB() {
             task: taskSelect[taskSelect.value].textContent.trim(),
             date: (new Date()).toLocaleDateString(),
             time: (new Date()).toLocaleTimeString(),
+        }, 
+        serverSettings
+    );
+}
+
+async function manuallyAddTimeToDB() {
+    // const time = "06:";
+    // const hours = Number(time.trim().split(':')[0]);
+    // const minutes = Number(time.trim().split(':')[1]);
+
+    // if (!isNaN(hours) && !isNaN(minutes)) console.log(hours, minutes)
+
+    // return
+
+    await insertDBEntry(
+        LOGS_SCHEMA,
+        COMPLETED_TIMER_TABLE,
+        {
+            employeeName: employeesSelect[Number(employeesSelect.value) + 1].textContent.trim(),
+            employeeID: employeesSelect[Number(employeesSelect.value) + 1].getAttribute('db_id'),
+            jobName: jobsSelect[jobsSelect.value].textContent.trim(),
+            jobID: jobsSelect[jobsSelect.value].getAttribute('db_id'),
+            station: station.trim(),
+            task: taskSelect[taskSelect.value].textContent.trim(),
+            date: (new Date()).toLocaleDateString('en-CA'),
+            timeStart: (new Date()).toLocaleTimeString(),
+            timeEnd: (new Date()).toLocaleTimeString(),
+            durationMS: 60000,
+            durationTime: 11,
+            submitType: "manual"
         }, 
         serverSettings
     );
