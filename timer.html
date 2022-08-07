@@ -21,25 +21,45 @@
     <div id="main-view" class="main-view">
         <!-- Timer -->
         <section class="view">
+            <h2 class="section-title">Timer</h2>
             <label class="flex-column">Employee
-                <select id="employees">
-                </select>
+                <select id="employees"></select>
             </label>
             <label class="flex-column">Jobs
-                <select id="jobs">
-                </select>
+                <select id="jobs"></select>
             </label>
             <label class="flex-column">Task
-                <select id="tasks">
-                </select>
+                <select id="tasks"></select>
             </label>
-                <button id="start-btn" class="start-stop start-btn" disabled="disabled">Start</button>
+            <button id="start-btn" class="start-stop start-btn" disabled="disabled">Start timer</button>
                 <!-- <button id="stop-btn" class="start-stop">Stop</button> -->
         </section>
 
         <!-- Running timers -->
         <section id="running-timers-container" class="running-timers-container">
-            <h2 class="running-timers-title">Running timers</h2>
+            <h2 class="section-title">Running Timers</h2>
+        </section>
+
+        <!-- Add Time Manually -->
+        <section class="view">
+            <h2 class="section-title">Add Time Manually</h2>
+            <label class="flex-column">Employee
+                <select id="add-time-employees"></select>
+            </label>
+            <label class="flex-column">Jobs
+                <select id="add-time-jobs"></select>
+            </label>
+            <label class="flex-column">Task
+                <select id="add-time-tasks"></select>
+            </label>
+            <label class="flex-column">Time
+                <div class="time-container">
+                    <input id="hours-input" class="time-input" type="number" placeholder="Hours" min="0" max="100">
+                    <label class="time-separator"> : </label>
+                    <input id="minutes-input" class="time-input" type="number" placeholder="Minutes" min="0" max="59">
+                </div>
+            </label>
+            <button id="add-time-btn" class="start-stop add-time-btn" disabled="disabled">Add time</button>
         </section>
     </div>
 

@@ -33,6 +33,13 @@ const startBtn = document.querySelector("#start-btn");
 
 const runningTimersContainer = document.querySelector("#running-timers-container");
 
+const addTimeEmployeesSelect = document.querySelector("#add-time-employees");
+const addTimeJobsSelect = document.querySelector("#add-time-jobs");
+const addTimeTaskSelect = document.querySelector("#add-time-tasks");
+const addTimeHoursInput = document.querySelector("#hours-input");
+const addTimeMinutesInput = document.querySelector("#minutes-input");
+const addTimeBtn = document.querySelector("#add-time-btn");
+
 const yesNoModal = document.querySelector("#yes-no-item-modal");
 const yesNoModalYesBtn = document.querySelector("#yes-btn");
 const yesNoModalNoBtn = document.querySelector("#no-btn");
@@ -49,17 +56,27 @@ window.onkeydown = (event) => {
 }
 
 employeesSelect.addEventListener('change', updateStartBtn);
+addTimeEmployeesSelect.addEventListener('change', updateAddTimeBtn);
 
 startBtn.addEventListener('click', async () => {
     if (allFieldsSelected()) {
+        try {
+            await addRunningTimerToDB();
+            await loadFromDB();
+            await updateStartBtn();
+        } catch (error) {
+            console.error(error);
+        }
+    }
+    else {
+        showMessage("Missing info.", true);
+    }
+});
+
+addTimeBtn.addEventListener('click', async () => {
+    if (allAddTimeFieldsSelected()) {
         manuallyAddTimeToDB();
-        // try {
-        //     await addRunningTimerToDB();
-        //     await loadFromDB();
-        //     await updateStartBtn();
-        // } catch (error) {
-        //     console.error(error);
-        // }
+        clearAddTimeFields();
     }
     else {
         showMessage("Missing info.", true);
@@ -85,45 +102,6 @@ else {
     if (!station) showMessage("Missing station name");
 }
 startOverTimeTimer(station, serverSettings, stopRunningTimer, loadRunningTimers);
-// async function startOverTimeTimer() {
-//     await checkOverTimers(station, serverSettings, stopRunningTimer, loadRunningTimers);
-//     setInterval( async () => {
-//         await checkOverTimers(station, serverSettings, stopRunningTimer, loadRunningTimers);
-//     }, 1000);
-// }
-
-
-
-// ---Functions---
-
-// async function checkOverTimers(station, serverSettings, callback) {
-//     const employeeResponse = await getDBEntrees(BUSINESS_SCHEMA, EMPLOYEES_TABLE, "stations", `*${station}*`, serverSettings);
-//     if ((!employeeResponse) || (employeeResponse.error) || (employeeResponse.length == 0)) return true;
-    
-//     const runningTimersResponse = await getDBEntrees(LOGS_SCHEMA, RUNNING_TIMER_TABLE, "station", station, serverSettings);
-//     if ((!runningTimersResponse) || (runningTimersResponse.error || (runningTimersResponse.length == 0))) return true;
-
-//     runningTimersResponse.forEach(async runningTimer => {
-//         employeeResponse.forEach(async employee => {
-//             if (runningTimer.employeeID == employee.id) {
-//                 if (employee.shiftEnd && employee.shiftEnd.includes(":")) {
-//                     const theTime = timeToDecimal((new Date()).toLocaleTimeString());
-//                     const shiftEnd = timeToDecimal(employee.shiftEnd);
-//                     if (theTime >= shiftEnd) {
-//                         await callback(runningTimer, serverSettings);
-//                     }
-//                 }
-//             }
-//         });
-//     });
-// }
-
-// function timeToDecimal(time) {
-//     const hours24 = (time.includes("p") || time.includes("P")) ? 12 : 0;
-//     const nowHours = Number(time.split(':')[0]) + hours24;
-//     const nowMins = time.split(':')[1];
-//     return Number(nowHours + nowMins);
-// }
 
 async function loadRunningTimers() {
     const runningTimersResponse = await getDBEntrees(LOGS_SCHEMA, RUNNING_TIMER_TABLE, "__createdtime__", "*", serverSettings);
@@ -132,8 +110,8 @@ async function loadRunningTimers() {
     runningTimersContainer.innerHTML = "";
 
     const title = document.createElement("h2");
-    title.classList.add('running-timers-title');
-    title.textContent = "Running timers";
+    title.classList.add('section-title');
+    title.textContent = "Running Timers";
     runningTimersContainer.appendChild(title);
 
     runningTimersResponse.forEach((runningTimer) => {
@@ -151,6 +129,7 @@ async function loadRunningTimers() {
         stopBtn.textContent = "Stop";
         stopBtn.addEventListener('click', async () => {
             stopRunningTimer(runningTimer, station, serverSettings, loadRunningTimers);
+            await updateStartBtn();
         });
 
         const cancelBtn = document.createElement('button');
@@ -160,6 +139,7 @@ async function loadRunningTimers() {
             await showYesNoModal(async () => {
                 await deleteDBEntry(LOGS_SCHEMA, RUNNING_TIMER_TABLE, runningTimer.id, serverSettings);
                 await loadRunningTimers();
+                await updateStartBtn();
             });
         });
 
@@ -169,53 +149,19 @@ async function loadRunningTimers() {
         runningTimersContainer.appendChild(card);
     });
 }
-// async function stopRunningTimer(runningTimer, serverSettings) {
-//     const runningTimersResponse = await getDBEntrees(LOGS_SCHEMA, RUNNING_TIMER_TABLE, "id", runningTimer.id, serverSettings);
-//     if ((!runningTimersResponse) || (runningTimersResponse.error)) return true;
-    
-//     insertDBEntry(
-//         LOGS_SCHEMA,
-//         COMPLETED_TIMER_TABLE,
-//         {
-//             employeeName: runningTimer.employeeName,
-//             employeeID: runningTimer.employeeID,
-//             jobName: runningTimer.jobName,
-//             jobID: runningTimer.jobID,
-//             station: station,
-//             task: runningTimer.task,
-//             date: (new Date()).toLocaleDateString(),
-//             timeStart: runningTimer.time,
-//             timeEnd: (new Date()).toLocaleTimeString(),
-//             durationMS: Date.now() - runningTimersResponse[0].__createdtime__,
-//             durationTime: msToTime(Date.now() - runningTimersResponse[0].__createdtime__),
-//         }, 
-//         serverSettings
-//     );
-//     // showMessage("Stopped");
-//     await deleteDBEntry(LOGS_SCHEMA, RUNNING_TIMER_TABLE, runningTimer.id, serverSettings);
-//     await loadRunningTimers();
-// }
-
-// function msToTime(s) {
-//     const ms = s % 1000;
-//     s = (s - ms) / 1000;
-//     const secs = s % 60;
-//     s = (s - secs) / 60;
-//     const mins = s % 60;
-//     const hrs = (s - mins) / 60;
-  
-//     return hrs + ':' + mins + ':' + secs;
-//     // return hrs + ':' + mins + ':' + secs + '.' + ms;
-//   }
 
 async function updateStartBtn() {
     const employeeID = employeesSelect[Number(employeesSelect.value) + 1].getAttribute('db_id');
-    if (await employeeHasRunningTimer(employeeID)) {
+    
+    if (await employeeHasRunningTimer(employeeID) || (employeesSelect.value === "")) {
         startBtn.setAttribute('disabled', true);
     }
     else {
         startBtn.removeAttribute('disabled');
     }
+}
+async function updateAddTimeBtn() {
+    addTimeBtn.removeAttribute('disabled');
 }
 
 async function employeeHasRunningTimer(selectedEmployeeID) {
@@ -251,6 +197,7 @@ async function loadEmployees() {
             return 0;
         });
         loadSelectFromArray(employeesSelect, "name", true, employeeResponse, true);
+        loadSelectFromArray(addTimeEmployeesSelect, "name", true, employeeResponse, true);
     }
 }
 
@@ -268,6 +215,7 @@ async function loadJobs() {
             return 0;
         });
         loadSelectFromArray(jobsSelect, "name", true, jobsResponse);
+        loadSelectFromArray(addTimeJobsSelect, "name", true, jobsResponse);
     }
 }
 
@@ -283,6 +231,7 @@ async function loadTasks() {
                 task = task.trim();
             });
             loadSelectFromArray(taskSelect, "", false, tasks);
+            loadSelectFromArray(addTimeTaskSelect, "", false, tasks);
         }
         else {
             showMessage(`Error: No tasks for ${station}`, true);
@@ -330,30 +279,35 @@ async function addRunningTimerToDB() {
 }
 
 async function manuallyAddTimeToDB() {
-    // const time = "06:";
-    // const hours = Number(time.trim().split(':')[0]);
-    // const minutes = Number(time.trim().split(':')[1]);
+    const hours = Number(addTimeHoursInput.value);
+    const minutes = Number(addTimeMinutesInput.value);
 
-    // if (!isNaN(hours) && !isNaN(minutes)) console.log(hours, minutes)
+    const milliseconds = (hours * 60 * 60000) + (minutes * 60000);
 
-    // return
-
+    if (hours + minutes < 1) {
+        showMessage("Please add time", true);
+        return;
+    }
+    else {
+        showMessage(`${addTimeHoursInput.value || "0"}:${addTimeMinutesInput.value || "0"} added to ${addTimeJobsSelect[addTimeJobsSelect.value].textContent}`);
+    }
+   
     await insertDBEntry(
         LOGS_SCHEMA,
         COMPLETED_TIMER_TABLE,
         {
-            employeeName: employeesSelect[Number(employeesSelect.value) + 1].textContent.trim(),
-            employeeID: employeesSelect[Number(employeesSelect.value) + 1].getAttribute('db_id'),
-            jobName: jobsSelect[jobsSelect.value].textContent.trim(),
-            jobID: jobsSelect[jobsSelect.value].getAttribute('db_id'),
+            employeeName: addTimeEmployeesSelect[Number(addTimeEmployeesSelect.value) + 1].textContent.trim(),
+            employeeID: addTimeEmployeesSelect[Number(addTimeEmployeesSelect.value) + 1].getAttribute('db_id'),
+            jobName: addTimeJobsSelect[addTimeJobsSelect.value].textContent.trim(),
+            jobID: addTimeJobsSelect[addTimeJobsSelect.value].getAttribute('db_id'),
             station: station.trim(),
-            task: taskSelect[taskSelect.value].textContent.trim(),
+            task: addTimeTaskSelect[addTimeTaskSelect.value].textContent.trim(),
             date: (new Date()).toLocaleDateString('en-CA'),
             timeStart: (new Date()).toLocaleTimeString(),
             timeEnd: (new Date()).toLocaleTimeString(),
-            durationMS: 60000,
-            durationTime: 11,
-            submitType: "manual"
+            durationMS: milliseconds,
+            durationTime: `${hours}:${minutes}:0`,
+            submitType: "manual",
         }, 
         serverSettings
     );
@@ -379,6 +333,18 @@ function showMessage(messageText, isError) {
 
 function allFieldsSelected() {
     return employeesSelect.value && jobsSelect.value && taskSelect.value;
+}
+
+function allAddTimeFieldsSelected() {
+    return addTimeEmployeesSelect.value && 
+           addTimeJobsSelect.value && 
+           addTimeTaskSelect.value &&
+           (addTimeHoursInput.value || addTimeMinutesInput.value);
+}
+
+function clearAddTimeFields() {
+    addTimeHoursInput.value = '';
+    addTimeMinutesInput.value = '';
 }
 
 async function showYesNoModal(yesCallback) {
