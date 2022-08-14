@@ -91,6 +91,8 @@ body *{
     bottom: 1rem;
     right: 1rem;
     z-index: 10;
+    width: 2.5ch;
+    height: 2.5ch;
     /* padding: 0.25rem; */
     font-size: x-large;
     /* font-weight: 100; */
