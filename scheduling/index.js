@@ -1,10 +1,110 @@
 
+import {
+    getDBEntrees,
+    insertDBEntry,
+    updateDBEntry,
+    deleteDBEntry,
+    createSchema,
+    createTable,
+    createAttributes,
+    describeDatabase,
+    getUniqueColumnValues
+} from "../db-utilities.js";
 
+import {
+    INVENTORY_SCHEMA,
+    SUPPLY_LIST_TABLE,
+    ISSUE_SCHEMA,
+    PARTS_ISSUES_TABLE,
+    SUPPLY_ISSUES_TABLE,
+    TIME_CLOCK_ISSUES_TABLE,
+    OTHER_ISSUES_TABLE,
+    LOGS_SCHEMA,
+    RUNNING_TIMER_TABLE,
+    COMPLETED_TIMER_TABLE,
+    TIMER_TABLE,
+    BUSINESS_SCHEMA,
+    EMPLOYEES_TABLE,
+    JOBS_TABLE,
+    STATIONS_TABLE,
+    TABLE_ATTRIBUTES,
+    SYSTEM_SCHEMA,
+    MESSAGES_TABLE,
+} from "../directives.js";
+
+const settings = {
+    url: "",
+    authorization: ""
+}
+
+let draggingTask = {taskIndex: 0, sequenceName: ""};
+
+const job = {
+    active: true,
+    sequences: [
+        {
+            name: "Cabinets",
+            tasks: [
+                {
+                    taskName: "Cutting",
+                    taskID: "#cutting"
+                },
+                {
+                    taskName: "Banding",
+                    taskID: "#banding"
+                },
+                {
+                    taskName: "Assembling",
+                    taskID: "#assembling"
+                },
+                {
+                    taskName: "Packaging",
+                    taskID: "#packaging"
+                }
+            ]
+        },
+        {
+            name: "Veneers",
+            tasks: [
+                {
+                    taskName: "Cutting",
+                    taskID: "#cutting"
+                },
+                {
+                    taskName: "Banding",
+                    taskID: "#banding"
+                },
+                {
+                    taskName: "Sanding",
+                    taskID: "#sanding"
+                },
+                {
+                    taskName: "Finishing",
+                    taskID: "#finishing"
+                },
+                {
+                    taskName: "Packaging",
+                    taskID: "#packaging"
+                }
+            ]
+        }
+    ]
+}
 
 const theme = getLocalStorageValue('theme') || "light";
 
 const addJobBtn = document.querySelector('#add-job-btn');
+// const addJobBtn = document.querySelector('#add-job-btn');
+
 const addModal= document.querySelector('#add-job-modal');
+const addJobNameInput = document.querySelector('#add-job-name-input');
+const addJobNotesInput = document.querySelector('#add-job-job-notes-textarea');
+const addJobSequenceContainer = document.querySelector('#add-job-modal-sequence-container');
+const addJobSequenceName = document.querySelector('#add-job-new-sequence-input');
+const addJobNewTaskName = document.querySelector('#add-job-new-task-select');
+const addJobHours = document.querySelector('#add-job-new-task-hours-input');
+const addJobMinutes = document.querySelector('#add-job-new-task-minutes-input');
+const addJobAddTaskBtn= document.querySelector('#add-job-new-task-btn');
 const addJobOKBtn = document.querySelector('#add-job-ok');
 const addJobCancelBtn = document.querySelector('#add-job-cancel');
 
@@ -12,14 +112,17 @@ const tableRows = document.querySelectorAll('.jobs-table tr');
 const jobsTable = document.querySelector('#jobs-table');
 const grabbers = document.querySelectorAll('.grabber');
 
-const scheduleTabBtn = document.querySelector('#scheduling-tab-btn');
-const calendarTabBtn = document.querySelector('#calendar-tab-btn');
-
-const JobPage = document.querySelector('#job-page');
-const calendarPage = document.querySelector('#calendar-page');
 
 
 // INIT CODE
+
+document.documentElement.setAttribute('data-color-theme', theme);
+
+settings.url = getLocalStorageValue('serverURL') || "";
+settings.authorization = getLocalStorageValue('serverAuthorization') || "";
+const stationName = getLocalStorageValue('stationName') || "";
+
+
 tableRows.forEach((row, index) => {
     if (index === 0) return;
     
@@ -29,48 +132,172 @@ tableRows.forEach((row, index) => {
     row.addEventListener('dragleave', (event) => {
         row.classList.remove('drag-over');
     });
-    // row.addEventListener('dragstart', (event) => {
-    //     jobsTable.style.cursor = "grabbing";
-    // });
-    // row.addEventListener('dragend', (event) => {
-    //     jobsTable.style.cursor = "grab";
-    // });
-})
+});
+
+
+loadJobModal();
+
+
 
 // EVENT LISTENERS
 
-addJobBtn.addEventListener('click', (event) => {
-    addModal.style.display = 'flex';
-});
-
-addJobOKBtn.addEventListener('click', (event) => {
-    addModal.style.display = 'none';
-});
-
-addJobCancelBtn.addEventListener('click', (event) => {
-    addModal.style.display = 'none';
-});
-
-scheduleTabBtn.addEventListener('click', () => {
-    JobPage.style.display = 'block';
-    calendarPage.style.display = 'none';
-    scheduleTabBtn.classList.add('tab-btn-active');
-    calendarTabBtn.classList.remove('tab-btn-active');
-});
-calendarTabBtn.addEventListener('click', () => {
-    JobPage.style.display = 'none';
-    calendarPage.style.display = 'block';
-    scheduleTabBtn.classList.remove('tab-btn-active');
-    calendarTabBtn.classList.add('tab-btn-active');
-});
+// Show Add Job Modal
+addJobBtn.addEventListener('click', showAddJobModal);
 
 
-document.documentElement.setAttribute('data-color-theme', theme);
+// Add Job OK click
+addJobOKBtn.addEventListener('click', async () => {
+    await addJobToDB();
+});
+
+// Add Task Button Click
+addJobAddTaskBtn.addEventListener('click', addTask);
+
+// Cancel adding job button
+addJobCancelBtn.addEventListener('click', hideAddJobModal);
+
+
 
 
 
 
 // FUNCTIONS
+
+
+function addTask() {
+    if (!addJobSequenceName.value) return;
+
+    let sequenceFound = false;
+    job.sequences.forEach((sequence) => {
+        if (sequence.name === addJobSequenceName.value) {
+            sequence.tasks.push({
+                taskName: addJobNewTaskName.value,
+                taskID: "",
+                hours: addJobHours.value,
+                minutes: addJobMinutes.value,
+            });
+            sequenceFound = true;
+        }
+    });
+
+    if (!sequenceFound) {
+        job.sequences.push({
+            name: addJobSequenceName.value,
+            tasks: [
+                {
+                    taskName: addJobNewTaskName.value,
+                    taskID: "#"
+                },
+            ]
+        },)
+    }
+console.log(job);
+loadSequences(job.sequences);
+};
+
+function loadJobModal() {
+    addJobNameInput.value = job.name;
+    addJobNotesInput.value = job.note;
+
+    loadSequences(job.sequences);
+}
+
+function loadSequences(sequences) {
+    addJobSequenceContainer.innerHTML = "";
+    sequences.forEach((sequence) => {
+        const sequenceTitle = document.createElement('h3');
+        sequenceTitle.textContent = sequence.name;
+        addJobSequenceContainer.appendChild(sequenceTitle);
+
+        const sequenceBlock = document.createElement('div');
+        sequenceBlock.classList.add('add-job-modal-sequence');
+        sequence.tasks.forEach((task, index) => {
+            const taskElement = document.createElement('p');
+            taskElement.setAttribute('draggable', 'true');
+            taskElement.setAttribute('sequence-name', sequence.name);
+
+            taskElement.classList.add('add-job-modal-sequence-task');
+            taskElement.textContent = task.taskName;
+
+            
+            taskElement.addEventListener('dragstart', (e) => {
+                draggingTask.sequenceName = sequence.name;
+                draggingTask.taskIndex = index;
+            });
+            taskElement.addEventListener('dragover', (e) => {
+                e.preventDefault();
+            });
+
+            taskElement.addEventListener('dragenter', (event) => {
+                event.preventDefault();
+                const draggersSequence = event.target.attributes['sequence-name'].value;
+                if (draggingTask.sequenceName === draggersSequence) {
+                    taskElement.classList.add('add-job-task-drag-over');
+                }
+            });
+
+            taskElement.addEventListener('dragleave', () => {
+                taskElement.classList.remove('add-job-task-drag-over');
+            });
+
+            taskElement.addEventListener('drop', (event) => {
+                const draggersSequence = event.target.attributes['sequence-name'].value;
+                if (draggingTask.sequenceName === draggersSequence) {
+                    const temp = sequence.tasks.splice(draggingTask.taskIndex, 1);
+                    sequence.tasks.splice(index, 0, ...temp);
+                    loadSequences(job.sequences);
+
+                }
+                taskElement.classList.remove('add-job-task-drag-over');
+            });
+
+            sequenceBlock.appendChild(taskElement);
+        });
+        addJobSequenceContainer.appendChild(sequenceBlock);
+    });
+    
+}
+
+
+async function addJobToDB(){
+    // showAddJobModal();
+    
+    const jobName = addJobNameInput.value.trim();
+    const jobNote = addJobNotesInput.value;
+    job.name = jobName;
+    job.note = jobNote;
+    
+    if (!jobName) return;
+
+    if (!await jobNameExists(jobName)) {
+        await insertDBEntry(BUSINESS_SCHEMA, JOBS_TABLE, job, settings);
+    }
+    else {
+        showAlert("Job name already exists", `Sorry, ${jobName} already exists.`);
+    }
+
+}
+
+async function jobNameExists(jobName) {
+    const response = await getDBEntrees(BUSINESS_SCHEMA, JOBS_TABLE, "__createdtime__", "*", settings);
+    
+    if ((!response) || (response.error)) return;
+    
+    const jobsNameArray = [];
+    response.forEach((job) => {
+        jobsNameArray.push(String(job.name));
+    });
+
+    return jobsNameArray.indexOf(jobName) > -1;
+};
+
+function showAddJobModal(){
+    addModal.style.display = 'flex';
+}
+
+function hideAddJobModal(){
+    addModal.style.display = 'none';
+}
 
 function getLocalStorageValue(key) {
     if (window.localStorage[key])

@@ -111,10 +111,10 @@ body *{
 
 
 .add-job-modal-background{
-    display: none;
+    display: flex;
     justify-content: center;
     align-items: center;
-    position: absolute;
+    position: sticky;
     inset: 0;
     z-index: 100;
     background-color: var(--background_transparent_color);
@@ -146,10 +146,22 @@ body *{
     font-size: 1em;
     border: 1px solid var(--border_color);
 }
+.add-job-job-notes-label{
+    font-size: 1.2em;
+}
+.add-job-job-notes-textarea{
+    width: 100%;
+    height: 5rem;
+    border: 1px solid var(--border_color);
+}
+.add-job-sequence-label{
+    font-size: 1.2em;
+}
 .add-job-modal-sequence-container{
     display: flex;
     flex-direction: column;
     border: 1px solid var(--border_color);
+    overflow: scroll;
 }
 .add-job-modal-sequence{
     display: flex;
@@ -160,14 +172,19 @@ body *{
     margin: 0.5rem;
     margin-bottom: 0;
 }
-.add-job-modal-sequence p{
+.add-job-modal-sequence-task{
     margin: 0.5rem;
     padding: 0.25rem 1rem;
     cursor: pointer;
+    border-left: 2px solid transparent;
 }
-.add-job-modal-sequence p:hover{
+.add-job-modal-sequence-task:hover{
     color: var(--background_color);
     background-color: var(--color);
+}
+.add-job-task-drag-over{
+    border-left: 2px solid var(--color);
+    background-color: var(--background_hover_color);
 }
 .add-job-new-task-container{
     display: flex;
@@ -208,6 +225,10 @@ body *{
     color: var(--background_color);
     background-color: var(--color);
 }
+.add-job-new-task-btn:active{
+    color: var(--color);
+    background-color: var(--background_color);
+}
 .add-job-ok-cancel-btn-container{
     display: flex;
     flex-direction: row;
@@ -226,6 +247,10 @@ body *{
 .add-job-ok-cancel-btn:hover{
     color: var(--background_color);
     background-color: var(--color);
+}
+.add-job-ok-cancel-btn:active{
+    color: var(--color);
+    background-color: var(--background_color);
 }
 
 
