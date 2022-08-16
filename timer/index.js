@@ -11,6 +11,7 @@ import {
     BUSINESS_SCHEMA,
     EMPLOYEES_TABLE,
     STATIONS_TABLE,
+    TASKS_TABLE,
     JOBS_TABLE,
 } from "../directives.js";
 
@@ -115,6 +116,7 @@ async function loadRunningTimers() {
     runningTimersContainer.appendChild(title);
 
     runningTimersResponse.forEach((runningTimer) => {
+        console.log(runningTimer)
         if (runningTimer.station != getLocalStorageValue("stationName")) return;
 
         const card = document.createElement('card');
@@ -220,22 +222,50 @@ async function loadJobs() {
 }
 
 async function loadTasks() {
-    const tasksResponse = await getDBEntrees(BUSINESS_SCHEMA, STATIONS_TABLE, "name", station, serverSettings);
-    if ((!tasksResponse) || (tasksResponse.error)) {
+    const stationResponse = await getDBEntrees(BUSINESS_SCHEMA, STATIONS_TABLE, "name", station, serverSettings);
+    if ((!stationResponse) || (stationResponse.error)) {
         showMessage("Error loading tasks", true);
+        return;
     }
-    else {
-        if (tasksResponse.length > 0) {
-            const tasks = tasksResponse[0].tasks.split(',');
-            tasks.forEach(task => {
-                task = task.trim();
+
+    if (stationResponse.length == 0) {
+        showMessage(`Error: No tasks for ${station}`, true);
+        return;
+    }
+
+    // Old system
+    if (typeof stationResponse[0].tasks === "string") {
+        const tasks = stationResponse[0].tasks.split(',');
+        tasks.forEach(task => {
+            task = task.trim();
+        });
+        loadSelectFromArray(taskSelect, "", false, tasks);
+        loadSelectFromArray(addTimeTaskSelect, "", false, tasks);
+    } // New system
+    else if (Array.isArray(stationResponse[0].tasks)) {
+        const tasksResponse = await getDBEntrees(BUSINESS_SCHEMA, TASKS_TABLE, "id", "*", serverSettings);
+        if ((!tasksResponse) || (tasksResponse.error)) return;
+
+        taskSelect.innerHTML = "";
+        let index = 0;
+        tasksResponse.forEach(task => {
+            stationResponse[0].tasks.forEach(taskID => {
+                if (task.id !== taskID) return;
+                
+                const timerOption = document.createElement("option");
+                timerOption.textContent = task.name;
+                timerOption.id = task.id;
+                timerOption.value = index++;
+                taskSelect.appendChild(timerOption);
+                
+                const manualTimeOption = document.createElement("option");
+                manualTimeOption.textContent = task.name;
+                manualTimeOption.id = task.id;
+                manualTimeOption.value = index++;
+                addTimeTaskSelect.appendChild(manualTimeOption);
+                
             });
-            loadSelectFromArray(taskSelect, "", false, tasks);
-            loadSelectFromArray(addTimeTaskSelect, "", false, tasks);
-        }
-        else {
-            showMessage(`Error: No tasks for ${station}`, true);
-        }
+        });
     }
 }
 
@@ -271,6 +301,7 @@ async function addRunningTimerToDB() {
             jobID: jobsSelect[jobsSelect.value].getAttribute('db_id'),
             station: station.trim(),
             task: taskSelect[taskSelect.value].textContent.trim(),
+            taskID: taskSelect[taskSelect.value].id,
             date: (new Date()).toLocaleDateString(),
             time: (new Date()).toLocaleTimeString(),
         }, 
@@ -302,6 +333,7 @@ async function manuallyAddTimeToDB() {
             jobID: addTimeJobsSelect[addTimeJobsSelect.value].getAttribute('db_id'),
             station: station.trim(),
             task: addTimeTaskSelect[addTimeTaskSelect.value].textContent.trim(),
+            taskID: addTimeTaskSelect[addTimeTaskSelect.value].id,
             date: (new Date()).toLocaleDateString('en-CA'),
             timeStart: (new Date()).toLocaleTimeString(),
             timeEnd: (new Date()).toLocaleTimeString(),

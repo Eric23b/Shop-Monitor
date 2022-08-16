@@ -84,6 +84,7 @@ export async function stopRunningTimer(runningTimer, station, serverSettings, re
             jobID: runningTimer.jobID,
             station: station,
             task: runningTimer.task,
+            taskID: runningTimer.taskID || "",
             date: (new Date()).toLocaleDateString(),
             timeStart: runningTimer.time,
             timeEnd: (new Date()).toLocaleTimeString(),
