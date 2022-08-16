@@ -32,6 +32,17 @@ import {
     MESSAGES_TABLE,
 } from "../directives.js";
 
+import {
+    getTableDataWithText,
+    getTableDataWithProgressBar,
+    getTableDataRow,
+    getTableDataWithEditText,
+    getTableDataWithGrabber,
+    getTableHeaderRow,
+    getTableDataWithCheckbox,
+    getTableDataWithDeleteButton
+} from "../table-utilities.js";
+
 const settings = {
     url: "",
     authorization: ""
@@ -108,6 +119,7 @@ const addJobAddTaskBtn= document.querySelector('#add-job-new-task-btn');
 const addJobOKBtn = document.querySelector('#add-job-ok');
 const addJobCancelBtn = document.querySelector('#add-job-cancel');
 
+
 const tableRows = document.querySelectorAll('.jobs-table tr');
 const jobsTable = document.querySelector('#jobs-table');
 const grabbers = document.querySelectorAll('.grabber');
@@ -123,16 +135,6 @@ settings.authorization = getLocalStorageValue('serverAuthorization') || "";
 const stationName = getLocalStorageValue('stationName') || "";
 
 
-tableRows.forEach((row, index) => {
-    if (index === 0) return;
-    
-    row.addEventListener('dragenter', (event) => {
-        row.classList.add('drag-over');
-    });
-    row.addEventListener('dragleave', (event) => {
-        row.classList.remove('drag-over');
-    });
-});
 
 
 loadJobModal();
@@ -162,6 +164,73 @@ addJobCancelBtn.addEventListener('click', hideAddJobModal);
 
 
 // FUNCTIONS
+
+
+loadJobs();
+async function loadJobs() {
+    const jobsResponse = await getDBEntrees(BUSINESS_SCHEMA, JOBS_TABLE, "__createdtime__", "*", settings);
+    
+    if ((!jobsResponse) || (jobsResponse.error)) return;
+
+    jobsResponse.sort((a, b) => {
+        const nameA = a.active;
+        const nameB = b.active;
+        if (nameA < nameB) return 1;
+        if (nameA > nameB) return -1;
+        return 0;
+    });
+
+    console.log(jobsResponse);
+
+    jobsTable.innerHTML = getTableHeaderRow(["Name", "Estimated Date", "Target Date", "Progress", "Note", "Active", "Hours", "Delete"]);
+
+    jobsResponse.forEach((job) => {
+        const row = document.createElement('tr');
+        row.classList.add('table-row-blank-border');
+        row.addEventListener('dragenter', () => {row.classList.add('drag-over');});
+        row.addEventListener('dragleave', () => {row.classList.remove('drag-over');});
+
+        const progressBar = getTableDataWithProgressBar(50);
+        const name = getTableDataWithText(job.name);
+        const estimatedDate = getTableDataWithText(job.shipDate);
+        const targetDate = getTableDataWithText(job.shipDate);
+
+        const note = getTableDataWithEditText(job.note, );
+        note.onclick = () => {
+            console.log(prompt("Note", job.note));
+            // showPrompt("Note", job.note, async (newNote) => {
+            //         await updateDBEntry(BUSINESS_SCHEMA, JOBS_TABLE, {id: job.id, note: newNote}, settings);
+            //         await loadJobsTable();
+            //     });
+        }
+        note.style.cursor = "pointer";
+
+        const active = getTableDataWithCheckbox(
+            job.active,
+            async (event) => {
+                const isChecked = event.target.checked;
+                await updateDBEntry(BUSINESS_SCHEMA, JOBS_TABLE, {id: job.id, active: isChecked}, settings);
+                loadJobs();
+            }
+        );
+
+        const hours = getTableDataWithText("100");
+
+        const deleteTD = getTableDataWithDeleteButton(async () => {
+            if (confirm(`Delete Job ${job.name}?`)) {``
+                await deleteDBEntry(BUSINESS_SCHEMA, JOBS_TABLE, job.id, settings);
+                loadJobs();
+            }
+        });
+        deleteTD.classList.add('table-delete-btn');
+
+        const grabber = getTableDataWithGrabber();
+
+        appendChildren(row, [name, estimatedDate, targetDate, progressBar, note, active, hours, deleteTD, grabber]);
+        jobsTable.appendChild(row);
+    });
+}
+
 
 
 function addTask() {
@@ -275,7 +344,7 @@ async function addJobToDB(){
     else {
         showAlert("Job name already exists", `Sorry, ${jobName} already exists.`);
     }
-
+    await loadJobs();
 }
 
 async function jobNameExists(jobName) {
@@ -302,4 +371,10 @@ function hideAddJobModal(){
 function getLocalStorageValue(key) {
     if (window.localStorage[key])
         return JSON.parse(window.localStorage.getItem(key));
+}
+
+function appendChildren(parent, childList) {
+    childList.forEach((childElement) => {
+        parent.appendChild(childElement);
+    });
 }

@@ -17,29 +17,7 @@
             <label class="add-job-job-notes-label" for="add-job-job-notes-label">Notes</label>
             <textarea id="add-job-job-notes-textarea" class="add-job-job-notes-textarea" cols="30" rows="10"></textarea>
             <label class="add-job-sequence-label">Sequence</label>
-            <div id="add-job-modal-sequence-container" class="add-job-modal-sequence-container">
-                <!-- <h3>Cabinets</h3>
-                <div class="add-job-modal-sequence">
-                    <p>Cutting</p>
-                    <p>Banding</p>
-                    <p>Assembly</p>
-                    <p>Packaging</p>
-                </div>
-                <h3>Veneers</h3>
-                <div class="add-job-modal-sequence">
-                    <p>Cutting</p>
-                    <p>Banding</p>
-                    <p>Sanding</p>
-                    <p>Finishing</p>
-                    <p>Packaging</p>
-                </div>
-                <h3>Doors</h3>
-                <div class="add-job-modal-sequence">
-                    <p>Sanding</p>
-                    <p>Finishing</p>
-                    <p>Packaging</p>
-                </div> -->
-            </div>
+            <div id="add-job-modal-sequence-container" class="add-job-modal-sequence-container"></div>
             <div class="add-job-new-task-container">
                 <h3>New Task</h3>
                 <label >Sequence<br><input id="add-job-new-sequence-input" class="add-job-new-task-input" type="text" placeholder="Cabinets" list="sequence-datalist"></label>
@@ -71,6 +49,7 @@
             </div>
         </div>
     </section>
+
     <section class="main-container">
         <section class="header">
             <a class="header-link" href="/">Home</a>
@@ -90,7 +69,10 @@
                         <th>Hours</th>
                     </tr>
                     <tr class="table-row-blank-border">
-                        <td class="progress-td"><div style="width:100%"></div></td>
+                        <td class="progress-td">
+                            <div style="width:100%">
+                            </div>
+                        </td>
                         <td class="table-date">2022-11-05</td>
                         <td>13777</td>
                         <td>100</td>

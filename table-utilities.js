@@ -37,6 +37,26 @@ export function getTableDataWithEditText(text, promptText, editCallback) {
     return td;
 }
 
+export function getTableDataWithProgressBar(percentage) {
+    const td = document.createElement('td');
+    const bar = document.createElement('div');
+    bar.style.width = percentage + "%";
+    bar.style.height = "1.25em";
+    bar.style.backgroundColor = "var(--yes)";
+    td.style.backgroundColor = "var(--background_hover_color)";
+    td.appendChild(bar);
+    return td;
+}
+
+{/* <td class="grabber" draggable="true">⁝</td> */}
+export function getTableDataWithGrabber() {
+    const td = document.createElement('td');
+    td.classList.add("grabber");
+    td.setAttribute("draggable", "true");
+    td.textContent = "⁝";
+    return td;
+}
+
 export function getTableDataWithCheckbox(checked, asyncCallback) {
     const tableData = document.createElement('td');
     const checkbox = document.createElement('input');

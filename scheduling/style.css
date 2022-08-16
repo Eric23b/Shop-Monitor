@@ -39,6 +39,7 @@ html{
     box-sizing: border-box;
     scrollbar-width: thin;
     scrollbar-color: var(--border_color) transparent;
+    /* position: relative; */
 }
 *::-webkit-scrollbar-thumb:hover {
     background-color: var(--color);
@@ -75,6 +76,9 @@ body{
     color: var(--color);
     background-color: var(--background_color);
     inset: 0;
+    position: relative;
+    width: 100vw;
+    height: 100vh;
 }
 
 body *{
@@ -111,13 +115,14 @@ body *{
 
 
 .add-job-modal-background{
-    display: flex;
+    display: none;
     justify-content: center;
-    align-items: center;
-    position: sticky;
+    /* align-items: center; */
+    position: absolute;
     inset: 0;
     z-index: 100;
     background-color: var(--background_transparent_color);
+    overflow: scroll;
 }
 .add-job-modal-window{
     display: flex;
@@ -160,6 +165,7 @@ body *{
 .add-job-modal-sequence-container{
     display: flex;
     flex-direction: column;
+    width: 100%;
     border: 1px solid var(--border_color);
     overflow: scroll;
 }
@@ -337,11 +343,15 @@ body *{
     width: 100%;
     border-collapse: collapse;
 }
+tr:hover{
+    background-color: var(--background_hover_color);
+}
 .table-row-blank-border{
     border-top: 1px solid var(--background_color);
 }
 .jobs-table tr td{
     text-align: center;
+    background: transparent;
 }
 .drag-over{
     border-top: 1px solid var(--yes);
@@ -361,6 +371,21 @@ body *{
     /* width: 80%; */
     height: 1.25em;
     background-color: var(--yes);
+}
+
+.delete-btn{
+    font-size: larger;
+    border: none;
+    color: red;
+    opacity: 0.5;
+    background: transparent;
+}
+.delete-btn:active{
+    border: none;
+    color: var(--inactive);
+}
+.delete-btn:hover{
+    opacity: 1;
 }
 
 
