@@ -16,6 +16,7 @@ export const BUSINESS_SCHEMA = "business_schema";
 export const EMPLOYEES_TABLE = "employees";
 export const JOBS_TABLE = "jobs";
 export const STATIONS_TABLE = "stations";
+export const TASKS_TABLE = "tasks";
 
 export const SYSTEM_SCHEMA = "system_schema";
 export const MESSAGES_TABLE = "message";
@@ -35,4 +36,5 @@ export const TABLE_ATTRIBUTES = {
     employees: ["active", "name", "stations"],
     jobs: ["active", "finishType", "name", "checklist", "shipDate", "note"],
     stations: ["active", "name", "tasks"],
+    tasks: ["active", "name", "hours", "minutes"],
 }

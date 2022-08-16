@@ -40,6 +40,7 @@ import {
     EMPLOYEES_TABLE,
     JOBS_TABLE,
     STATIONS_TABLE,
+    TASKS_TABLE,
     TABLE_ATTRIBUTES,
     SYSTEM_SCHEMA,
     MESSAGES_TABLE,
@@ -441,6 +442,8 @@ runDBSetupBtn.addEventListener('click', async () => {
     message += await createAttributes(TABLE_ATTRIBUTES.jobs, JOBS_TABLE, BUSINESS_SCHEMA, settings, dbActive) + "\n";
     message += await createTable(STATIONS_TABLE, BUSINESS_SCHEMA, settings, dbActive) + "\n";
     message += await createAttributes(TABLE_ATTRIBUTES.stations, STATIONS_TABLE, BUSINESS_SCHEMA, settings, dbActive) + "\n";
+    message += await createTable(TASKS_TABLE, BUSINESS_SCHEMA, settings, dbActive) + "\n";
+    message += await createAttributes(TABLE_ATTRIBUTES.tasks, TASKS_TABLE, BUSINESS_SCHEMA, settings, dbActive) + "\n";
     
     message += await createSchema(SYSTEM_SCHEMA, settings, dbActive) + "\n";
     message += await createTable(MESSAGES_TABLE, SYSTEM_SCHEMA, settings, dbActive) + "\n";
@@ -798,6 +801,8 @@ async function loadTimersTable() {
     const completedTasks = await getDBEntrees(LOGS_SCHEMA, COMPLETED_TIMER_TABLE, "__createdtime__", "*", settings);
     if ((!completedTasks) || (completedTasks.error)) return;
     completedTasks.sort((a, b) => {return a.__createdtime__ - b.__createdtime__});
+    
+    console.log(`${completedTasks.length} completed tasks.`);
 
     // Get all jobs
     const activeJobs = await getDBEntrees(BUSINESS_SCHEMA, JOBS_TABLE, "__createdtime__", "*", settings, dbActive);
