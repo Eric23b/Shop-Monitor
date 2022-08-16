@@ -132,6 +132,15 @@ textarea{
     color: var(--active);
 }
 
+.task-timer-input-label{
+    width: 100%;
+    max-width: max-content;
+    margin-bottom: 1rem;
+    text-align: center;
+}
+.task-timer-input-label input{
+    width: 10rem;
+}
 
 
 .icon-button{
@@ -481,6 +490,24 @@ input{
 .modal-button:active{
     color: var(--color);
     background-color: var(--background_color);
+}
+
+.checklist-prompt-checkbox-container{
+    border: 1px solid var(--border_color);
+    padding: 1rem;
+}
+.checklist-prompt-check-label{
+    display: flex;
+    gap: 1rem;
+    width: 100%;
+    padding: 0.25rem;
+    font-size: large;
+}
+.checklist-prompt-check-label:hover{ 
+    background-color: var(--background_hover_color);
+}
+.checklist-prompt-check-label input{
+    margin-left: auto;
 }
 
 .small-font{

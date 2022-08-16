@@ -47,6 +47,7 @@
             <button id="jobs-tab-btn" class="tab-btn" tabContainer="jobs">Jobs</button>
             <button id="employees-tab-btn" class="tab-btn" tabContainer="employees">Employees</button>
             <button id="work-stations-tab-btn" class="tab-btn" tabContainer="work-stations">Work stations</button>
+            <button id="tasks-tab-btn" class="tab-btn" tabContainer="tasks">Tasks</button>
             <button id="supply-list-tab-btn" class="tab-btn" tabContainer="supply-list">Supply list</button>
             <button id="settings-tab-btn" class="tab-btn" tabContainer="settings">Settings</button>
         </div>
@@ -143,6 +144,20 @@
             <table id="work-stations-table" class="table"></table>
         </div>
         
+        <!-- Tasks -->
+        <div id="tasks-container" class="tab-container">
+            <label class="small-input-label">New task name
+                <input id="task-name-input" class="labeled-input" type="text">
+            </label>
+            <label class="task-timer-input-label">Hours per day<br>
+                <input id="tasks-hours-input" class="labeled-input" type="number" min="0" placeholder="Hours">
+                :
+                <input id="tasks-minutes-input" class="labeled-input" type="number" min="0" placeholder="Minutes">
+            </label>
+            <button id="add-task-btn" class="small-btn">Add</button>
+            <table id="tasks-table" class="table"></table>
+        </div>
+        
         <!-- Supply List Editor -->
         <div id="supply-list-container" class="tab-container">
             <div class="flex-row gap-2rem align-start">
@@ -198,6 +213,22 @@
             <div class="modal-button-group">
                 <button id="prompt-cancel-btn" class="modal-button">Cancel</button>
                 <button id="prompt-ok-btn" class="modal-button">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <div id="checklist-prompt" class="modal-background" style="display: none;">
+        <div class="modal-window">
+            <label id="checklist-prompt-label" class="modal-input-label"></label>
+            <div id="checklist-prompt-checkbox-container" class="checklist-prompt-checkbox-container">
+                <label class="checklist-prompt-check-label">
+                    <input type="checkbox">
+                    Label
+                </label>
+            </div>
+            <div class="modal-button-group">
+                <button id="checklist-prompt-cancel-btn" class="modal-button">Cancel</button>
+                <button id="checklist-prompt-ok-btn" class="modal-button">OK</button>
             </div>
         </div>
     </div>
