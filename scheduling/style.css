@@ -166,6 +166,7 @@ body *{
     display: flex;
     flex-direction: column;
     width: 100%;
+    min-height: 2rem;
     border: 1px solid var(--border_color);
     overflow: scroll;
 }
