@@ -27,6 +27,7 @@ import {
     EMPLOYEES_TABLE,
     JOBS_TABLE,
     STATIONS_TABLE,
+    TASKS_TABLE,
     TABLE_ATTRIBUTES,
     SYSTEM_SCHEMA,
     MESSAGES_TABLE,
@@ -50,62 +51,14 @@ const settings = {
 
 let draggingTask = {taskIndex: 0, sequenceName: ""};
 
-const job = {
+let currentJob = {
     active: true,
-    sequences: [
-        {
-            name: "Cabinets",
-            tasks: [
-                {
-                    taskName: "Cutting",
-                    taskID: "#cutting"
-                },
-                {
-                    taskName: "Banding",
-                    taskID: "#banding"
-                },
-                {
-                    taskName: "Assembling",
-                    taskID: "#assembling"
-                },
-                {
-                    taskName: "Packaging",
-                    taskID: "#packaging"
-                }
-            ]
-        },
-        {
-            name: "Veneers",
-            tasks: [
-                {
-                    taskName: "Cutting",
-                    taskID: "#cutting"
-                },
-                {
-                    taskName: "Banding",
-                    taskID: "#banding"
-                },
-                {
-                    taskName: "Sanding",
-                    taskID: "#sanding"
-                },
-                {
-                    taskName: "Finishing",
-                    taskID: "#finishing"
-                },
-                {
-                    taskName: "Packaging",
-                    taskID: "#packaging"
-                }
-            ]
-        }
-    ]
+    sequences: null,
 }
 
 const theme = getLocalStorageValue('theme') || "light";
 
-const addJobBtn = document.querySelector('#add-job-btn');
-// const addJobBtn = document.querySelector('#add-job-btn');
+const addNewJobBtn = document.querySelector('#add-job-btn');
 
 const addModal= document.querySelector('#add-job-modal');
 const addJobNameInput = document.querySelector('#add-job-name-input');
@@ -137,24 +90,25 @@ const stationName = getLocalStorageValue('stationName') || "";
 
 
 
-loadJobModal();
-
-
 
 // EVENT LISTENERS
 
 // Show Add Job Modal
-addJobBtn.addEventListener('click', showAddJobModal);
-
-
-// Add Job OK click
-addJobOKBtn.addEventListener('click', async () => {
-    await addJobToDB();
+addNewJobBtn.addEventListener('click', async () => {
+    clearCurrentJob();
+    loadJobModal();
+    await showAddJobModal();
 });
+
 
 // Add Task Button Click
 addJobAddTaskBtn.addEventListener('click', addTask);
 
+// Add Job OK click
+addJobOKBtn.addEventListener('click', async () => {
+    await addJobToDB();
+    hideAddJobModal();
+});
 // Cancel adding job button
 addJobCancelBtn.addEventListener('click', hideAddJobModal);
 
@@ -165,6 +119,29 @@ addJobCancelBtn.addEventListener('click', hideAddJobModal);
 
 // FUNCTIONS
 
+async function loadTasksSelect() {
+    const tasksResponse = await getDBEntrees(BUSINESS_SCHEMA, TASKS_TABLE, "id", "*", settings);
+    if ((!tasksResponse) || (tasksResponse.error)) return;
+    if (tasksResponse.length == 0) return;
+
+    addJobNewTaskName.innerHTML = "";
+    tasksResponse.forEach((task, index) => {
+        const timerOption = document.createElement("option");
+        timerOption.textContent = task.name;
+        timerOption.id = task.id;
+        timerOption.value = index;
+        addJobNewTaskName.appendChild(timerOption);
+    });
+}
+
+function clearCurrentJob() {
+    currentJob = {};
+    currentJob.name = "";
+    currentJob.id = null;
+    currentJob.note = "";
+    currentJob.active = true;
+    currentJob.sequences = null;
+}
 
 loadJobs();
 async function loadJobs() {
@@ -182,7 +159,7 @@ async function loadJobs() {
 
     console.log(jobsResponse);
 
-    jobsTable.innerHTML = getTableHeaderRow(["Name", "Estimated Date", "Target Date", "Progress", "Note", "Active", "Hours", "Delete"]);
+    jobsTable.innerHTML = getTableHeaderRow(["Name", "Estimated Date", "Target Date", "Progress", "Note", "Active", "Hours", "Edit", "Delete"]);
 
     jobsResponse.forEach((job) => {
         const row = document.createElement('tr');
@@ -198,10 +175,7 @@ async function loadJobs() {
         const note = getTableDataWithEditText(job.note, );
         note.onclick = () => {
             console.log(prompt("Note", job.note));
-            // showPrompt("Note", job.note, async (newNote) => {
-            //         await updateDBEntry(BUSINESS_SCHEMA, JOBS_TABLE, {id: job.id, note: newNote}, settings);
-            //         await loadJobsTable();
-            //     });
+            // TODO add prompt
         }
         note.style.cursor = "pointer";
 
@@ -216,6 +190,18 @@ async function loadJobs() {
 
         const hours = getTableDataWithText("100");
 
+        // Edit job
+        const edit = getTableDataWithText("✏");
+        edit.style.cursor = "pointer";
+        edit.addEventListener('click', async () => {
+            addJobNameInput.value = job.name;
+            addJobNotesInput.value = job.note;
+            currentJob = job;
+            loadSequences(currentJob.sequences);
+            await showAddJobModal();
+            console.log(job);
+        });
+
         const deleteTD = getTableDataWithDeleteButton(async () => {
             if (confirm(`Delete Job ${job.name}?`)) {``
                 await deleteDBEntry(BUSINESS_SCHEMA, JOBS_TABLE, job.id, settings);
@@ -226,53 +212,54 @@ async function loadJobs() {
 
         const grabber = getTableDataWithGrabber();
 
-        appendChildren(row, [name, estimatedDate, targetDate, progressBar, note, active, hours, deleteTD, grabber]);
+        appendChildren(row, [name, estimatedDate, targetDate, progressBar, note, active, hours, edit, deleteTD, grabber]);
         jobsTable.appendChild(row);
     });
 }
 
-
-
 function addTask() {
     if (!addJobSequenceName.value) return;
 
+    const data = {
+        taskName: addJobNewTaskName[addJobNewTaskName.value].textContent,
+        taskID: addJobNewTaskName[addJobNewTaskName.value].id,
+        hours: Number(addJobHours.value),
+        minutes: Number(addJobMinutes.value),
+    }
+
     let sequenceFound = false;
-    job.sequences.forEach((sequence) => {
+
+    if (!currentJob.sequences) currentJob.sequences = [];
+
+    currentJob.sequences.forEach((sequence) => {
         if (sequence.name === addJobSequenceName.value) {
-            sequence.tasks.push({
-                taskName: addJobNewTaskName.value,
-                taskID: "",
-                hours: addJobHours.value,
-                minutes: addJobMinutes.value,
-            });
+            sequence.tasks.push(data);
             sequenceFound = true;
         }
     });
 
     if (!sequenceFound) {
-        job.sequences.push({
+        currentJob.sequences.push({
             name: addJobSequenceName.value,
-            tasks: [
-                {
-                    taskName: addJobNewTaskName.value,
-                    taskID: "#"
-                },
-            ]
+            tasks: [data]
         },)
     }
-console.log(job);
-loadSequences(job.sequences);
+    loadSequences(currentJob.sequences);
+    console.log(currentJob.sequences);
 };
 
 function loadJobModal() {
-    addJobNameInput.value = job.name;
-    addJobNotesInput.value = job.note;
+    addJobNameInput.value = currentJob.name;
+    addJobNotesInput.value = currentJob.note;
 
-    loadSequences(job.sequences);
+    loadSequences(currentJob.sequences);
 }
 
 function loadSequences(sequences) {
     addJobSequenceContainer.innerHTML = "";
+
+    if (!sequences) return;
+
     sequences.forEach((sequence) => {
         const sequenceTitle = document.createElement('h3');
         sequenceTitle.textContent = sequence.name;
@@ -288,6 +275,9 @@ function loadSequences(sequences) {
             taskElement.classList.add('add-job-modal-sequence-task');
             taskElement.textContent = task.taskName;
 
+            taskElement.addEventListener('click', () => {
+                console.log("click");
+            });
             
             taskElement.addEventListener('dragstart', (e) => {
                 draggingTask.sequenceName = sequence.name;
@@ -314,7 +304,7 @@ function loadSequences(sequences) {
                 if (draggingTask.sequenceName === draggersSequence) {
                     const temp = sequence.tasks.splice(draggingTask.taskIndex, 1);
                     sequence.tasks.splice(index, 0, ...temp);
-                    loadSequences(job.sequences);
+                    loadSequences(currentJob.sequences);
 
                 }
                 taskElement.classList.remove('add-job-task-drag-over');
@@ -324,25 +314,26 @@ function loadSequences(sequences) {
         });
         addJobSequenceContainer.appendChild(sequenceBlock);
     });
-    
 }
 
-
 async function addJobToDB(){
-    // showAddJobModal();
-    
     const jobName = addJobNameInput.value.trim();
     const jobNote = addJobNotesInput.value;
-    job.name = jobName;
-    job.note = jobNote;
+    currentJob.name = jobName;
+    currentJob.note = jobNote;
     
     if (!jobName) return;
 
-    if (!await jobNameExists(jobName)) {
-        await insertDBEntry(BUSINESS_SCHEMA, JOBS_TABLE, job, settings);
+    if (currentJob.id) {
+        await updateDBEntry(BUSINESS_SCHEMA, JOBS_TABLE, currentJob, settings);
     }
     else {
-        showAlert("Job name already exists", `Sorry, ${jobName} already exists.`);
+        if (await jobNameExists(jobName)) {
+            alert("Job name already exists", `Sorry, ${jobName} already exists.`);
+            // showAlert("Job name already exists", `Sorry, ${jobName} already exists.`);
+        } else {
+            await insertDBEntry(BUSINESS_SCHEMA, JOBS_TABLE, currentJob, settings);
+        }
     }
     await loadJobs();
 }
@@ -360,8 +351,9 @@ async function jobNameExists(jobName) {
     return jobsNameArray.indexOf(jobName) > -1;
 };
 
-function showAddJobModal(){
+async function showAddJobModal(){
     addModal.style.display = 'flex';
+    await loadTasksSelect();
 }
 
 function hideAddJobModal(){
