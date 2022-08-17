@@ -113,7 +113,8 @@ const employeesTable = document.querySelector("#employee-table");
 
 const workStationsTabContainer = document.querySelector("#work-stations-container");
 const workStationNameInput = document.querySelector("#work-station-input");
-const workStationTasksInput = document.querySelector("#work-station-tasks-input");
+const workStationTasksContainer = document.querySelector("#work-station-tasks-checkbox-container");
+// const workStationTasksInput = document.querySelector("#work-station-tasks-input");
 const addWorkStationButton = document.querySelector("#add-work-stations-btn");
 const workStationsTable = document.querySelector("#work-stations-table");
 
@@ -341,9 +342,15 @@ addEmployeeButton.addEventListener('click', async () => {
 // Add work station button
 addWorkStationButton.addEventListener('click', async () => {
     const stationName = workStationNameInput.value.trim();
-    const tasks = workStationTasksInput.value.trim();
-
+    
     if (!stationName) return;
+
+    const checkboxes =  workStationTasksContainer.querySelectorAll('input');
+
+    const tasks = [];
+    checkboxes.forEach((checkbox) => {
+        if (checkbox.checked)  tasks.push(checkbox.id);
+    });
 
     const data = {name: stationName, tasks: tasks, active: true};
 
@@ -351,7 +358,7 @@ addWorkStationButton.addEventListener('click', async () => {
     await loadWorkStationTable();
 
     workStationNameInput.value = "";
-    workStationTasksInput.value = "";
+    loadTasksCheckboxList();
 });
 
 // Add tasks button
@@ -561,6 +568,7 @@ async function showTabContent(tab) {
         case "work-stations":
             workStationsTabContainer.style.display = "flex";
             workStationsTabBtn.classList.add("active-tab");
+            await loadTasksCheckboxList();
             await loadWorkStationTable();
             break;
         case "tasks":
@@ -1222,7 +1230,7 @@ async function loadWorkStationTable() {
         return 0;
     });
 
-    workStationsTable.innerHTML = getTableHeaderRow(["Name", "Tasks", "Active", "Delete"]);
+    let rowElementArray = [];
 
     for (const entry of response) {
         const row = document.createElement('tr');
@@ -1252,33 +1260,32 @@ async function loadWorkStationTable() {
             const tasksResponse = await getDBEntrees(BUSINESS_SCHEMA, TASKS_TABLE, "__createdtime__", "*", settings, dbActive);
             if ((!tasksResponse) || (tasksResponse.error)) return;
             
-            // Add check true if has task
+            // Add checked true if has task
             const allTasks = [...tasksResponse];
-            allTasks.forEach(task => {
-                entry.tasks.forEach(ownTask => {
-                    task.check = ownTask === task.id;
-                    if (ownTask === task.id) task.check = true;
-                });
-            });
+            allTasks.forEach(task => task.checked = false);
+            for (const task of allTasks) {
+                for (const ownTask of entry.tasks) {
+                    if (ownTask === task.id) task.checked = true;
+                }
+            }
 
-            console.log(allTasks);
+            // console.log(allTasks);
+            let ownTaskName = "";
+            for (const task of allTasks) {
+                for (const ownTask of entry.tasks) {
+                    if (ownTask === task.id) ownTaskName += task.name + ',';
+                }
+            }
+            // console.log(entry.tasks);
 
-            tasksTD = getTableDataWithText(allTasks.toString());
+            tasksTD = getTableDataWithText(ownTaskName);
             tasksTD.onclick = async () => {
-
-                // tasksResponse.forEach((responseTask) => {
-                //     entry.tasks.forEach((ownTask) => {
-                //         console.log(ownTask)
-                //         if (ownTask.id === responseTask.id) {
-                //         }
-                //     });
-                // });
-                // return;
-                showChecklistPrompt("Tasks", allTasks);
-                // showPrompt("Tasks", entry.tasks, async (newTask) => {
-                //     await updateDBEntry(BUSINESS_SCHEMA, STATIONS_TABLE, {id: entry.id, tasks: newTask}, settings, dbActive);
-                //     await loadWorkStationTable();
-                // });
+                showChecklistPrompt("Tasks", allTasks, async (newTasks) => {
+                    // console.log(newTasks);
+                    // return
+                    await updateDBEntry(BUSINESS_SCHEMA, STATIONS_TABLE, {id: entry.id, tasks: newTasks}, settings, dbActive);
+                    await loadWorkStationTable();
+                });
             }
             tasksTD.style.cursor = "pointer";
         }
@@ -1299,8 +1306,33 @@ async function loadWorkStationTable() {
         );
 
         appendChildren(row, [name, tasksTD, active, deleteTD]);
-        workStationsTable.appendChild(row);
+            rowElementArray.push(row);
     };
+    workStationsTable.innerHTML = getTableHeaderRow(["Station", "Tasks", "Active", "Delete"]);
+    rowElementArray.forEach((row) => {
+        workStationsTable.appendChild(row);
+    });
+}
+
+async function loadTasksCheckboxList() {
+    const tasksResponse = await getDBEntrees(BUSINESS_SCHEMA, TASKS_TABLE, "active", "true", settings, dbActive);
+    if ((!tasksResponse) || (tasksResponse.error)) return;
+
+    workStationTasksContainer.innerHTML = "";
+
+    tasksResponse.forEach((task) => {
+        const checkLabel = document.createElement('label');
+        checkLabel.classList.add('checklist-prompt-check-label');
+
+        const checkbox = document.createElement('input');
+        checkbox.setAttribute('type', 'checkbox');
+
+        checkLabel.innerText = task.name;
+        checkbox.id = task.id;
+
+        checkLabel.appendChild(checkbox);
+        workStationTasksContainer.appendChild(checkLabel);
+    });
 }
 
 // Tasks Table
@@ -1345,7 +1377,7 @@ async function loadTasksTable() {
 
         const minutes = getTableDataWithText(entry.minutes);
         minutes.onclick = () => {
-            showPrompt("Hours", entry.minutes, async (newMinutes) => {
+            showPrompt("Minutes", entry.minutes, async (newMinutes) => {
                 await updateDBEntry(BUSINESS_SCHEMA, TASKS_TABLE, {id: entry.id, minutes: newMinutes}, settings, dbActive);
                 await loadTasksTable();
             },
@@ -1566,7 +1598,7 @@ function showPrompt(labelText, defaultText, OKCallback, cancelCallback, hideBack
         promptBackground.style.display = "none";
     }
 }
-// showChecklistPrompt("Tasks", [{name: "cutting", id: "#cutting"}, {name: "banding", id: "#banding"}]);
+
 function showChecklistPrompt(labelText, checkArray, OKCallback, cancelCallback) {
     checklistPromptBackground.style.display = "flex";
     checklistPromptBackground.style.backgroundColor = "var(--background_transparent_color)";
@@ -1581,8 +1613,7 @@ function showChecklistPrompt(labelText, checkArray, OKCallback, cancelCallback) 
 
         const checkbox = document.createElement('input');
         checkbox.setAttribute('type', 'checkbox');
-        if (checkItem.check) checkbox.setAttribute('checked', 'true');
-        console.log(checkItem.check);
+        if (checkItem.checked) checkbox.setAttribute('checked', 'true');
 
         checkLabel.innerText = checkItem.name;
         checkbox.id = checkItem.id;
@@ -1591,29 +1622,28 @@ function showChecklistPrompt(labelText, checkArray, OKCallback, cancelCallback) 
         checklistPromptCheckContainer.appendChild(checkLabel);
     });
 
-    // promptInput.value = defaultText || "";
-    // promptInput.setAttribute('type', inputType ? inputType : "text");
-    // promptInput.select();
-    // promptInput.onkeypress = (event) => {
-    //     if (event.key === "Enter") okClick();
-    // }
-
-    checklistPromptOKBtn.addEventListener('click', () => {
-        const checks = checklistPromptCheckContainer.querySelectorAll('input');
-        console.log(checks);
-        
+    // OK click
+    checklistPromptOKBtn.onclick = () => {
+        const newTaskIDArray = [];
+        // checkArray.forEach((checkItem) => {
+        //     const checkbox = checklistPromptCheckContainer.querySelector('input');
+        //     console.log(checkbox.checked);
+        //     if (checkbox.checked) {
+            //         newTaskIDArray.push(checkItem.id);
+            //     }
+            // });
+        const checkbox = checklistPromptCheckContainer.querySelectorAll('input');
+        checkbox.forEach((checkItem) => {
+            if (checkItem.checked) {
+                newTaskIDArray.push(checkItem.id);
+            }
+        });
+        OKCallback(newTaskIDArray);
         checklistPromptBackground.style.display = "none";
-    });
+    };
 
     checklistPromptCancelBtn.onclick = cancelClick;
-
     function cancelClick() {
-        // if (cancelCallback) cancelCallback(promptInput.value);
-        checklistPromptBackground.style.display = "none";
-    }
-
-    function okClick() {
-        // OKCallback(checklistPromptInput.value);
         checklistPromptBackground.style.display = "none";
     }
 }
