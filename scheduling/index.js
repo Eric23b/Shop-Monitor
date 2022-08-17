@@ -157,8 +157,6 @@ async function loadJobs() {
         return 0;
     });
 
-    console.log(jobsResponse);
-
     jobsTable.innerHTML = getTableHeaderRow(["Name", "Estimated Date", "Target Date", "Progress", "Note", "Active", "Hours", "Edit", "Delete"]);
 
     jobsResponse.forEach((job) => {
@@ -172,10 +170,14 @@ async function loadJobs() {
         const estimatedDate = getTableDataWithText(job.shipDate);
         const targetDate = getTableDataWithText(job.shipDate);
 
+        // Note
         const note = getTableDataWithEditText(job.note, );
-        note.onclick = () => {
-            console.log(prompt("Note", job.note));
-            // TODO add prompt
+        note.onclick = async () => {
+            job.note = prompt("Note", job.note || "");
+            if (job.note !== null) {
+                await updateDBEntry(BUSINESS_SCHEMA, JOBS_TABLE, {id: job.id, note: job.note}, settings);
+                loadJobs();
+            }
         }
         note.style.cursor = "pointer";
 
@@ -194,12 +196,15 @@ async function loadJobs() {
         const edit = getTableDataWithText("✏");
         edit.style.cursor = "pointer";
         edit.addEventListener('click', async () => {
-            addJobNameInput.value = job.name;
-            addJobNotesInput.value = job.note;
-            currentJob = job;
+            const jobsResponse = await getDBEntrees(BUSINESS_SCHEMA, JOBS_TABLE, "id", job.id, settings);
+            if ((!jobsResponse) || (jobsResponse.error)) return;
+            const originalJob = jobsResponse[0];
+            addJobNameInput.value = originalJob.name;
+            addJobNotesInput.value = originalJob.note;
+            currentJob = originalJob;
+            // console.log(originalJob)
             loadSequences(currentJob.sequences);
             await showAddJobModal();
-            console.log(job);
         });
 
         const deleteTD = getTableDataWithDeleteButton(async () => {
@@ -260,9 +265,15 @@ function loadSequences(sequences) {
 
     if (!sequences) return;
 
-    sequences.forEach((sequence) => {
+    sequences.forEach((sequence, sequenceIndex) => {
         const sequenceTitle = document.createElement('h3');
         sequenceTitle.textContent = sequence.name;
+        sequenceTitle.onclick = async () => {
+            if (confirm(`Delete "${sequence.name}" sequence?`)) {
+                sequences.splice(sequenceIndex, 1);
+                loadSequences(currentJob.sequences);
+            }
+        }
         addJobSequenceContainer.appendChild(sequenceTitle);
 
         const sequenceBlock = document.createElement('div');
@@ -273,13 +284,16 @@ function loadSequences(sequences) {
             taskElement.setAttribute('sequence-name', sequence.name);
 
             taskElement.classList.add('add-job-modal-sequence-task');
-            taskElement.textContent = task.taskName;
+            taskElement.textContent = `${task.taskName} ${task.hours}:${task.minutes}`;
 
             taskElement.addEventListener('click', () => {
-                console.log("click");
+                if (confirm(`Delete "${task.taskName}" task?`)) {
+                    sequence.tasks.splice(index, 1);
+                    loadSequences(currentJob.sequences);
+                }
             });
             
-            taskElement.addEventListener('dragstart', (e) => {
+            taskElement.addEventListener('dragstart', () => {
                 draggingTask.sequenceName = sequence.name;
                 draggingTask.taskIndex = index;
             });
@@ -305,7 +319,6 @@ function loadSequences(sequences) {
                     const temp = sequence.tasks.splice(draggingTask.taskIndex, 1);
                     sequence.tasks.splice(index, 0, ...temp);
                     loadSequences(currentJob.sequences);
-
                 }
                 taskElement.classList.remove('add-job-task-drag-over');
             });
