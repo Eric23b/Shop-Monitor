@@ -364,8 +364,8 @@ addWorkStationButton.addEventListener('click', async () => {
 // Add tasks button
 addTaskButton.addEventListener('click', async () => {
     const taskName = taskNameInput.value.trim();
-    const hours = tasksHoursInput.value.trim();
-    const minutes = tasksMinutesInput.value.trim();
+    const hours = tasksHoursInput.value.trim() || 0;
+    const minutes = tasksMinutesInput.value.trim() || 0;
 
     if (!taskName) return;
 
@@ -1397,8 +1397,10 @@ async function loadTasksTable() {
 
         const deleteTD = getTableDataWithDeleteButton(
             async () => {
-                await deleteDBEntry(BUSINESS_SCHEMA, TASKS_TABLE, entry.id, settings, dbActive);
-                await loadTasksTable();
+                if (confirm(`Are you sure you want to delete ${entry}?`)) {
+                    await deleteDBEntry(BUSINESS_SCHEMA, TASKS_TABLE, entry.id, settings, dbActive);
+                    await loadTasksTable();
+                }
             }
         );
 
@@ -1625,13 +1627,6 @@ function showChecklistPrompt(labelText, checkArray, OKCallback, cancelCallback) 
     // OK click
     checklistPromptOKBtn.onclick = () => {
         const newTaskIDArray = [];
-        // checkArray.forEach((checkItem) => {
-        //     const checkbox = checklistPromptCheckContainer.querySelector('input');
-        //     console.log(checkbox.checked);
-        //     if (checkbox.checked) {
-            //         newTaskIDArray.push(checkItem.id);
-            //     }
-            // });
         const checkbox = checklistPromptCheckContainer.querySelectorAll('input');
         checkbox.forEach((checkItem) => {
             if (checkItem.checked) {
