@@ -10,7 +10,7 @@
 </head>
 <body>
     <button id="add-job-btn" class="add-job-btn">✚</button>
-    <section id="add-job-modal" class="add-job-modal-background">
+    <section id="add-job-modal" class="add-job-modal-background" style="display: flex;">
         <div class="add-job-modal-window">
             <h2  class="add-job-modal-title">Add Job</h2>
             <label class="add-job-name-label">Job Name <input id="add-job-name-input" class="add-job-name-input" type="text" placeholder="13777"></label>
@@ -18,24 +18,38 @@
             <textarea id="add-job-job-notes-textarea" class="add-job-job-notes-textarea" cols="30" rows="10"></textarea>
             <label class="add-job-sequence-label">Sequence</label>
             <div id="add-job-modal-sequence-container" class="add-job-modal-sequence-container"></div>
-            <div class="add-job-new-task-container">
-                <h3>New Task</h3>
-                <label >Sequences<br><input id="add-job-new-sequence-input" class="add-job-new-task-input" type="text" placeholder="Cabinets" list="sequence-datalist"></label>
-                <label >Task<br>
-                    <select id="add-job-new-task-select" class="add-job-new-task-select"></select>
-                </label>
-                <label >Shop Hours
-                    <br>
-                    <input id="add-job-new-task-hours-input" class="add-job-new-task-time-input" type="number" placeholder="Hours">
-                     : 
-                     <input id="add-job-new-task-minutes-input" class="add-job-new-task-time-input" type="number" placeholder="Minutes">
-                </label>
-                <datalist id="sequence-datalist">
-                    <option value="Cabinets"></option>
-                    <option value="Veneers"></option>
-                    <option value="Doors"></option>
-                </datalist>
-                <button id="add-job-new-task-btn" class="add-job-new-task-btn">Add Task</button>
+            <div class="flex-row">
+                <div class="add-job-new-task-container">
+                    <h3>New Task</h3>
+                    <label >Sequences<br><input id="add-job-new-sequence-input" class="add-job-new-task-input" type="text" placeholder="Cabinets" list="sequence-datalist"></label>
+                    <label >Task<br>
+                        <select id="add-job-new-task-select" class="add-job-new-task-select"></select>
+                    </label>
+                    <label >Shop Hours
+                        <br>
+                        <input id="add-job-new-task-hours-input" class="add-job-new-task-time-input" type="number" placeholder="Hours">
+                         : 
+                         <input id="add-job-new-task-minutes-input" class="add-job-new-task-time-input" type="number" placeholder="Minutes">
+                    </label>
+                    <datalist id="sequence-datalist">
+                        <option value="Cabinets"></option>
+                        <option value="Veneers"></option>
+                        <option value="Doors"></option>
+                    </datalist>
+                    <button id="add-job-new-task-btn" class="add-job-new-task-btn">Add Task</button>
+                </div>
+                <div class="add-job-new-task-container">
+                    <h3>Add tasks from text</h3>
+                    <textarea id="add-tasks-from-text-textarea" class="add-tasks-from-text-textarea" cols="30" rows="10">
+                        Job Labor   53 hours 47 minutes
+                           Cutting   10 hours 54 minutes
+                           Banding 2 hours 03 minutes
+                           Assembly 8 hours 54 minutes
+                           Finishing 28 hours 04 minutes
+                           Packaging    3 hours 51 minutes
+                    </textarea>
+                    <button id="add-tasks-from-text-btn" class="add-job-new-task-btn">Add</button>
+                </div>
             </div>
             <div class="add-job-ok-cancel-btn-container">
                 <button id="add-job-cancel" class="add-job-ok-cancel-btn">Cancel</button>

@@ -69,6 +69,8 @@ const addJobNewTaskName = document.querySelector('#add-job-new-task-select');
 const addJobHours = document.querySelector('#add-job-new-task-hours-input');
 const addJobMinutes = document.querySelector('#add-job-new-task-minutes-input');
 const addJobAddTaskBtn= document.querySelector('#add-job-new-task-btn');
+const addJobAddTasksFromTextBtn= document.querySelector('#add-tasks-from-text-btn');
+const addJobAddTasksFromTextTextArea= document.querySelector('#add-tasks-from-text-textarea');
 const addJobOKBtn = document.querySelector('#add-job-ok');
 const addJobCancelBtn = document.querySelector('#add-job-cancel');
 
@@ -103,6 +105,104 @@ addNewJobBtn.addEventListener('click', async () => {
 
 // Add Task Button Click
 addJobAddTaskBtn.addEventListener('click', addTask);
+
+addJobAddTasksFromTextBtn.addEventListener('click', () => {
+    const text = addJobAddTasksFromTextTextArea.value;
+
+    console.log(getTotalShopHours(text));
+
+    console.log(getTaskTimes(text));
+});
+
+function getTaskTimes(text) {
+    const textArray = text.split('\n');
+
+    for (let i = 0; i < textArray.length; i++) {
+        textArray[i] = textArray[i].replace(/\s/g, "");
+    }
+    
+    let jobLaborLineIndex = 0;
+    for (let i = 0; i < textArray.length; i++) {
+        if (textArray[i].startsWith("JobLabor")) jobLaborLineIndex = i;
+    }
+
+    for (let i = jobLaborLineIndex + 1; i < textArray.length; i++) {
+        let taskName = "";
+        if (jobLaborLine.includes("minutes")) {
+            let minutes = jobLaborLine.split("hours");
+            return Number(minutes[1].replace("minutes", ""));
+        }
+        console.log(taskName);
+    }
+
+
+    return jobLaborLineIndex;
+
+    const jobHours = getJobLaborHours(jobLaborLine);
+    const jobMinutes = getJobLaborMinutes(jobLaborLine);
+    return jobHours + ":" + jobMinutes;
+
+    function getJobLaborMinutes(line) {
+        jobLaborLine = line.replace("JobLabor", "");
+        if (jobLaborLine.includes("minutes")) {
+            let minutes = jobLaborLine.split("hours");
+            return Number(minutes[1].replace("minutes", ""));
+        }
+        else {
+            return 0;
+        }
+    }
+
+    function getJobLaborHours(line) {
+        jobLaborLine = line.replace("JobLabor", "");
+        if (jobLaborLine.includes("hours")) {
+            let hours = jobLaborLine.split("hours");
+            return Number(hours[0]);
+        }
+        else {
+            return 0;
+        }
+    }
+}
+
+function getTotalShopHours(text) {
+    const textArray = text.split('\n');
+
+    for (let i = 0; i < textArray.length; i++) {
+        textArray[i] = textArray[i].replace(/\s/g, "");
+    }
+    
+    let jobLaborLine = "";
+    for (const line of textArray) {
+        if (line.startsWith("JobLabor")) jobLaborLine = line;
+    }
+
+    const jobHours = getJobLaborHours(jobLaborLine);
+    const jobMinutes = getJobLaborMinutes(jobLaborLine);
+    return jobHours + ":" + jobMinutes;
+
+    function getJobLaborMinutes(line) {
+        jobLaborLine = line.replace("JobLabor", "");
+        if (jobLaborLine.includes("minutes")) {
+            let minutes = jobLaborLine.split("hours");
+            return Number(minutes[1].replace("minutes", ""));
+        }
+        else {
+            return 0;
+        }
+    }
+
+    function getJobLaborHours(line) {
+        jobLaborLine = line.replace("JobLabor", "");
+        if (jobLaborLine.includes("hours")) {
+            let hours = jobLaborLine.split("hours");
+            return Number(hours[0]);
+        }
+        else {
+            return 0;
+        }
+    }
+}
 
 // Add Job OK click
 addJobOKBtn.addEventListener('click', async () => {
