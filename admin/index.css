@@ -513,6 +513,12 @@ input{
 .small-font{
     font-size: smaller;
 }
+.center-text{
+    text-align: center;
+}
+.no-top-margin{
+    margin-top: 0;
+}
 
 
 .sort-container{

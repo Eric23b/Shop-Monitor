@@ -105,7 +105,8 @@ const employeeTable = document.querySelector("#jobs-table");
 
 const employeesTabContainer = document.querySelector("#employee-container");
 const employeeNameInput = document.querySelector("#employee-input");
-const employeeWorkStationsInput = document.querySelector("#employee-work-stations-input");
+const employeeWorkStationsContainer = document.querySelector("#employee-work-station-checkbox-container");
+// const employeeWorkStationsInput = document.querySelector("#employee-work-stations-input");
 const employeeShiftStart = document.querySelector("#employee-shift-start-input");
 const employeeShiftEnd = document.querySelector("#employee-shift-end-input");
 const addEmployeeButton = document.querySelector("#add-employee-btn");
@@ -319,15 +320,21 @@ addJobButton.addEventListener('click', async () => {
 // Add employee button
 addEmployeeButton.addEventListener('click', async () => {
     const employeeName = employeeNameInput.value.trim();
-    const workStations = employeeWorkStationsInput.value.trim();
+    // const workStations = employeeWorkStationsInput.value.trim();
     const shiftStart = employeeShiftStart.value;
     const shiftEnd = employeeShiftEnd.value;
 
     if (!employeeName) return;
 
+    const checkboxes = employeeWorkStationsContainer.querySelectorAll('input');
+    const stations = [];
+    checkboxes.forEach((checkbox) => {
+        if (checkbox.checked) stations.push(checkbox.id);
+    });
+
     const data = {
         name: employeeName,
-        stations: workStations,
+        stations: stations,
         shiftStart: shiftStart,
         shiftEnd: shiftEnd,
         active: true,
@@ -345,11 +352,11 @@ addWorkStationButton.addEventListener('click', async () => {
     
     if (!stationName) return;
 
-    const checkboxes =  workStationTasksContainer.querySelectorAll('input');
+    const checkboxes = workStationTasksContainer.querySelectorAll('input');
 
     const tasks = [];
     checkboxes.forEach((checkbox) => {
-        if (checkbox.checked)  tasks.push(checkbox.id);
+        if (checkbox.checked) tasks.push(checkbox.id);
     });
 
     const data = {name: stationName, tasks: tasks, active: true};
@@ -563,6 +570,7 @@ async function showTabContent(tab) {
         case "employees":
             employeesTabContainer.style.display = "flex";
             employeesTabBtn.classList.add("active-tab");
+            await loadWorkStationsCheckboxList();
             await loadEmployeeTable();
             break;
         case "work-stations":
@@ -1161,14 +1169,48 @@ async function loadEmployeeTable() {
         }
         name.style.cursor = "pointer";
 
-        const stations = getTableDataWithText(entry.stations);
-        stations.onclick = () => {
-            showPrompt("Work stations", entry.stations, async (newStations) => {
-                await updateDBEntry(BUSINESS_SCHEMA, EMPLOYEES_TABLE, {id: entry.id, stations: newStations}, settings, dbActive);
-                await loadEmployeeTable();
-            });
+        // Work Stations
+        let stations = document.createElement('td');
+        // Old system
+        if (typeof entry.stations === "string") {
+            stations = getTableDataWithText(entry.stations);
+            stations.onclick = () => {
+                showPrompt("Stations", entry.stations, async (newStations) => {
+                    await updateDBEntry(BUSINESS_SCHEMA, EMPLOYEES_TABLE, {id: entry.id, stations: newStations}, settings, dbActive);
+                    await loadEmployeeTable();
+                });
+            }
+            stations.style.cursor = "pointer";
+        } // New system
+        else if (Array.isArray(entry.stations)) {
+            const stationsResponse = await getDBEntrees(BUSINESS_SCHEMA, STATIONS_TABLE, "__createdtime__", "*", settings, dbActive);
+            if ((!stationsResponse) || (stationsResponse.error)) return;
+            
+            // Add checked true if has station
+            const allStations = [...stationsResponse];
+            allStations.forEach(stations => stations.checked = false);
+            for (const station of allStations) {
+                for (const ownStation of entry.stations) {
+                    if (ownStation === station.id) station.checked = true;
+                }
+            }
+
+            let ownStationsName = "";
+            for (const station of allStations) {
+                for (const ownStation of entry.stations) {
+                    if (ownStation === station.id) ownStationsName += station.name + ',';
+                }
+            }
+
+            stations = getTableDataWithText(ownStationsName);
+            stations.onclick = async () => {
+                showChecklistPrompt("Stations", allStations, async (newStations) => {
+                    await updateDBEntry(BUSINESS_SCHEMA, EMPLOYEES_TABLE, {id: entry.id, stations: newStations}, settings, dbActive);
+                    await loadEmployeeTable();
+                });
+            }
+            stations.style.cursor = "pointer";
         }
-        stations.style.cursor = "pointer";
 
         const shiftStartTime = hours24To12(entry.shiftStart);
         const shiftStart = getTableDataWithText(shiftStartTime);
@@ -1311,6 +1353,27 @@ async function loadWorkStationTable() {
     workStationsTable.innerHTML = getTableHeaderRow(["Station", "Tasks", "Active", "Delete"]);
     rowElementArray.forEach((row) => {
         workStationsTable.appendChild(row);
+    });
+}
+
+async function loadWorkStationsCheckboxList() {
+    const workStationsResponse = await getDBEntrees(BUSINESS_SCHEMA, STATIONS_TABLE, "active", "true", settings, dbActive);
+    if ((!workStationsResponse) || (workStationsResponse.error)) return;
+
+    employeeWorkStationsContainer.innerHTML = "";
+
+    workStationsResponse.forEach((station) => {
+        const checkLabel = document.createElement('label');
+        checkLabel.classList.add('checklist-prompt-check-label');
+
+        const checkbox = document.createElement('input');
+        checkbox.setAttribute('type', 'checkbox');
+
+        checkLabel.innerText = station.name;
+        checkbox.id = station.id;
+
+        checkLabel.appendChild(checkbox);
+        employeeWorkStationsContainer.appendChild(checkLabel);
     });
 }
 
