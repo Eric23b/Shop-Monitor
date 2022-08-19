@@ -109,60 +109,59 @@ addJobAddTaskBtn.addEventListener('click', addTask);
 addJobAddTasksFromTextBtn.addEventListener('click', () => {
     const text = addJobAddTasksFromTextTextArea.value;
 
-    console.log(getTotalShopHours(text));
+    const totalShopTime = getTotalShopHours(text);
 
-    console.log(getTaskTimes(text));
+    const taskList = getTaskTimes(text);
 });
 
 function getTaskTimes(text) {
     const textArray = text.split('\n');
 
+    // Remove all spaces
     for (let i = 0; i < textArray.length; i++) {
         textArray[i] = textArray[i].replace(/\s/g, "");
     }
     
+    // Find first line
     let jobLaborLineIndex = 0;
     for (let i = 0; i < textArray.length; i++) {
         if (textArray[i].startsWith("JobLabor")) jobLaborLineIndex = i;
     }
 
+    let tasks = [];
     for (let i = jobLaborLineIndex + 1; i < textArray.length; i++) {
-        let taskName = "";
-        if (jobLaborLine.includes("minutes")) {
-            let minutes = jobLaborLine.split("hours");
-            return Number(minutes[1].replace("minutes", ""));
-        }
-        console.log(taskName);
-    }
+        // skip empty lines
+        if (!textArray[i]) continue;
 
+        const task = {};
 
-    return jobLaborLineIndex;
-
-    const jobHours = getJobLaborHours(jobLaborLine);
-    const jobMinutes = getJobLaborMinutes(jobLaborLine);
-    return jobHours + ":" + jobMinutes;
-
-    function getJobLaborMinutes(line) {
-        jobLaborLine = line.replace("JobLabor", "");
-        if (jobLaborLine.includes("minutes")) {
-            let minutes = jobLaborLine.split("hours");
-            return Number(minutes[1].replace("minutes", ""));
+        // Find task name
+        if (textArray[i].match(/^\D+/)) {
+            task.name = textArray[i].match(/^\D+/)[0];
         }
         else {
-            return 0;
+            task.name = "Missing task name";
         }
-    }
 
-    function getJobLaborHours(line) {
-        jobLaborLine = line.replace("JobLabor", "");
-        if (jobLaborLine.includes("hours")) {
-            let hours = jobLaborLine.split("hours");
-            return Number(hours[0]);
+        // Find task hours
+        if (textArray[i].match(/\d+hours/)) {
+            task.hours = Number(textArray[i].match(/\d+hours/)[0].split("hours")[0]);
         }
         else {
-            return 0;
+            task.hours = 0;
         }
+        
+        // Find task minutes
+        if (textArray[i].match(/\d+minutes/)) {
+            task.minutes = Number(textArray[i].match(/\d+minutes/)[0].split("minutes")[0]);
+        }
+        else {
+            task.minutes = 0;
+        }
+
+        tasks.push(task);
     }
+    return tasks;
 }
 
 function getTotalShopHours(text) {
@@ -350,7 +349,6 @@ function addTask() {
         },)
     }
     loadSequences(currentJob.sequences);
-    console.log(currentJob.sequences);
 };
 
 function loadJobModal() {
