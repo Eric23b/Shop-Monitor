@@ -106,7 +106,10 @@ addNewJobBtn.addEventListener('click', async () => {
 
 // Add Task Button Click
 addJobAddTaskBtn.addEventListener('click', async () => {
-    if (!addJobSequenceName.value) return;
+    if (!addJobSequenceName.value) {
+        alert("Missing sequence name");
+        return;
+    }
     const sequenceName = addJobSequenceName.value;
 
     const data = {
@@ -121,6 +124,11 @@ addJobAddTaskBtn.addEventListener('click', async () => {
 
 addJobAddTasksFromTextBtn.addEventListener('click', async () => {
     const sequenceName = addJobAddTasksFromTextTextTaskName.value;
+    if (!sequenceName) {
+        alert("Missing sequence name");
+        return;
+    }
+
     const text = addJobAddTasksFromTextTextArea.value;
 
     const totalShopTime = getTotalShopHours(text);
@@ -149,7 +157,7 @@ addJobAddTasksFromTextBtn.addEventListener('click', async () => {
                 );
             }
         }
-        if (!taskFound) console.log(`Task "${ownTask.name} not found."`);
+        if (!taskFound) alert(`Task "${ownTask.name} not found.\nPlease added "${ownTask.name}" to Tasks in the Admin page.`);
     }
 });
 
@@ -414,10 +422,11 @@ function loadSequences(sequences) {
             taskElement.textContent = `${task.taskName} ${task.hours}:${task.minutes}`;
 
             taskElement.addEventListener('click', () => {
-                if (confirm(`Delete "${task.taskName}" task?`)) {
-                    sequence.tasks.splice(index, 1);
-                    loadSequences(currentJob.sequences);
-                }
+                addJobSequenceName.value = sequence.name;
+                // if (confirm(`Delete "${task.taskName}" task?`)) {
+                //     sequence.tasks.splice(index, 1);
+                //     loadSequences(currentJob.sequences);
+                // }
             });
             
             taskElement.addEventListener('dragstart', () => {
