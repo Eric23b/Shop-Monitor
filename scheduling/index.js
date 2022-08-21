@@ -104,14 +104,48 @@ addNewJobBtn.addEventListener('click', async () => {
 
 
 // Add Task Button Click
-addJobAddTaskBtn.addEventListener('click', addTask);
+addJobAddTaskBtn.addEventListener('click', async () => {
+    if (!addJobSequenceName.value) return;
+    const sequenceName = addJobSequenceName.value;
 
-addJobAddTasksFromTextBtn.addEventListener('click', () => {
+    const data = {
+        taskName: addJobNewTaskName[addJobNewTaskName.value].textContent,
+        taskID: addJobNewTaskName[addJobNewTaskName.value].id,
+        hours: Number(addJobHours.value),
+        minutes: Number(addJobMinutes.value),
+    }
+
+    addTask(sequenceName, data);
+});
+
+addJobAddTasksFromTextBtn.addEventListener('click', async () => {
     const text = addJobAddTasksFromTextTextArea.value;
 
     const totalShopTime = getTotalShopHours(text);
 
     const taskList = getTaskTimes(text);
+
+    const tasksResponse = await getDBEntrees(BUSINESS_SCHEMA, TASKS_TABLE, "id", "*", settings);
+    if ((!tasksResponse) || (tasksResponse.error)) return;
+    if (tasksResponse.length == 0) return;
+
+    const errors = [];
+
+    for (const ownTask of taskList) {
+        let taskFound = false;
+        for (const task of tasksResponse) {
+            if (task.name === ownTask.name) {
+                taskFound = true;
+                addTask("Cabinets", {
+                    taskName: ownTask.name,
+                    taskID: task.id,
+                    hours: ownTask.hours,
+                    minutes: ownTask.minutes,
+                });
+            }
+        }
+        if (!taskFound) console.log(`Task "${ownTask.name} not found."`);
+    }
 });
 
 function getTaskTimes(text) {
@@ -301,7 +335,6 @@ async function loadJobs() {
             addJobNameInput.value = originalJob.name;
             addJobNotesInput.value = originalJob.note;
             currentJob = originalJob;
-            // console.log(originalJob)
             loadSequences(currentJob.sequences);
             await showAddJobModal();
         });
@@ -321,22 +354,13 @@ async function loadJobs() {
     });
 }
 
-function addTask() {
-    if (!addJobSequenceName.value) return;
-
-    const data = {
-        taskName: addJobNewTaskName[addJobNewTaskName.value].textContent,
-        taskID: addJobNewTaskName[addJobNewTaskName.value].id,
-        hours: Number(addJobHours.value),
-        minutes: Number(addJobMinutes.value),
-    }
-
+function addTask(sequenceName, data) {
     let sequenceFound = false;
 
     if (!currentJob.sequences) currentJob.sequences = [];
 
     currentJob.sequences.forEach((sequence) => {
-        if (sequence.name === addJobSequenceName.value) {
+        if (sequence.name === sequenceName) {
             sequence.tasks.push(data);
             sequenceFound = true;
         }
@@ -344,7 +368,7 @@ function addTask() {
 
     if (!sequenceFound) {
         currentJob.sequences.push({
-            name: addJobSequenceName.value,
+            name: sequenceName,
             tasks: [data]
         },)
     }
