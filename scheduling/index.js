@@ -69,8 +69,9 @@ const addJobNewTaskName = document.querySelector('#add-job-new-task-select');
 const addJobHours = document.querySelector('#add-job-new-task-hours-input');
 const addJobMinutes = document.querySelector('#add-job-new-task-minutes-input');
 const addJobAddTaskBtn= document.querySelector('#add-job-new-task-btn');
-const addJobAddTasksFromTextBtn= document.querySelector('#add-tasks-from-text-btn');
+const addJobAddTasksFromTextTextTaskName= document.querySelector('#add-job-new-sequence-for-add-from-text-input');
 const addJobAddTasksFromTextTextArea= document.querySelector('#add-tasks-from-text-textarea');
+const addJobAddTasksFromTextBtn= document.querySelector('#add-tasks-from-text-btn');
 const addJobOKBtn = document.querySelector('#add-job-ok');
 const addJobCancelBtn = document.querySelector('#add-job-cancel');
 
@@ -119,6 +120,7 @@ addJobAddTaskBtn.addEventListener('click', async () => {
 });
 
 addJobAddTasksFromTextBtn.addEventListener('click', async () => {
+    const sequenceName = addJobAddTasksFromTextTextTaskName.value;
     const text = addJobAddTasksFromTextTextArea.value;
 
     const totalShopTime = getTotalShopHours(text);
@@ -136,12 +138,15 @@ addJobAddTasksFromTextBtn.addEventListener('click', async () => {
         for (const task of tasksResponse) {
             if (task.name === ownTask.name) {
                 taskFound = true;
-                addTask("Cabinets", {
-                    taskName: ownTask.name,
-                    taskID: task.id,
-                    hours: ownTask.hours,
-                    minutes: ownTask.minutes,
-                });
+                addTask(
+                    sequenceName,
+                    {
+                        taskName: ownTask.name,
+                        taskID: task.id,
+                        hours: ownTask.hours,
+                        minutes: ownTask.minutes,
+                    }
+                );
             }
         }
         if (!taskFound) console.log(`Task "${ownTask.name} not found."`);
