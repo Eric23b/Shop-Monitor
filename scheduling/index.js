@@ -68,12 +68,21 @@ const addJobSequenceName = document.querySelector('#add-job-new-sequence-input')
 const addJobNewTaskName = document.querySelector('#add-job-new-task-select');
 const addJobHours = document.querySelector('#add-job-new-task-hours-input');
 const addJobMinutes = document.querySelector('#add-job-new-task-minutes-input');
-const addJobAddTaskBtn= document.querySelector('#add-job-new-task-btn');
+const addJobAddTaskBtn= document.querySelector('#add-task-btn');
 const addJobAddTasksFromTextTextTaskName= document.querySelector('#add-job-new-sequence-for-add-from-text-input');
 const addJobAddTasksFromTextTextArea= document.querySelector('#add-tasks-from-text-textarea');
 const addJobAddTasksFromTextBtn= document.querySelector('#add-tasks-from-text-btn');
 const addJobOKBtn = document.querySelector('#add-job-ok');
 const addJobCancelBtn = document.querySelector('#add-job-cancel');
+
+
+const taskModalBackground = document.querySelector('#task-modal-background');
+const taskModalSequence = document.querySelector('#task-modal-sequence-input');
+const taskModalTaskSelect = document.querySelector('#task-modal-task-select');
+const taskModalHours = document.querySelector('#task-modal-hours-input');
+const taskModalMinutes = document.querySelector('#task-modal-minutes-input');
+const taskModalCancelBtn = document.querySelector('#task-modal-cancel-btn');
+const taskModalOKBtn = document.querySelector('#task-modal-ok-btn');
 
 
 const tableRows = document.querySelectorAll('.jobs-table tr');
@@ -106,20 +115,33 @@ addNewJobBtn.addEventListener('click', async () => {
 
 // Add Task Button Click
 addJobAddTaskBtn.addEventListener('click', async () => {
-    if (!addJobSequenceName.value) {
-        alert("Missing sequence name");
-        return;
-    }
-    const sequenceName = addJobSequenceName.value;
+    showAddUpdateTaskModal(
+        "",
+        {},
+        async (sequenceName, task) => {
+            const data = {
+                name: task.name,
+                id: task.id,
+                hours: task.hours,
+                minutes: task.minutes,
+            }
+            addTask(sequenceName, data);
+        }
+    );
+    // if (!addJobSequenceName.value) {
+    //     alert("Missing sequence name");
+    //     return;
+    // }
+    // const sequenceName = addJobSequenceName.value;
 
-    const data = {
-        taskName: addJobNewTaskName[addJobNewTaskName.value].textContent,
-        taskID: addJobNewTaskName[addJobNewTaskName.value].id,
-        hours: Number(addJobHours.value),
-        minutes: Number(addJobMinutes.value),
-    }
+    // const data = {
+    //     taskName: addJobNewTaskName[addJobNewTaskName.value].textContent,
+    //     taskID: addJobNewTaskName[addJobNewTaskName.value].id,
+    //     hours: Number(addJobHours.value),
+    //     minutes: Number(addJobMinutes.value),
+    // }
 
-    addTask(sequenceName, data);
+    // addTask(sequenceName, data);
 });
 
 addJobAddTasksFromTextBtn.addEventListener('click', async () => {
@@ -149,8 +171,8 @@ addJobAddTasksFromTextBtn.addEventListener('click', async () => {
                 addTask(
                     sequenceName,
                     {
-                        taskName: ownTask.name,
-                        taskID: task.id,
+                        name: ownTask.name,
+                        id: task.id,
                         hours: ownTask.hours,
                         minutes: ownTask.minutes,
                     }
@@ -160,6 +182,51 @@ addJobAddTasksFromTextBtn.addEventListener('click', async () => {
         if (!taskFound) alert(`Task "${ownTask.name} not found.\nPlease added "${ownTask.name}" to Tasks in the Admin page.`);
     }
 });
+
+// Add Job OK click
+addJobOKBtn.addEventListener('click', async () => {
+    await addJobToDB();
+    hideAddJobModal();
+});
+// Cancel adding job button
+addJobCancelBtn.addEventListener('click', hideAddJobModal);
+
+
+
+
+
+
+// FUNCTIONS
+
+async function showAddUpdateTaskModal(sequenceName, task, OKCallback, cancelCallback) {
+    await loadTasksSelect();
+    taskModalBackground.style.display = "flex";
+    taskModalSequence.value = sequenceName || "";
+    // taskModalTaskSelect.textContent = task ? task.name : "";
+    taskModalTaskSelect.value = 1;
+    taskModalHours.value = task ? task.hours : "";
+    taskModalMinutes.value = task ? task.minutes : "";
+
+    taskModalOKBtn.onclick = async () => {
+        console.log(taskModalTaskSelect);
+        OKCallback(taskModalSequence.value, {
+            name: taskModalTaskSelect[taskModalTaskSelect.value].textContent,
+            id: taskModalTaskSelect[taskModalTaskSelect.value].id,
+            hours: Number(taskModalHours.value),
+            minutes: Number(taskModalMinutes.value),
+        });
+        hideAddTaskModal();
+    };
+
+    taskModalCancelBtn.onclick = async () => {
+        if (cancelCallback) cancelCallback();
+        hideAddTaskModal();
+    };
+}
+
+function hideAddTaskModal() {
+    taskModalBackground.style.display = "none";
+}
 
 function getTaskTimes(text) {
     const textArray = text.split('\n');
@@ -250,33 +317,18 @@ function getTotalShopHours(text) {
     }
 }
 
-// Add Job OK click
-addJobOKBtn.addEventListener('click', async () => {
-    await addJobToDB();
-    hideAddJobModal();
-});
-// Cancel adding job button
-addJobCancelBtn.addEventListener('click', hideAddJobModal);
-
-
-
-
-
-
-// FUNCTIONS
-
 async function loadTasksSelect() {
     const tasksResponse = await getDBEntrees(BUSINESS_SCHEMA, TASKS_TABLE, "id", "*", settings);
     if ((!tasksResponse) || (tasksResponse.error)) return;
     if (tasksResponse.length == 0) return;
 
-    addJobNewTaskName.innerHTML = "";
+    taskModalTaskSelect.innerHTML = "";
     tasksResponse.forEach((task, index) => {
         const timerOption = document.createElement("option");
         timerOption.textContent = task.name;
         timerOption.id = task.id;
         timerOption.value = index;
-        addJobNewTaskName.appendChild(timerOption);
+        taskModalTaskSelect.appendChild(timerOption);
     });
 }
 
@@ -419,10 +471,22 @@ function loadSequences(sequences) {
             taskElement.setAttribute('sequence-name', sequence.name);
 
             taskElement.classList.add('add-job-modal-sequence-task');
-            taskElement.textContent = `${task.taskName} ${task.hours}:${task.minutes}`;
+            taskElement.textContent = `${task.name} ${task.hours}:${task.minutes}`;
 
             taskElement.addEventListener('click', () => {
-                addJobSequenceName.value = sequence.name;
+                // addJobSequenceName.value = sequence.name;
+                showAddUpdateTaskModal(
+                    sequence.name,
+                    task,
+                    async (sequenceName, newTask) => {
+                        task.name = newTask.name;
+                        task.id = newTask.id;
+                        task.hours = newTask.hours;
+                        task.minutes = newTask.minutes;
+                            
+                        loadSequences(currentJob.sequences);
+                        // addTask(sequenceName, data);
+                    });
                 // if (confirm(`Delete "${task.taskName}" task?`)) {
                 //     sequence.tasks.splice(index, 1);
                 //     loadSequences(currentJob.sequences);
