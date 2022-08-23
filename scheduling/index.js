@@ -64,26 +64,26 @@ const addModal= document.querySelector('#add-job-modal');
 const addJobNameInput = document.querySelector('#add-job-name-input');
 const addJobNotesInput = document.querySelector('#add-job-job-notes-textarea');
 const addJobSequenceContainer = document.querySelector('#add-job-modal-sequence-container');
-const addJobSequenceName = document.querySelector('#add-job-new-sequence-input');
-const addJobNewTaskName = document.querySelector('#add-job-new-task-select');
-const addJobHours = document.querySelector('#add-job-new-task-hours-input');
-const addJobMinutes = document.querySelector('#add-job-new-task-minutes-input');
 const addJobAddTaskBtn= document.querySelector('#add-task-btn');
-const addJobAddTasksFromTextTextTaskName= document.querySelector('#add-job-new-sequence-for-add-from-text-input');
-const addJobAddTasksFromTextTextArea= document.querySelector('#add-tasks-from-text-textarea');
 const addJobAddTasksFromTextBtn= document.querySelector('#add-tasks-from-text-btn');
 const addJobOKBtn = document.querySelector('#add-job-ok');
 const addJobCancelBtn = document.querySelector('#add-job-cancel');
 
-
+// Add/Update Task Modal
 const taskModalBackground = document.querySelector('#task-modal-background');
-const taskModalSequence = document.querySelector('#task-modal-sequence-input');
+const taskModalSequenceName = document.querySelector('#task-modal-sequence-input');
 const taskModalTaskSelect = document.querySelector('#task-modal-task-select');
 const taskModalHours = document.querySelector('#task-modal-hours-input');
 const taskModalMinutes = document.querySelector('#task-modal-minutes-input');
 const taskModalCancelBtn = document.querySelector('#task-modal-cancel-btn');
 const taskModalOKBtn = document.querySelector('#task-modal-ok-btn');
 
+// Add Tasks From Text
+const addTaskFromTextModalBackground = document.querySelector('#add-task-from-text-modal-background');
+const addTaskFromTextModalSequenceName = document.querySelector('#tasks-from-text-sequence-name');
+const addTasksFromTextTextArea = document.querySelector('#add-tasks-from-text-textarea');
+const addTasksFromTextOKBtn = document.querySelector('#tasks-from-text-ok-btn');
+const addTasksFromTextCancelBtn = document.querySelector('#tasks-from-text-cancel-btn');
 
 const tableRows = document.querySelectorAll('.jobs-table tr');
 const jobsTable = document.querySelector('#jobs-table');
@@ -128,59 +128,46 @@ addJobAddTaskBtn.addEventListener('click', async () => {
             addTask(sequenceName, data);
         }
     );
-    // if (!addJobSequenceName.value) {
-    //     alert("Missing sequence name");
-    //     return;
-    // }
-    // const sequenceName = addJobSequenceName.value;
-
-    // const data = {
-    //     taskName: addJobNewTaskName[addJobNewTaskName.value].textContent,
-    //     taskID: addJobNewTaskName[addJobNewTaskName.value].id,
-    //     hours: Number(addJobHours.value),
-    //     minutes: Number(addJobMinutes.value),
-    // }
-
-    // addTask(sequenceName, data);
 });
 
 addJobAddTasksFromTextBtn.addEventListener('click', async () => {
-    const sequenceName = addJobAddTasksFromTextTextTaskName.value;
-    if (!sequenceName) {
-        alert("Missing sequence name");
-        return;
-    }
+    showAddTaskFromTextModal(
+        async (sequenceName, text) => {
+            if (!sequenceName) {
+                alert("Missing sequence name");
+                return;
+            }
 
-    const text = addJobAddTasksFromTextTextArea.value;
-
-    const totalShopTime = getTotalShopHours(text);
-
-    const taskList = getTaskTimes(text);
-
-    const tasksResponse = await getDBEntrees(BUSINESS_SCHEMA, TASKS_TABLE, "id", "*", settings);
-    if ((!tasksResponse) || (tasksResponse.error)) return;
-    if (tasksResponse.length == 0) return;
-
-    const errors = [];
-
-    for (const ownTask of taskList) {
-        let taskFound = false;
-        for (const task of tasksResponse) {
-            if (task.name === ownTask.name) {
-                taskFound = true;
-                addTask(
-                    sequenceName,
-                    {
-                        name: ownTask.name,
-                        id: task.id,
-                        hours: ownTask.hours,
-                        minutes: ownTask.minutes,
+            const totalShopTime = getTotalShopHours(text);
+        
+            const taskList = getTaskTimes(text);
+        
+            const tasksResponse = await getDBEntrees(BUSINESS_SCHEMA, TASKS_TABLE, "id", "*", settings);
+            if ((!tasksResponse) || (tasksResponse.error)) return;
+            if (tasksResponse.length == 0) return;
+        
+            const errors = [];
+        
+            for (const ownTask of taskList) {
+                let taskFound = false;
+                for (const task of tasksResponse) {
+                    if (task.name === ownTask.name) {
+                        taskFound = true;
+                        addTask(
+                            sequenceName,
+                            {
+                                name: ownTask.name,
+                                id: task.id,
+                                hours: ownTask.hours,
+                                minutes: ownTask.minutes,
+                            }
+                        );
                     }
-                );
+                }
+                if (!taskFound) alert(`Task "${ownTask.name} not found.\nPlease added "${ownTask.name}" to Tasks in the Admin page.`);
             }
         }
-        if (!taskFound) alert(`Task "${ownTask.name} not found.\nPlease added "${ownTask.name}" to Tasks in the Admin page.`);
-    }
+    );
 });
 
 // Add Job OK click
@@ -195,13 +182,30 @@ addJobCancelBtn.addEventListener('click', hideAddJobModal);
 
 
 
-
 // FUNCTIONS
+
+async function showAddTaskFromTextModal(OKCallback, cancelCallback) {
+    addTaskFromTextModalBackground.style.display = 'flex';
+
+    addTasksFromTextOKBtn.onclick = async () => {
+        OKCallback(addTaskFromTextModalSequenceName.value, addTasksFromTextTextArea.value);
+        hideAddTaskFromTextModal();
+    };
+
+    addTasksFromTextCancelBtn.onclick = async () => {
+        if (cancelCallback) cancelCallback();
+        hideAddTaskFromTextModal();
+    }
+}
+
+async function hideAddTaskFromTextModal() {
+    addTaskFromTextModalBackground.style.display = 'none';
+}
 
 async function showAddUpdateTaskModal(sequenceName, task, OKCallback, cancelCallback) {
     await loadTasksSelect();
     taskModalBackground.style.display = "flex";
-    taskModalSequence.value = sequenceName || "";
+    taskModalSequenceName.value = sequenceName || "";
     // taskModalTaskSelect.textContent = task ? task.name : "";
     taskModalTaskSelect.value = 1;
     taskModalHours.value = task ? task.hours : "";
@@ -209,7 +213,7 @@ async function showAddUpdateTaskModal(sequenceName, task, OKCallback, cancelCall
 
     taskModalOKBtn.onclick = async () => {
         console.log(taskModalTaskSelect);
-        OKCallback(taskModalSequence.value, {
+        OKCallback(taskModalSequenceName.value, {
             name: taskModalTaskSelect[taskModalTaskSelect.value].textContent,
             id: taskModalTaskSelect[taskModalTaskSelect.value].id,
             hours: Number(taskModalHours.value),
