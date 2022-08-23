@@ -171,7 +171,7 @@
     </section>
 
     <!-- Add Job Modal -->
-    <section id="add-job-modal" class="add-job-modal-background" style="display: flex;">
+    <section id="add-job-modal" class="add-job-modal-background" style="display: none;">
         <div class="add-job-modal-window">
             <h2  class="add-job-modal-title">Add Job</h2>
             <label class="add-job-name-label">Job Name <input id="add-job-name-input" class="add-job-name-input" type="text" placeholder="13777"></label>
@@ -243,5 +243,27 @@
             </div>
         </div>
     </section>
+
+    <!-- Yes/No modal -->
+    <section id="yes-no-modal" class="yes-no-modal-background" style="display: none;">
+        <div class="yes-no-modal-container">
+            <h2 id="yes-no-modal-title" class="yes-no-modal-title">Delete check item?</h2>
+            <div class="yes-no-modal-buttons-container">
+                <button id="no-btn" class="yes-no-modal-button">No</button>
+                <button id="yes-btn" class="yes-no-modal-button">Yes</button>
+            </div>
+        </div>
+    </section>
+
+    <!-- Alert modal -->
+    <div id="alert" class="alert-modal-background" style="display: none;">
+        <div class="alert-modal-window">
+            <h2 id="alert-modal-label" class="alert-modal-label">label</h2>
+            <p id="alert-modal-message" class="alert-modal-message">text</p>
+            <div class="alert-modal-button-group">
+                <button id="alert-ok-btn" class="alert-modal-button">OK</button>
+            </div>
+        </div>
+    </div>
 </body>
 </html>

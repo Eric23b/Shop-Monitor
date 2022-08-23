@@ -315,6 +315,109 @@ body *{
 }
 
 
+/* MODAL */
+.yes-no-modal-background{
+    position: fixed;
+    inset: 0;
+    display: none;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    background: var(--background_color_transparent);
+    background-color: var(--background_transparent_color);
+    z-index: 100;
+}
+.yes-no-modal-container{
+    padding: 0.5rem;
+    border: 1px solid var(--border_color);
+    /* border-radius: 0.5rem; */
+    background-color: var(--background_color);
+}
+.yes-no-modal-input{
+    border: 1px solid var(--border_color);
+    border-radius: 0.25rem;
+    margin-bottom: 1rem;
+    font-size: larger;
+    color: var(--color);
+    background: var(--background_color);
+}
+.yes-no-modal-buttons-container{
+    display: flex;
+    flex-direction: row;
+    justify-content: flex-end;
+    gap: 1rem;
+}
+.yes-no-modal-button{
+    cursor: pointer;
+    padding: 0.5rem;
+    font-size: larger;
+    border: 1px solid var(--border_color);
+    border-radius: 0.25rem;
+    color: var(--color);
+    background: var(--background_color);
+}
+.yes-no-modal-button:hover{
+    color: var(--background_color);
+    background-color: var(--color);
+}
+.yes-no-modal-button:active{
+    color: var(--background_color);
+    background: var(--color);
+}
+
+
+/* Alert Modal */
+.alert-modal-background{
+    position: fixed;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    inset: 0;
+    z-index: 1000;
+    padding: 0.5rem;
+    background: var(--background_transparent_color);
+}
+.alert-modal-window{
+    display: flex;
+    flex-direction: column;
+    max-width: 100%;
+    max-height: 90vh;
+    padding: 1rem;
+    border: 1px solid var(--border_color);
+    gap: 0.5rem;
+    background-color: var(--background_color);
+    font-size: 1.2em;
+}
+.alert-modal-label{
+    text-align: center;
+}
+.alert-modal-message{
+    font-size: 1.2em;
+    overflow-wrap: break-word;
+    white-space: pre-line;
+    overflow-y: scroll;
+}
+.alert-modal-button-group{
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-top: 1rem;
+    justify-content: flex-end;
+}
+.alert-modal-button{
+    padding: 0.5rem 1rem;
+    font-size: 1.25em;
+    border: 1px solid var(--border_color);
+}
+.alert-modal-button:hover{
+    color: var(--background_color);
+    background-color: var(--color);
+}
+.alert-modal-button:active{
+    color: var(--color);
+    background-color: var(--background_color);
+}
+
 
 .add-job-ok-cancel-btn-container{
     display: flex;
