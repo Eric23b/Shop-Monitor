@@ -208,6 +208,14 @@ async function showPrompt(title, defaultText, OKCallback, cancelCallback) {
     promptLabel.textContent = title;
 
     promptInput.value = defaultText || "";
+    promptInput.focus();
+
+    promptInput.onkeypress = (event) => {
+        if (event.key === "Enter") {
+            OKCallback(promptInput.value);
+            prompt.style.display = 'none';
+        }
+    };
 
     promptOKBtn.onclick = async () => {
         OKCallback(promptInput.value);
@@ -224,6 +232,7 @@ async function showAlert(title, message, OKCallback) {
     alert.style.display = 'flex';
     alertLabel.textContent = title;
     alertMessage.textContent = message;
+    alertOKBtn.focus();
     alertOKBtn.onclick = async () => {
             if (OKCallback) OKCallback();
             alert.style.display = 'none';
@@ -233,6 +242,7 @@ async function showAlert(title, message, OKCallback) {
 async function showYesNoModal(title, OKCallback) {
     yesNoModalTitle.textContent = title;
     yesNoModal.style.display = 'flex';
+    yesNoModalYesBtn.focus();
 
     yesNoModalYesBtn.onclick = () => {
         OKCallback();
@@ -270,14 +280,18 @@ async function showAddUpdateTaskModal(sequenceName, task, OKCallback, cancelCall
     taskModalMinutes.value = task ? task.minutes : "";
 
     taskModalOKBtn.onclick = async () => {
-        console.log(taskModalTaskSelect);
-        OKCallback(taskModalSequenceName.value, {
-            name: taskModalTaskSelect[taskModalTaskSelect.value].textContent,
-            id: taskModalTaskSelect[taskModalTaskSelect.value].id,
-            hours: Number(taskModalHours.value),
-            minutes: Number(taskModalMinutes.value),
-        });
-        hideAddTaskModal();
+        if (taskModalSequenceName.value) {
+            OKCallback(taskModalSequenceName.value, {
+                name: taskModalTaskSelect[taskModalTaskSelect.value].textContent,
+                id: taskModalTaskSelect[taskModalTaskSelect.value].id,
+                hours: Number(taskModalHours.value),
+                minutes: Number(taskModalMinutes.value),
+            });
+            hideAddTaskModal();
+        }
+        else {
+            showAlert("Missing sequence name", "Add a sequence name");
+        }
     };
 
     taskModalCancelBtn.onclick = async () => {
@@ -426,8 +440,20 @@ async function loadJobs() {
         row.addEventListener('dragleave', () => {row.classList.remove('drag-over');});
 
         const progressBar = getTableDataWithProgressBar(50);
+
         const name = getTableDataWithText(job.name);
+        name.onclick = async () => {
+            showPrompt("Note", job.name, async (name) => {
+                job.name = name;
+                await updateDBEntry(BUSINESS_SCHEMA, JOBS_TABLE, {id: job.id, name: job.name}, settings);
+                loadJobs();
+            });
+        }
+        name.style.cursor = "pointer";
+
+
         const estimatedDate = getTableDataWithText(job.shipDate);
+
         const targetDate = getTableDataWithText(job.shipDate);
 
         // Note
