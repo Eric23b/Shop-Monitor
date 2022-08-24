@@ -417,7 +417,7 @@ async function loadJobs() {
         return 0;
     });
 
-    jobsTable.innerHTML = getTableHeaderRow(["Name", "Estimated Date", "Target Date", "Progress", "Note", "Active", "Hours", "Edit", "Delete"]);
+    jobsTable.innerHTML = getTableHeaderRow(["Name", "Estimated Date", "Target Date", "Progress", "Note", "Active", "Shop\nHours", "Edit", "Delete"]);
 
     jobsResponse.forEach((job) => {
         const row = document.createElement('tr');
@@ -450,7 +450,7 @@ async function loadJobs() {
             }
         );
 
-        console.log(5%2);
+        // Calculate shop hours
         let totalHours = 0;
         let totalMinutes = 0;
         if (job.sequences) {

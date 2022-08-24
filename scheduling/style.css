@@ -594,6 +594,9 @@ tr:hover{
     text-align: center;
     background: transparent;
 }
+.jobs-table tr th{
+    white-space: pre;
+}
 .drag-over{
     border-top: 1px solid var(--yes);
 }
