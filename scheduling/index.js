@@ -95,6 +95,12 @@ const alertLabel = document.querySelector('#alert-modal-label');
 const alertMessage = document.querySelector('#alert-modal-message');
 const alertOKBtn = document.querySelector('#alert-ok-btn');
 
+const prompt = document.querySelector('#prompt');
+const promptLabel = document.querySelector('#prompt-modal-label');
+const promptInput = document.querySelector('#prompt-modal-input');
+const promptCancelBtn = document.querySelector('#prompt-modal-cancel-btn');
+const promptOKBtn = document.querySelector('#prompt-modal-ok-btn');
+
 const tableRows = document.querySelectorAll('.jobs-table tr');
 const jobsTable = document.querySelector('#jobs-table');
 const grabbers = document.querySelectorAll('.grabber');
@@ -195,6 +201,24 @@ addJobCancelBtn.addEventListener('click', hideAddJobModal);
 
 
 // FUNCTIONS
+
+async function showPrompt(title, defaultText, OKCallback, cancelCallback) {
+    prompt.style.display = 'flex';
+
+    promptLabel.textContent = title;
+
+    promptInput.value = defaultText || "";
+
+    promptOKBtn.onclick = async () => {
+        OKCallback(promptInput.value);
+        prompt.style.display = 'none';
+    }
+    
+    promptCancelBtn.onclick = async () => {
+        if (cancelCallback) cancelCallback();
+        prompt.style.display = 'none';
+    }
+}
 
 async function showAlert(title, message, OKCallback) {
     alert.style.display = 'flex';
@@ -409,11 +433,11 @@ async function loadJobs() {
         // Note
         const note = getTableDataWithEditText(job.note, );
         note.onclick = async () => {
-            job.note = prompt("Note", job.note || "");
-            if (job.note !== null) {
+            showPrompt("Note", job.note, async (note) => {
+                job.note = note;
                 await updateDBEntry(BUSINESS_SCHEMA, JOBS_TABLE, {id: job.id, note: job.note}, settings);
                 loadJobs();
-            }
+            });
         }
         note.style.cursor = "pointer";
 
@@ -426,7 +450,21 @@ async function loadJobs() {
             }
         );
 
-        const hours = getTableDataWithText("100");
+        console.log(5%2);
+        let totalHours = 0;
+        let totalMinutes = 0;
+        if (job.sequences) {
+            job.sequences.forEach((sequence) => {
+                if (sequence.tasks) {
+                    sequence.tasks.forEach((task) => {
+                        totalHours += Number(task.hours);
+                        totalMinutes += Number(task.minutes);
+                    });
+                }
+            });
+        }
+        const hours = getTableDataWithText(`${totalHours + Math.floor(totalMinutes/60)}:${(((totalMinutes/60)%1)*60).toFixed(0)}`);
+            
 
         // Edit job
         const edit = getTableDataWithText("✏");

@@ -204,9 +204,9 @@
             </label>
             <label >Shop Hours
                 <br>
-                <input id="task-modal-hours-input" class="task-modal-time-input" type="number" placeholder="Hours">
+                <input id="task-modal-hours-input" class="task-modal-time-input" type="number" min="0" placeholder="Hours">
                 : 
-                <input id="task-modal-minutes-input" class="task-modal-time-input" type="number" placeholder="Minutes">
+                <input id="task-modal-minutes-input" class="task-modal-time-input" type="number" min="0" placeholder="Minutes">
             </label>
             <datalist id="sequence-datalist">
                 <option value="Cabinets"></option>
@@ -262,6 +262,18 @@
             <p id="alert-modal-message" class="alert-modal-message">text</p>
             <div class="alert-modal-button-group">
                 <button id="alert-ok-btn" class="alert-modal-button">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Input prompt -->
+    <div id="prompt" class="prompt-modal-background" style="display: none;">
+        <div class="prompt-modal-window">
+            <h2 id="prompt-modal-label" class="prompt-modal-input-label">label</h2>
+            <input id="prompt-modal-input" class="prompt-modal-input" type="text">
+            <div class="prompt-modal-button-group">
+                <button id="prompt-modal-cancel-btn" class="prompt-modal-button">Cancel</button>
+                <button id="prompt-modal-ok-btn" class="prompt-modal-button">OK</button>
             </div>
         </div>
     </div>

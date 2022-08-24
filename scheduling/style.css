@@ -419,6 +419,63 @@ body *{
 }
 
 
+/* Promp Modal */
+.prompt-modal-background{
+    position: fixed;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    inset: 0;
+    z-index: 1000;
+    padding: 0.5rem;
+    background: var(--background_transparent_color);
+}
+.prompt-modal-window{
+    display: flex;
+    flex-direction: column;
+    max-width: 100%;
+    max-height: 90vh;
+    padding: 1rem;
+    border: 1px solid var(--border_color);
+    gap: 0.5rem;
+    background-color: var(--background_color);
+    font-size: 1.2em;
+}
+.prompt-modal-label{
+    text-align: center;
+}
+.prompt-modal-input{
+    font-size: 1.2em;
+    border: 1px solid var(--border_color);
+}
+.prompt-modal-message{
+    font-size: 1.2em;
+    overflow-wrap: break-word;
+    white-space: pre-line;
+    overflow-y: scroll;
+}
+.prompt-modal-button-group{
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-top: 1rem;
+    justify-content: flex-end;
+}
+.prompt-modal-button{
+    padding: 0.5rem 1rem;
+    font-size: 1.25em;
+    border: 1px solid var(--border_color);
+}
+.prompt-modal-button:hover{
+    color: var(--background_color);
+    background-color: var(--color);
+}
+.prompt-modal-button:active{
+    color: var(--color);
+    background-color: var(--background_color);
+}
+
+
 .add-job-ok-cancel-btn-container{
     display: flex;
     flex-direction: row;
