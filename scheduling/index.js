@@ -514,7 +514,10 @@ async function loadJobs() {
         });
         deleteTD.classList.add('table-delete-btn');
 
-        const grabber = getTableDataWithGrabber();
+        let grabber = document.createElement('td');
+        if (job.active) {
+            grabber = getTableDataWithGrabber();
+        }
 
         appendChildren(row, [name, estimatedDate, targetDate, progressBar, note, active, hours, edit, deleteTD, grabber]);
         jobsTable.appendChild(row);
