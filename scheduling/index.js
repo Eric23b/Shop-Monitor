@@ -441,6 +441,7 @@ async function loadJobs() {
         let totalMinutes = 0;
         let completedHours = 0;
         let completedMinutes = 0;
+        let allTasksCompleted = true;
         if (job.sequences) {
             job.sequences.forEach((sequence) => {
                 if (sequence.tasks) {
@@ -450,6 +451,9 @@ async function loadJobs() {
                         if (task.completed) {
                             completedHours += Number(task.hours);
                             completedMinutes += Number(task.minutes);
+                        }
+                        else {
+                            allTasksCompleted = false;
                         }
                     });
                 }
@@ -480,7 +484,7 @@ async function loadJobs() {
         name.style.cursor = "pointer";
 
 
-        const estimatedDate = getTableDataWithText(job.shipDate);
+        const estimatedDate = getTableDataWithText(job.active ? job.shipDate : "");
 
         const shipDate = getTableDataWithText(job.shipDate);
 
