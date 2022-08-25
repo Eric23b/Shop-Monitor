@@ -140,6 +140,7 @@ addJobAddTaskBtn.addEventListener('click', async () => {
                 id: task.id,
                 hours: task.hours,
                 minutes: task.minutes,
+                completed: false,
             }
             addTask(sequenceName, data);
         }
@@ -176,6 +177,7 @@ addJobAddTasksFromTextBtn.addEventListener('click', async () => {
                                 id: task.id,
                                 hours: ownTask.hours,
                                 minutes: ownTask.minutes,
+                                completed: false,
                             }
                         );
                     }
@@ -431,15 +433,41 @@ async function loadJobs() {
         return 0;
     });
 
-    jobsTable.innerHTML = getTableHeaderRow(["Name", "Estimated Date", "Target Date", "Progress", "Note", "Active", "Shop\nHours", "Edit", "Delete"]);
+    jobsTable.innerHTML = getTableHeaderRow(["Name", "Estimated\nDate", "Ship\nDate", "Progress", "Note", "Active", "Shop\nHours", "Edit", "Delete"]);
 
     jobsResponse.forEach((job) => {
+        // Calculate shop hours
+        let totalHours = 0;
+        let totalMinutes = 0;
+        let completedHours = 0;
+        let completedMinutes = 0;
+        if (job.sequences) {
+            job.sequences.forEach((sequence) => {
+                if (sequence.tasks) {
+                    sequence.tasks.forEach((task) => {
+                        totalHours += Number(task.hours);
+                        totalMinutes += Number(task.minutes);
+                        if (task.completed) {
+                            completedHours += Number(task.hours);
+                            completedMinutes += Number(task.minutes);
+                        }
+                    });
+                }
+            });
+        }
+        totalHours = Number(totalHours + Math.floor(totalMinutes / 60));
+        totalMinutes = Number((((totalMinutes / 60) % 1) * 60).toFixed(0));
+        const totalDecimalTime = totalHours + (totalMinutes / 60);
+        const totalDecimalCompletedTime = completedHours + (completedMinutes / 60);
+        const percentCompleted = ((totalDecimalCompletedTime / totalDecimalTime) * 100).toFixed(0);
+
         const row = document.createElement('tr');
         row.classList.add('table-row-blank-border');
         row.addEventListener('dragenter', () => {row.classList.add('drag-over');});
         row.addEventListener('dragleave', () => {row.classList.remove('drag-over');});
 
-        const progressBar = getTableDataWithProgressBar(50);
+        const progressBar = getTableDataWithProgressBar(percentCompleted);
+        progressBar.setAttribute('title', percentCompleted + "% completed")
 
         const name = getTableDataWithText(job.name);
         name.onclick = async () => {
@@ -454,7 +482,7 @@ async function loadJobs() {
 
         const estimatedDate = getTableDataWithText(job.shipDate);
 
-        const targetDate = getTableDataWithText(job.shipDate);
+        const shipDate = getTableDataWithText(job.shipDate);
 
         // Note
         const note = getTableDataWithEditText(job.note, );
@@ -476,21 +504,7 @@ async function loadJobs() {
             }
         );
 
-        // Calculate shop hours
-        let totalHours = 0;
-        let totalMinutes = 0;
-        if (job.sequences) {
-            job.sequences.forEach((sequence) => {
-                if (sequence.tasks) {
-                    sequence.tasks.forEach((task) => {
-                        totalHours += Number(task.hours);
-                        totalMinutes += Number(task.minutes);
-                    });
-                }
-            });
-        }
-        const hours = getTableDataWithText(`${totalHours + Math.floor(totalMinutes/60)}:${(((totalMinutes/60)%1)*60).toFixed(0)}`);
-            
+        const hours = getTableDataWithText(`${totalHours}:${totalMinutes}`);
 
         // Edit job
         const edit = getTableDataWithText("✏");
@@ -507,7 +521,7 @@ async function loadJobs() {
         });
 
         const deleteTD = getTableDataWithDeleteButton(async () => {
-            if (confirm(`Delete Job ${job.name}?`)) {``
+            if (confirm(`Delete Job ${job.name}?`)) {
                 await deleteDBEntry(BUSINESS_SCHEMA, JOBS_TABLE, job.id, settings);
                 loadJobs();
             }
@@ -519,7 +533,7 @@ async function loadJobs() {
             grabber = getTableDataWithGrabber();
         }
 
-        appendChildren(row, [name, estimatedDate, targetDate, progressBar, note, active, hours, edit, deleteTD, grabber]);
+        appendChildren(row, [name, estimatedDate, shipDate, progressBar, note, active, hours, edit, deleteTD, grabber]);
         jobsTable.appendChild(row);
     });
 }
@@ -590,6 +604,7 @@ function loadSequences(sequences) {
                         task.id = newTask.id;
                         task.hours = newTask.hours;
                         task.minutes = newTask.minutes;
+                        // task.completed = false;
                             
                         loadSequences(currentJob.sequences);
                     });
