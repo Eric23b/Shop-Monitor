@@ -445,6 +445,9 @@ async function loadJobs(jobs) {
         });
     }
 
+    // TODO: Total available shop hours with task IDs
+    // TODO: Break this up into functions
+
     jobsTable.innerHTML = getTableHeaderRow(["Name", "Estimated\nDate", "⇨", "Ship\nDate", "Progress", "Note", "Active", "Shop\nHours", "Edit", "Delete"]);
 
     jobs.forEach((job, jobIndex) => {
