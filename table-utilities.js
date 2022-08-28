@@ -44,6 +44,7 @@ export function getTableDataWithProgressBar(percentage) {
     bar.style.height = "1.25em";
     bar.style.backgroundColor = "var(--yes)";
     td.style.backgroundColor = "var(--background_hover_color)";
+    td.setAttribute('title', percentage + "% completed")
     td.appendChild(bar);
     return td;
 }
