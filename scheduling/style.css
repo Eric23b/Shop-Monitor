@@ -583,6 +583,10 @@ body *{
 .jobs-table{
     width: 100%;
     border-collapse: collapse;
+    -webkit-user-select: none;  
+    -moz-user-select: none;    
+    -ms-user-select: none;      
+    user-select: none;
 }
 tr:hover{
     background-color: var(--background_hover_color);
@@ -590,9 +594,11 @@ tr:hover{
 .table-row-blank-border{
     border-top: 1px solid var(--background_color);
 }
-.jobs-table tr td{
+.jobs-table *{
+    /* padding: 0 0.5rem; */
     text-align: center;
     background: transparent;
+    /* white-space: pre-line; */
 }
 .jobs-table tr th{
     white-space: pre;
@@ -615,6 +621,18 @@ tr:hover{
     /* width: 80%; */
     height: 1.25em;
     background-color: var(--yes);
+}
+.table-text-btn{
+    font-size: larger;
+    border: none;
+    background: transparent;
+    color: var(--color);
+}
+.table-text-btn:hover{
+    color: var(--yes);
+}
+.table-text-btn:active{
+    opacity: 0.5;
 }
 
 .delete-btn{
@@ -746,3 +764,41 @@ tr:hover{
 .color-6{
     background-color: var(--color-6);
 }
+
+.january{
+    border-left: 0.5em solid #ff0000;
+}
+.february{
+    border-left: 0.5em solid #ff8000;
+}
+.march{
+    border-left: 0.5em solid #ffff00 ;
+}
+.april{
+    border-left: 0.5em solid #80ff00;
+}
+.may{
+    border-left: 0.5em solid #00ff00;
+}
+.june{
+    border-left: 0.5em solid #00ff80;
+}
+.july{
+    border-left: 0.5em solid #00ffff;
+}
+.august{
+    border-left: 0.5em solid #0080ff;
+}
+.september{
+    border-left: 0.5em solid #0000ff;
+}
+.october{
+    border-left: 0.5em solid #8000ff;
+}
+.november{
+    border-left: 0.5em solid #ff00ff;
+}
+.december{
+    border-left: 0.5em solid #ff0080;
+}
+	
