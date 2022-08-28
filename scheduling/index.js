@@ -49,6 +49,7 @@ const settings = {
     authorization: ""
 }
 
+let draggingJobIndex = 0;
 let draggingTask = {taskIndex: 0, sequenceName: ""};
 
 let currentJob = {
@@ -204,12 +205,13 @@ addJobCancelBtn.addEventListener('click', hideAddJobModal);
 
 // FUNCTIONS
 
-async function showPrompt(title, defaultText, OKCallback, cancelCallback) {
+async function showPrompt(title, defaultText, OKCallback, cancelCallback, inputType) {
     prompt.style.display = 'flex';
 
     promptLabel.textContent = title;
 
     promptInput.value = defaultText || "";
+    promptInput.setAttribute('type', inputType || 'text');
     promptInput.focus();
 
     promptInput.onkeypress = (event) => {
@@ -420,62 +422,55 @@ function clearCurrentJob() {
 }
 
 loadJobs();
-async function loadJobs() {
-    const jobsResponse = await getDBEntrees(BUSINESS_SCHEMA, JOBS_TABLE, "__createdtime__", "*", settings);
-    
-    if ((!jobsResponse) || (jobsResponse.error)) return;
+async function loadJobs(jobs) {
+    if (!jobs) {
+        jobs = await getDBEntrees(BUSINESS_SCHEMA, JOBS_TABLE, "__createdtime__", "*", settings);
+        if ((!jobs) || (jobs.error)) return;
+        // Sort by ship date
+        jobs.sort((a, b) => {
+            const nameA = a.shipDate;
+            const nameB = b.shipDate;
+            if (nameA < nameB) return 1;
+            if (nameA > nameB) return -1;
+            return 0;
+        });
 
-    jobsResponse.sort((a, b) => {
-        const nameA = a.active;
-        const nameB = b.active;
-        if (nameA < nameB) return 1;
-        if (nameA > nameB) return -1;
-        return 0;
-    });
+        // Sort by active
+        jobs.sort((a, b) => {
+            const nameA = a.active;
+            const nameB = b.active;
+            if (nameA < nameB) return 1;
+            if (nameA > nameB) return -1;
+            return 0;
+        });
+    }
 
-    jobsTable.innerHTML = getTableHeaderRow(["Name", "Estimated\nDate", "Ship\nDate", "Progress", "Note", "Active", "Shop\nHours", "Edit", "Delete"]);
+    jobsTable.innerHTML = getTableHeaderRow(["Name", "Estimated\nDate", "⇨", "Ship\nDate", "Progress", "Note", "Active", "Shop\nHours", "Edit", "Delete"]);
 
-    jobsResponse.forEach((job) => {
-        // Calculate shop hours
-        let totalHours = 0;
-        let totalMinutes = 0;
-        let completedHours = 0;
-        let completedMinutes = 0;
-        let allTasksCompleted = true;
-        if (job.sequences) {
-            job.sequences.forEach((sequence) => {
-                if (sequence.tasks) {
-                    sequence.tasks.forEach((task) => {
-                        totalHours += Number(task.hours);
-                        totalMinutes += Number(task.minutes);
-                        if (task.completed) {
-                            completedHours += Number(task.hours);
-                            completedMinutes += Number(task.minutes);
-                        }
-                        else {
-                            allTasksCompleted = false;
-                        }
-                    });
-                }
-            });
-        }
-        totalHours = Number(totalHours + Math.floor(totalMinutes / 60));
-        totalMinutes = Number((((totalMinutes / 60) % 1) * 60).toFixed(0));
-        const totalDecimalTime = totalHours + (totalMinutes / 60);
-        const totalDecimalCompletedTime = completedHours + (completedMinutes / 60);
-        const percentCompleted = ((totalDecimalCompletedTime / totalDecimalTime) * 100).toFixed(0);
+    jobs.forEach((job, jobIndex) => {
+        const jobTimes = getJobTimes(job);
 
         const row = document.createElement('tr');
         row.classList.add('table-row-blank-border');
-        row.addEventListener('dragenter', () => {row.classList.add('drag-over');});
-        row.addEventListener('dragleave', () => {row.classList.remove('drag-over');});
+        if (job.active) {
+            row.addEventListener('dragstart', () => {draggingJobIndex = jobIndex});
+            row.addEventListener('dragenter', () => {row.classList.add('drag-over')});
+            row.addEventListener('dragleave', () => {row.classList.remove('drag-over')});
+            row.addEventListener('dragover', (event) => {event.preventDefault()});
+            row.addEventListener('drop', async () => {
+                row.classList.remove('drag-over');
+                const tempJob = jobs.splice(draggingJobIndex, 1);
+                jobs.splice(jobIndex, 0, ...tempJob);
+                loadJobs(jobs);
+            });
+        }
 
-        const progressBar = getTableDataWithProgressBar(percentCompleted);
-        progressBar.setAttribute('title', percentCompleted + "% completed")
+        const progressBar = getTableDataWithProgressBar(jobTimes.percentCompleted);
 
+        // Name
         const name = getTableDataWithText(job.name);
         name.onclick = async () => {
-            showPrompt("Note", job.name, async (name) => {
+            showPrompt("Rename job", job.name, async (name) => {
                 job.name = name;
                 await updateDBEntry(BUSINESS_SCHEMA, JOBS_TABLE, {id: job.id, name: job.name}, settings);
                 loadJobs();
@@ -483,10 +478,27 @@ async function loadJobs() {
         }
         name.style.cursor = "pointer";
 
-
         const estimatedDate = getTableDataWithText(job.active ? job.shipDate : "");
 
-        const shipDate = getTableDataWithText(job.shipDate);
+        let updateShipDate = document.createElement('td');
+        if (job.active) {
+            updateShipDate = getTableDataWithText("⇨");
+            updateShipDate.style.cursor = "pointer";
+            updateShipDate.classList.add('table-text-btn');
+            updateShipDate.addEventListener('click', async () => {
+            });
+        }
+
+        const shipDate = getTableDataWithEditText(job.shipDate);
+        // const month = new Date(job.shipDate).toLocaleString("en-CA", { month: "long" }).toLowerCase();
+        // shipDate.classList.add(month);
+        shipDate.onclick = async () => {
+            showPrompt("Ship Date", job.shipDate, async (shipDate) => {
+                job.shipDate = shipDate;
+                await updateDBEntry(BUSINESS_SCHEMA, JOBS_TABLE, {id: job.id, shipDate: job.shipDate}, settings);
+                loadJobs();
+            }, null, 'date');
+        }
 
         // Note
         const note = getTableDataWithEditText(job.note, );
@@ -508,11 +520,12 @@ async function loadJobs() {
             }
         );
 
-        const hours = getTableDataWithText(`${totalHours}:${totalMinutes}`);
+        const hours = getTableDataWithText(`${jobTimes.totalHours}:${jobTimes.totalMinutes}`);
 
         // Edit job
         const edit = getTableDataWithText("✏");
         edit.style.cursor = "pointer";
+        edit.classList.add('table-text-btn');
         edit.addEventListener('click', async () => {
             const jobsResponse = await getDBEntrees(BUSINESS_SCHEMA, JOBS_TABLE, "id", job.id, settings);
             if ((!jobsResponse) || (jobsResponse.error)) return;
@@ -525,21 +538,56 @@ async function loadJobs() {
         });
 
         const deleteTD = getTableDataWithDeleteButton(async () => {
-            if (confirm(`Delete Job ${job.name}?`)) {
+            if (showYesNoModal(`Delete Job ${job.name}?`, async () => {
                 await deleteDBEntry(BUSINESS_SCHEMA, JOBS_TABLE, job.id, settings);
                 loadJobs();
-            }
+            }));
         });
         deleteTD.classList.add('table-delete-btn');
 
         let grabber = document.createElement('td');
         if (job.active) {
             grabber = getTableDataWithGrabber();
+            grabber.setAttribute('job-index', jobIndex);
         }
 
-        appendChildren(row, [name, estimatedDate, shipDate, progressBar, note, active, hours, edit, deleteTD, grabber]);
+        appendChildren(row, [name, estimatedDate, updateShipDate, shipDate, progressBar, note, active, hours, edit, deleteTD, grabber]);
         jobsTable.appendChild(row);
     });
+}
+
+function getJobTimes(job) {
+    // Calculate shop hours
+    let times = {};
+    times.totalHours = 0;
+    times.totalMinutes = 0;
+    times.completedHours = 0;
+    times.completedMinutes = 0;
+    times.allTasksCompleted = true;
+    if (job.sequences) {
+        job.sequences.forEach((sequence) => {
+            if (sequence.tasks) {
+                sequence.tasks.forEach((task) => {
+                    times.totalHours += Number(task.hours);
+                    times.totalMinutes += Number(task.minutes);
+                    if (task.completed) {
+                        times.completedHours += Number(task.hours);
+                        times.completedMinutes += Number(task.minutes);
+                    }
+                    else {
+                        times.allTasksCompleted = false;
+                    }
+                });
+            }
+        });
+    }
+    times.totalHours = Number(times.totalHours + Math.floor(times.totalMinutes / 60));
+    times.totalMinutes = Number((((times.totalMinutes / 60) % 1) * 60).toFixed(0));
+    times.totalDecimalTime = times.totalHours + (times.totalMinutes / 60);
+    times.totalDecimalCompletedTime = times.completedHours + (times.completedMinutes / 60);
+    times.percentCompleted = ((times.totalDecimalCompletedTime / times.totalDecimalTime) * 100).toFixed(0);
+
+    return times;
 }
 
 function addTask(sequenceName, data) {
