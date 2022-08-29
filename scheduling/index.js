@@ -106,6 +106,7 @@ const tableRows = document.querySelectorAll('.jobs-table tr');
 const jobsTable = document.querySelector('#jobs-table');
 const grabbers = document.querySelectorAll('.grabber');
 
+const log = console.log;
 
 
 // INIT CODE
@@ -445,44 +446,24 @@ async function loadJobs(jobs) {
         });
     }
 
-    const dailyAvailableShopHoursDec = getTotalAvailableShopHoursDec();
-    async function getTotalAvailableShopHoursDec() {
-        const tasksResponse = await getDBEntrees(BUSINESS_SCHEMA, TASKS_TABLE, "id", "*", settings);
-        if ((!tasksResponse) || (tasksResponse.error)) return;
-        if (tasksResponse.length == 0) return;
+    const dailyAvailableShopHoursDec = await getTotalAvailableShopHoursDec();
 
-        let totalHours = 0;
-        let totalMinutes = 0;
-        tasksResponse.forEach((task) => {
-            totalHours += task.hours;
-            totalMinutes += task.minutes;
-        });
-        totalHours = Number(totalHours + Math.floor(totalMinutes / 60));
-        totalMinutes = Number((((totalMinutes / 60) % 1) * 60).toFixed(0));
-        let totalDecimalTime = totalHours + (totalMinutes / 60);
-        return totalDecimalTime;
-
-        // const activeJobTasks = [];
-        // jobs.forEach((job) => {
-        //     job.sequences.forEach((sequence) => {
-        //         sequence.tasks.forEach((task) => {
-        //             if(activeJobTasks.indexOf(task.id) === -1) {
-        //                 activeJobTasks.push(task.id)
-        //             }
-        //         });
-        //     });
-        // });
-        // console.log(activeJobTasks);
-    }
-
-    // TODO: Total available shop hours with task IDs
-    // TODO: Break this up into functions
+    const dayIndex = new Date();
+    log(dayIndex)
+    incWorkDay(dayIndex, 5)
+    log(dayIndex)
+    // log(new Date(dayIndex).toLocaleString('default', {weekday: 'long'}) )
 
     jobsTable.innerHTML = getTableHeaderRow(["Name", "Estimated\nDate", "", "Ship\nDate", "Progress", "Note", "Active", "Shop\nHours", "Edit", "Delete"]);
 
     jobs.forEach((job, jobIndex) => {
         const jobTimes = getJobTimes(job);
-        console.log(jobTimes);
+        jobTimes.daysToCompleteDec = jobTimes.totalTimeRemainingDec / dailyAvailableShopHoursDec;
+        // log(job.name, jobTimes)
+        
+        // incWorkDay(dayIndex, Math.floor(jobTimes.daysToCompleteDec));
+        const shipDay = dayIndex.toLocaleDateString('en-CA');
+        // log(job.name, shipDay);
 
         const row = document.createElement('tr');
         row.classList.add('table-row-blank-border');
@@ -589,6 +570,48 @@ async function loadJobs(jobs) {
         jobsTable.appendChild(row);
     });
 }
+    
+function incWorkDay(date, amount) {
+    let index = 0;
+    while (index < amount) {
+        index++;
+        date.setDate(date.getDate() + 1);
+        const dayName = (date.toLocaleString('default', {weekday: 'short'}));
+        if (dayName === "Sat") {
+            index += 2;
+            date.setDate(date.getDate() + 2);
+        }
+    }
+}
+
+async function getTotalAvailableShopHoursDec() {
+    const tasksResponse = await getDBEntrees(BUSINESS_SCHEMA, TASKS_TABLE, "id", "*", settings);
+    if ((!tasksResponse) || (tasksResponse.error)) return;
+    if (tasksResponse.length == 0) return;
+
+    let totalHours = 0;
+    let totalMinutes = 0;
+    tasksResponse.forEach((task) => {
+        totalHours += task.hours;
+        totalMinutes += task.minutes;
+    });
+    totalHours = Number(totalHours + Math.floor(totalMinutes / 60));
+    totalMinutes = Number((((totalMinutes / 60) % 1) * 60).toFixed(0));
+    let totalDecimalTime = totalHours + (totalMinutes / 60);
+    return totalDecimalTime;
+
+    // const activeJobTasks = [];
+    // jobs.forEach((job) => {
+    //     job.sequences.forEach((sequence) => {
+    //         sequence.tasks.forEach((task) => {
+    //             if(activeJobTasks.indexOf(task.id) === -1) {
+    //                 activeJobTasks.push(task.id)
+    //             }
+    //         });
+    //     });
+    // });
+    // console.log(activeJobTasks);
+}
 
 function getJobTimes(job) {
     // Calculate shop hours
@@ -617,10 +640,10 @@ function getJobTimes(job) {
     }
     times.totalHours = Number(times.totalHours + Math.floor(times.totalMinutes / 60));
     times.totalMinutes = Number((((times.totalMinutes / 60) % 1) * 60).toFixed(0));
-    times.totalDecimalTime = times.totalHours + (times.totalMinutes / 60);
-    times.totalDecimalCompletedTime = times.completedHours + (times.completedMinutes / 60);
-    times.percentCompleted = ((times.totalDecimalCompletedTime / times.totalDecimalTime) * 100).toFixed(0);
-    // TODO: calculate remaining time
+    times.totalTimeDec = times.totalHours + (times.totalMinutes / 60);
+    times.totalCompletedTimeDec = times.completedHours + (times.completedMinutes / 60);
+    times.totalTimeRemainingDec = times.totalTimeDec - times.totalCompletedTimeDec;
+    times.percentCompleted = ((times.totalCompletedTimeDec / times.totalTimeDec) * 100).toFixed(0);
     return times;
 }
 
