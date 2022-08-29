@@ -445,13 +445,44 @@ async function loadJobs(jobs) {
         });
     }
 
+    const dailyAvailableShopHoursDec = getTotalAvailableShopHoursDec();
+    async function getTotalAvailableShopHoursDec() {
+        const tasksResponse = await getDBEntrees(BUSINESS_SCHEMA, TASKS_TABLE, "id", "*", settings);
+        if ((!tasksResponse) || (tasksResponse.error)) return;
+        if (tasksResponse.length == 0) return;
+
+        let totalHours = 0;
+        let totalMinutes = 0;
+        tasksResponse.forEach((task) => {
+            totalHours += task.hours;
+            totalMinutes += task.minutes;
+        });
+        totalHours = Number(totalHours + Math.floor(totalMinutes / 60));
+        totalMinutes = Number((((totalMinutes / 60) % 1) * 60).toFixed(0));
+        let totalDecimalTime = totalHours + (totalMinutes / 60);
+        return totalDecimalTime;
+
+        // const activeJobTasks = [];
+        // jobs.forEach((job) => {
+        //     job.sequences.forEach((sequence) => {
+        //         sequence.tasks.forEach((task) => {
+        //             if(activeJobTasks.indexOf(task.id) === -1) {
+        //                 activeJobTasks.push(task.id)
+        //             }
+        //         });
+        //     });
+        // });
+        // console.log(activeJobTasks);
+    }
+
     // TODO: Total available shop hours with task IDs
     // TODO: Break this up into functions
 
-    jobsTable.innerHTML = getTableHeaderRow(["Name", "Estimated\nDate", "⇨", "Ship\nDate", "Progress", "Note", "Active", "Shop\nHours", "Edit", "Delete"]);
+    jobsTable.innerHTML = getTableHeaderRow(["Name", "Estimated\nDate", "", "Ship\nDate", "Progress", "Note", "Active", "Shop\nHours", "Edit", "Delete"]);
 
     jobs.forEach((job, jobIndex) => {
         const jobTimes = getJobTimes(job);
+        console.log(jobTimes);
 
         const row = document.createElement('tr');
         row.classList.add('table-row-blank-border');
@@ -589,7 +620,7 @@ function getJobTimes(job) {
     times.totalDecimalTime = times.totalHours + (times.totalMinutes / 60);
     times.totalDecimalCompletedTime = times.completedHours + (times.completedMinutes / 60);
     times.percentCompleted = ((times.totalDecimalCompletedTime / times.totalDecimalTime) * 100).toFixed(0);
-
+    // TODO: calculate remaining time
     return times;
 }
 
