@@ -422,9 +422,13 @@ function clearCurrentJob() {
     currentJob.sequences = null;
 }
 
-loadJobs();
+await loadJobs();
 async function loadJobs(jobs) {
-    if (!jobs) {
+    if (jobs) {
+        log("yep")``
+    }
+    else {
+        log("nope");
         jobs = await getDBEntrees(BUSINESS_SCHEMA, JOBS_TABLE, "__createdtime__", "*", settings);
         if ((!jobs) || (jobs.error)) return;
         // Sort by ship date
@@ -433,6 +437,60 @@ async function loadJobs(jobs) {
             const nameB = b.shipDate;
             if (nameA < nameB) return 1;
             if (nameA > nameB) return -1;
+            return 0;
+        });
+        
+        // Sort by active
+        jobs.sort((a, b) => {
+            const nameA = a.active;
+            const nameB = b.active;
+            if (nameA < nameB) return 1;
+            if (nameA > nameB) return -1;
+            return 0;
+        });
+    }
+    jobs.forEach((job, index) => {job.index = index});
+
+    await updateEstimateDates(jobs);
+
+    async function updateEstimateDates(jobs) {
+        // Sort by index
+        jobs.sort((a, b) => {
+            const nameA = a.index;
+            const nameB = b.index;
+            if (nameA > nameB) return -1;
+            if (nameA < nameB) return 1;
+            return 0;
+        });
+
+        const dailyAvailableShopHoursDec = await getTotalAvailableShopHoursDec();
+    
+        const dayIndex = new Date();
+        let dayFraction = 0;
+
+        jobs.forEach((job) => {
+            if (!job.active) return;
+
+            const jobTimes = getJobTimes(job);
+            jobTimes.daysToCompleteDec = jobTimes.totalTimeRemainingDec / dailyAvailableShopHoursDec;
+            
+            jobTimes.startDay = new Date(dayIndex);
+
+            const fraction = Number((jobTimes.daysToCompleteDec % 1).toFixed(3));
+            incWorkDay(dayIndex, Math.floor(jobTimes.daysToCompleteDec) + Math.floor(dayFraction + fraction));
+            dayFraction = Number(((dayFraction + fraction) % 1).toFixed(3));
+            
+            jobTimes.shipDay = new Date(dayIndex);
+
+            job.estimatedDate = jobTimes.shipDay.toLocaleDateString('en-CA');
+        });
+
+        // Sort by index
+        jobs.sort((a, b) => {
+            const nameA = a.index;
+            const nameB = b.index;
+            if (nameA > nameB) return 1;
+            if (nameA < nameB) return -1;
             return 0;
         });
 
@@ -446,24 +504,10 @@ async function loadJobs(jobs) {
         });
     }
 
-    const dailyAvailableShopHoursDec = await getTotalAvailableShopHoursDec();
-
-    const dayIndex = new Date();
-    log(dayIndex)
-    incWorkDay(dayIndex, 5)
-    log(dayIndex)
-    // log(new Date(dayIndex).toLocaleString('default', {weekday: 'long'}) )
-
     jobsTable.innerHTML = getTableHeaderRow(["Name", "Estimated\nDate", "", "Ship\nDate", "Progress", "Note", "Active", "Shop\nHours", "Edit", "Delete"]);
 
     jobs.forEach((job, jobIndex) => {
         const jobTimes = getJobTimes(job);
-        jobTimes.daysToCompleteDec = jobTimes.totalTimeRemainingDec / dailyAvailableShopHoursDec;
-        // log(job.name, jobTimes)
-        
-        // incWorkDay(dayIndex, Math.floor(jobTimes.daysToCompleteDec));
-        const shipDay = dayIndex.toLocaleDateString('en-CA');
-        // log(job.name, shipDay);
 
         const row = document.createElement('tr');
         row.classList.add('table-row-blank-border');
@@ -493,14 +537,21 @@ async function loadJobs(jobs) {
         }
         name.style.cursor = "pointer";
 
-        const estimatedDate = getTableDataWithText(job.active ? job.shipDate : "");
+        const estimatedDateString = job.estimatedDate ? job.estimatedDate : "";
+        // const estimatedDateString = "";
+        log(job.estimatedDate)
+        const estimatedDate = getTableDataWithText(job.active ? estimatedDateString : "");
 
+        // Update ship date
         let updateShipDate = document.createElement('td');
         if (job.active) {
             updateShipDate = getTableDataWithText("⇨");
             updateShipDate.style.cursor = "pointer";
             updateShipDate.classList.add('table-text-btn');
             updateShipDate.addEventListener('click', async () => {
+                job.shipDate = job.estimatedDate;
+                await updateDBEntry(BUSINESS_SCHEMA, JOBS_TABLE, {id: job.id, shipDate: job.shipDate}, settings);
+                loadJobs(jobs);
             });
         }
 
@@ -516,7 +567,7 @@ async function loadJobs(jobs) {
         }
 
         // Note
-        const note = getTableDataWithEditText(job.note, );
+        const note = getTableDataWithEditText(job.index || "");
         note.onclick = async () => {
             showPrompt("Note", job.note, async (note) => {
                 job.note = note;
