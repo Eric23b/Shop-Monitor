@@ -112,7 +112,8 @@ async function buildCalender() {
         const weekContainer = document.createElement('div');
         weekContainer.classList.add('week');
     
-        daysOfTheWeek.forEach((day) => {
+        // daysOfTheWeek.forEach((day) => {
+        for (let index = 0; index < 7; index++) {
             const dayContainer = document.createElement('div');
             dayContainer.classList.add('day');
     
@@ -150,7 +151,7 @@ async function buildCalender() {
             dateIndex.setDate(dateIndex.getDate() + 1);
 
             if (dateIndex.toDateString('en-CA') === dates.lastSaturday.toDateString('en-CA')) endCalender = true;
-        });
+        };
     
         calenderContainer.appendChild(weekContainer);
     }
