@@ -104,6 +104,7 @@ body *{
     border-radius: 50%;
     color: var(--yes);
     opacity: 0.7;
+    cursor: pointer;
 }
 .add-job-btn:hover{
     opacity: 1;
@@ -614,8 +615,10 @@ th{
     border-top: 1px solid var(--yes);
 }
 .grabber{
+    font-weight: bolder;
     width: 2ch;
     cursor: grab;
+    color: var(--color);
 }
 .progress-td{
     padding: 0;
