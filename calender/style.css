@@ -1,0 +1,250 @@
+
+:root{
+    --color: #191d25;
+    --background_color: #edeff3;
+    --background_transparent_color: #edeff3c2;
+    --background_hover_color: #b2b8c6;
+    --border_color: #454750;
+    --active: #191d25;
+    --inactive: #191d2586;
+    --yes: forestgreen;
+    --no: tomato;
+    --accent_color: #0ba27a;
+    --color-1: #ff990060;
+    --color-2: #f1ee3260;
+    --color-3: #97f23d60;
+    --color-4: #53eec260;
+    --color-5: #51c4f560;
+    --color-6: #f1a4ec60;
+}
+/* @media (prefers-color-scheme: dark) { */
+[data-color-theme='dark']{
+    /* :root{ */
+        --color: #e0e0eb;
+        --background_color: #13131a;
+        --background_transparent_color: #13131abb;
+        --background_hover_color: #323238;
+        --border_color: #51525a;
+        --active: #e0e0eb;
+        --inactive: #e0e0eb80;
+        --yes: springgreen;
+        --no: tomato;
+        --accent_color: #2ceeba;
+    /* } */
+}
+
+html{
+    color: var(--color);
+    background-color: var(--background_color);
+    box-sizing: border-box;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border_color) transparent;
+    /* position: relative; */
+}
+*::-webkit-scrollbar-thumb:hover {
+    background-color: var(--color);
+}
+*::-webkit-scrollbar {
+    width: 12px;
+    height: 12px;
+}
+*::-webkit-scrollbar-track {
+    background: var(--background_color);
+}
+*::-webkit-scrollbar-thumb {
+    background-color: var(--border_color);
+    border-radius: 20px;
+    border: 3px solid var(--background_color);
+}
+*::-webkit-scrollbar-corner {
+    background: var(--background_color);
+}
+
+::-moz-selection { /* Code for Firefox */
+    color: var(--background_color);
+    background-color: var(--color);
+}
+
+::selection {
+    color: var(--background_color);
+    background-color: var(--color);
+}
+
+body{
+    padding: 0;
+    margin: 0;    
+    color: var(--color);
+    background-color: var(--background_color);
+    inset: 0;
+    /* position: relative; */
+    width: 100vw;
+    height: 100vh;
+}
+
+body *{
+    /* font-size: large; */
+    font-family: 'Lucida Sans', 'Lucida Sans Regular', 'Lucida Grande', 'Lucida Sans Unicode', 'Geneva', 'Verdana', 'sans-serif';
+    color: var(--color);
+    background-color: var(--background_color);
+    box-sizing: border-box;
+    /* accent-color: var(--accent_color); */
+}
+
+
+
+.main-container{
+    position: absolute;
+    display: flex;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+    /* align-items: center; */
+    align-content: center;
+    inset: 0;
+}
+
+.header{
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    align-items: center;
+    align-content: center;
+    /* gap: 2rem; */
+    width: 100%;
+    border-bottom: 1px solid var(--border_color);
+    background: transparent;
+}
+
+.header-link{
+    font-size: x-large;
+    margin: 0.25rem 1rem;
+    text-decoration: none;
+    opacity: 0.8;
+}
+.header-link:hover{
+    opacity: 1;
+}
+.header-spacer{
+    flex-grow: 1;
+}
+
+
+
+
+/* CALENDAR */
+.calender{
+    display: flex;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+    align-items: center;
+    align-content: center;
+    width: 100%;
+    inset: 0;
+    flex-grow: 1;
+    overflow: scroll;
+    -webkit-user-select: none;
+    -khtml-user-select: none;
+    -moz-user-select: -moz-none;
+    -o-user-select: none;
+    user-select: none;
+}
+.week{
+    position: relative;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    justify-content: space-between;
+    align-items: center;
+    align-content: center;
+    width: 100%;
+}
+.day{
+    position: relative;
+    flex-grow: 1;
+    flex-grow: 1;
+    height: 14vw;
+    border-right: 1px solid var(--border_color);
+    border-bottom: 1px solid var(--border_color);
+}
+.day-title{
+    position: absolute;
+    margin: 0.25rem;
+    opacity: 0.7;
+    background: transparent;
+    font-size: clamp(0.25em, 1.75vw, 1.125em);
+}
+.day-number{
+    position: absolute;
+    margin: 0.25rem;
+    right: 0;
+    opacity: 0.7;
+    font-size: clamp(0.25em, 1.75vw, 1.125em);
+    background: transparent;
+}
+.jobs-container{
+    position: absolute;
+    inset: 0;
+    top: 2.5ch;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    font-size: clamp(0.25em, 1.5vw, 1.125em);
+    background: transparent;
+}
+.jobs-container p{
+    overflow: visible;
+    /* white-space: nowrap; */
+    margin: 0;
+    z-index: 1;
+}
+.jobs-container p:hover{
+    color: var(--yes);
+}
+.today{
+    width: 2em;
+    padding: 0.25em;
+    text-align: center;
+    font-weight: bold;
+    color: var(--yes);
+    border: 2px solid var(--yes);
+    border-radius: 1em;
+    opacity: 1;
+}
+.jobs-overlay{
+    display: flex;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    justify-content: center;
+    justify-content: space-evenly;
+    /* justify-content: space-between; */
+    position: absolute;
+    inset: 0;
+    top: 1.75rem;
+    bottom: 0.5rem;
+    background: transparent;
+    gap: 0.5vw;
+}
+/* .ribbon{
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    flex-grow: 1;
+    width: 100%;
+    max-height: 1.25vw;
+    max-height: clamp(0.25em, 1.75vw, 1.25em);
+    background: transparent;
+}
+.bar{
+    left: 1rem;
+    width: 20%;
+    margin: 0;
+    padding: 0;
+    text-align: center;
+    font-size: 1.125vw;
+    font-size: clamp(0.25em, 1.5vw, 1.125em);
+    flex-grow: 1;
+    opacity: 1;
+} */
