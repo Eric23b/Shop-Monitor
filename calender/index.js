@@ -8,7 +8,8 @@ import {
     createTable,
     createAttributes,
     describeDatabase,
-    getUniqueColumnValues
+    getUniqueColumnValues,
+    isSuperUser,
 } from "../db-utilities.js";
 
 import {
@@ -65,6 +66,15 @@ const theme = getLocalStorageValue('theme') || "light";
 
 
 // INITIALIZE CODE
+
+
+const superUser = await isSuperUser(settings);
+if (superUser) {
+    const superUserElements = document.querySelectorAll('.super-user');
+    superUserElements.forEach((element) => {
+        element.classList.remove('super-user');
+    });
+}
 
 document.documentElement.setAttribute('data-color-theme', theme);
 

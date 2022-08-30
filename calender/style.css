@@ -91,6 +91,10 @@ body *{
 }
 
 
+.super-user{
+    display: none;
+}
+
 
 .main-container{
     position: absolute;
