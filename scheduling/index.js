@@ -424,11 +424,7 @@ function clearCurrentJob() {
 
 await loadJobs();
 async function loadJobs(jobs) {
-    if (jobs) {
-        log("yep")``
-    }
-    else {
-        log("nope");
+    if (jobs == null) {
         jobs = await getDBEntrees(BUSINESS_SCHEMA, JOBS_TABLE, "__createdtime__", "*", settings);
         if ((!jobs) || (jobs.error)) return;
         // Sort by ship date
@@ -504,7 +500,7 @@ async function loadJobs(jobs) {
         });
     }
 
-    jobsTable.innerHTML = getTableHeaderRow(["Name", "Estimated\nDate", "", "Ship\nDate", "Progress", "Note", "Active", "Shop\nHours", "Edit", "Delete"]);
+    jobsTable.innerHTML = getTableHeaderRow(["Name", "Estimated\nDate", "", "Ship\nDate", "Progress", "Note", "Active", "Shop\nHours", "Edit", "Delete", ""]);
 
     jobs.forEach((job, jobIndex) => {
         const jobTimes = getJobTimes(job);
@@ -538,15 +534,14 @@ async function loadJobs(jobs) {
         name.style.cursor = "pointer";
 
         const estimatedDateString = job.estimatedDate ? job.estimatedDate : "";
-        // const estimatedDateString = "";
-        log(job.estimatedDate)
         const estimatedDate = getTableDataWithText(job.active ? estimatedDateString : "");
 
-        // Update ship date
+        // ⇨ Update ship date button
         let updateShipDate = document.createElement('td');
         if (job.active) {
             updateShipDate = getTableDataWithText("⇨");
             updateShipDate.style.cursor = "pointer";
+            updateShipDate.style.color = (job.estimatedDate == job.shipDate) ? "var(--yes)" : "var(--no)";
             updateShipDate.classList.add('table-text-btn');
             updateShipDate.addEventListener('click', async () => {
                 job.shipDate = job.estimatedDate;

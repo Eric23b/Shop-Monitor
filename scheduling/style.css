@@ -594,7 +594,7 @@ tr:hover{
 .table-row-blank-border{
     border-top: 1px solid var(--background_color);
 }
-.jobs-table *{
+.jobs-table tr td{
     /* padding: 0 0.5rem; */
     text-align: center;
     background: transparent;
@@ -602,6 +602,13 @@ tr:hover{
 }
 .jobs-table tr th{
     white-space: pre;
+}
+.jobs-table th{
+    position: sticky;
+    top: 0;
+}
+th{
+    background-color: var(--background_color);
 }
 .drag-over{
     border-top: 1px solid var(--yes);
