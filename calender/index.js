@@ -54,6 +54,8 @@ const settings = {
     authorization: ""
 }
 
+let draggingJobID = 0;
+
 const calenderContainer = document.querySelector('#calender');
 
 
@@ -102,8 +104,8 @@ async function buildCalender() {
 
     const dateIndex = new Date(dates.firstSunday);
 
-    log(dates.lastSaturday.toDateString('en-CA'))
-    log(dateIndex.toDateString('en-CA'))
+    // log(dates.lastSaturday.toDateString('en-CA'))
+    // log(dateIndex.toDateString('en-CA'))
 
     // jobs.forEach((job) => {
     let endCalender = false;
@@ -114,8 +116,18 @@ async function buildCalender() {
     
         // daysOfTheWeek.forEach((day) => {
         for (let index = 0; index < 7; index++) {
+            const date = dateIndex.toLocaleDateString('en-CA');
             const dayContainer = document.createElement('div');
             dayContainer.classList.add('day');
+            dayContainer.addEventListener('dragenter', () => {dayContainer.classList.add('drag-over')});
+            dayContainer.addEventListener('dragleave', () => {dayContainer.classList.remove('drag-over')});
+            dayContainer.addEventListener('dragover', (event) => {event.preventDefault()});
+            dayContainer.addEventListener('drop', async () => {
+                dayContainer.classList.remove('drag-over');
+                await updateDBEntry(BUSINESS_SCHEMA, JOBS_TABLE, {id: draggingJobID, shipDate: date}, settings);
+                await buildCalender();
+                // dayContainer.classList.remove('dr
+            });
     
             const dayNameElement = document.createElement('p');
             dayNameElement.classList.add('day-title');
@@ -133,10 +145,12 @@ async function buildCalender() {
             jobs.forEach((job) => {
                 if (job.shipDate === dateIndex.toLocaleDateString('en-CA')) {
                     const jobTitle = document.createElement('p');
+                    jobTitle.setAttribute('draggable', 'true');
+                    jobTitle.addEventListener('dragstart', () => {draggingJobID = job.id});
                     jobTitle.textContent = job.name;
                     jobTitle.style.cursor = 'pointer';
-                    jobTitle.onclick = (e) => {
-                        log(job.id)
+                    jobTitle.onclick = () => {
+                        // log(job.id)
                     };
                     jobsContainer.appendChild(jobTitle);
                 }
