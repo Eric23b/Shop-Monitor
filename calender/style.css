@@ -155,7 +155,7 @@ body *{
     user-select: none;
 }
 .week{
-    position: relative;
+    /* position: relative; */
     display: flex;
     flex-direction: row;
     flex-wrap: nowrap;
@@ -163,44 +163,54 @@ body *{
     align-items: center;
     align-content: center;
     width: 100%;
+    height: max-content;
+    align-items: stretch;
 }
 .day{
     position: relative;
     flex-grow: 1;
     flex-grow: 1;
-    height: 14vw;
+    min-height: 14vw;
+    height: max-content;
     border-right: 1px solid var(--border_color);
     border-bottom: 1px solid var(--border_color);
 }
-.drag-over{
-    background-color: var(--background_hover_color);
+.day{
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-start;
+    align-items: stretch;
+    /* flex-grow: 1; */
+    width: 100%;
+    min-height: 14vw;
+    /* height: max-content; */
+    border-right: 1px solid var(--border_color);
+    border-bottom: 1px solid var(--border_color);
+    font-size: clamp(0.25em, 1.5vw, 1.125em);
 }
-.day-title{
-    position: absolute;
-    margin: 0.25rem;
-    opacity: 0.7;
+.day-header-container{
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
     background: transparent;
-    font-size: clamp(0.25em, 1.75vw, 1.125em);
     pointer-events: none;
+}
+.day-week-name{
+    margin: 0.5rem;
+    background: transparent;
+    color: var(--inactive);
 }
 .day-number{
-    position: absolute;
-    margin: 0.25rem;
-    right: 0;
-    opacity: 0.7;
-    font-size: clamp(0.25em, 1.75vw, 1.125em);
+    margin: 0.5rem;
     background: transparent;
-    pointer-events: none;
+    color: var(--inactive);
+
 }
 .jobs-container{
-    position: absolute;
-    inset: 0;
-    top: 2.5ch;
     display: flex;
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    font-size: clamp(0.25em, 1.5vw, 1.125em);
     background: transparent;
 }
 .jobs-container p{
@@ -209,52 +219,19 @@ body *{
     /* white-space: nowrap; */
     margin: 0;
     z-index: 1;
+    /* font-size: clamp(0.25em, 1.5vw, 1.125em); */
 }
 .jobs-container p:hover{
     color: var(--yes);
 }
+.drag-over{
+    background-color: var(--background_hover_color);
+}
+.day-title-first-of-the-month{
+    color: var(--yes);
+}
 .today{
-    width: 2em;
-    padding: 0.25em;
-    text-align: center;
     font-weight: bold;
     color: var(--yes);
-    border: 2px solid var(--yes);
-    border-radius: 1em;
-    opacity: 1;
+    text-decoration: underline;
 }
-.jobs-overlay{
-    display: flex;
-    flex-direction: column;
-    flex-wrap: nowrap;
-    justify-content: center;
-    justify-content: space-evenly;
-    /* justify-content: space-between; */
-    position: absolute;
-    inset: 0;
-    top: 1.75rem;
-    bottom: 0.5rem;
-    background: transparent;
-    gap: 0.5vw;
-}
-/* .ribbon{
-    display: flex;
-    flex-direction: row;
-    flex-wrap: nowrap;
-    flex-grow: 1;
-    width: 100%;
-    max-height: 1.25vw;
-    max-height: clamp(0.25em, 1.75vw, 1.25em);
-    background: transparent;
-}
-.bar{
-    left: 1rem;
-    width: 20%;
-    margin: 0;
-    padding: 0;
-    text-align: center;
-    font-size: 1.125vw;
-    font-size: clamp(0.25em, 1.5vw, 1.125em);
-    flex-grow: 1;
-    opacity: 1;
-} */

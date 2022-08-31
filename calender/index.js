@@ -80,9 +80,10 @@ if (superUser) {
 
 document.documentElement.setAttribute('data-color-theme', theme);
 
+buildCalender();
+
 
 // FUNCTIONS
-buildCalender();
 async function buildCalender() {
     const jobs = await getDBEntrees(BUSINESS_SCHEMA, JOBS_TABLE, "active", true, settings);
     if ((!jobs) || (jobs.error) || jobs.length === 0) return;
@@ -96,25 +97,21 @@ async function buildCalender() {
         return 0;
     });
 
-    log(jobs)
-
     calenderContainer.innerHTML = "";
 
     const dates = getDates(jobs);
 
     const dateIndex = new Date(dates.firstSunday);
 
-    // log(dates.lastSaturday.toDateString('en-CA'))
-    // log(dateIndex.toDateString('en-CA'))
+    const lastDatePlusOneMonth = new Date(dates.lastSaturday);
 
-    // jobs.forEach((job) => {
+    lastDatePlusOneMonth.setDate(lastDatePlusOneMonth.getDate() + 28);
+
     let endCalender = false;
     while (!endCalender) {
-        
         const weekContainer = document.createElement('div');
         weekContainer.classList.add('week');
     
-        // daysOfTheWeek.forEach((day) => {
         for (let index = 0; index < 7; index++) {
             const date = dateIndex.toLocaleDateString('en-CA');
             const dayContainer = document.createElement('div');
@@ -126,12 +123,21 @@ async function buildCalender() {
                 dayContainer.classList.remove('drag-over');
                 await updateDBEntry(BUSINESS_SCHEMA, JOBS_TABLE, {id: draggingJobID, shipDate: date}, settings);
                 await buildCalender();
-                // dayContainer.classList.remove('dr
             });
+
+            const dayHeader = document.createElement('div');
+            dayHeader.classList.add('day-header-container');
     
             const dayNameElement = document.createElement('p');
-            dayNameElement.classList.add('day-title');
-            dayNameElement.textContent = dateIndex.toLocaleString('default', {weekday: 'short'});
+            dayNameElement.classList.add('day-week-name');
+            if (dateIndex.getDate() == 1) {
+                const options = { month: "short" };
+                dayNameElement.textContent = (new Intl.DateTimeFormat("en-CA", options).format(dateIndex));
+                dayNameElement.classList.add('day-title-first-of-the-month');
+            }
+            else {
+                dayNameElement.textContent = dateIndex.toLocaleString('default', {weekday: 'short'});
+            }
     
             const dayNumberElement = document.createElement('p');
             dayNumberElement.classList.add('day-number');
@@ -155,16 +161,20 @@ async function buildCalender() {
                     jobsContainer.appendChild(jobTitle);
                 }
             });
+
+            dayHeader.appendChild(dayNameElement);
+            dayHeader.appendChild(dayNumberElement);
     
-            dayContainer.appendChild(dayNameElement);
-            dayContainer.appendChild(dayNumberElement);
+            dayContainer.appendChild(dayHeader);
             dayContainer.appendChild(jobsContainer);
     
             weekContainer.appendChild(dayContainer);
 
+            // Increment day
             dateIndex.setDate(dateIndex.getDate() + 1);
 
-            if (dateIndex.toDateString('en-CA') === dates.lastSaturday.toDateString('en-CA')) endCalender = true;
+            if (dateIndex.toDateString('en-CA') === lastDatePlusOneMonth.toDateString('en-CA')) endCalender = true;
+            // if (dateIndex.toDateString('en-CA') === dates.lastSaturday.toDateString('en-CA')) endCalender = true;
         };
     
         calenderContainer.appendChild(weekContainer);
