@@ -63,6 +63,7 @@ const addNewJobBtn = document.querySelector('#add-job-btn');
 
 const addModal= document.querySelector('#add-job-modal');
 const addJobNameInput = document.querySelector('#add-job-name-input');
+const addJobShipDateInput = document.querySelector('#add-job-ship-date');
 const addJobNotesInput = document.querySelector('#add-job-job-notes-textarea');
 const addJobSequenceContainer = document.querySelector('#add-job-modal-sequence-container');
 const addJobAddTaskBtn= document.querySelector('#add-task-btn');
@@ -200,6 +201,7 @@ addJobOKBtn.addEventListener('click', async () => {
 // Cancel adding job button
 addJobCancelBtn.addEventListener('click', hideAddJobModal);
 
+await loadJobs();
 
 
 
@@ -413,7 +415,7 @@ async function loadTasksSelect() {
     });
 }
 
-function clearCurrentJob() {
+async function clearCurrentJob() {
     currentJob = {};
     currentJob.name = "";
     currentJob.id = null;
@@ -422,7 +424,6 @@ function clearCurrentJob() {
     currentJob.sequences = null;
 }
 
-await loadJobs();
 async function loadJobs(jobs) {
     if (jobs == null) {
         jobs = await getDBEntrees(BUSINESS_SCHEMA, JOBS_TABLE, "__createdtime__", "*", settings);
@@ -592,6 +593,7 @@ async function loadJobs(jobs) {
             if ((!jobsResponse) || (jobsResponse.error)) return;
             const originalJob = jobsResponse[0];
             addJobNameInput.value = originalJob.name;
+            addJobShipDateInput.value = originalJob.shipDate;
             addJobNotesInput.value = originalJob.note;
             currentJob = originalJob;
             loadSequences(currentJob.sequences);
@@ -716,6 +718,7 @@ function addTask(sequenceName, data) {
 
 function loadJobModal() {
     addJobNameInput.value = currentJob.name;
+    addJobShipDateInput.value = currentJob.shipDate;
     addJobNotesInput.value = currentJob.note;
 
     loadSequences(currentJob.sequences);
@@ -812,8 +815,10 @@ function loadSequences(sequences) {
 
 async function addJobToDB(){
     const jobName = addJobNameInput.value.trim();
+    const jobShipDate = addJobShipDateInput.value.trim();
     const jobNote = addJobNotesInput.value;
     currentJob.name = jobName;
+    currentJob.shipDate = jobShipDate;
     currentJob.note = jobNote;
     
     if (!jobName) return;
