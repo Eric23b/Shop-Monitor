@@ -107,6 +107,13 @@ const tableRows = document.querySelectorAll('.jobs-table tr');
 const jobsTable = document.querySelector('#jobs-table');
 const grabbers = document.querySelectorAll('.grabber');
 
+
+const checklistPromptBackground = document.querySelector("#checklist-prompt");
+const checklistPromptLabel = document.querySelector("#checklist-prompt-label");
+const checklistPromptCheckContainer = document.querySelector("#checklist-prompt-checkbox-container");
+const checklistPromptCancelBtn = document.querySelector("#checklist-prompt-cancel-btn");
+const checklistPromptOKBtn = document.querySelector("#checklist-prompt-ok-btn");
+
 const log = console.log;
 
 
@@ -522,6 +529,12 @@ async function loadJobs(jobs) {
         }
 
         const progressBar = getTableDataWithProgressBar(jobTimes.percentCompleted);
+        progressBar.addEventListener('click', () => {
+            showChecklistPrompt(job.sequences, async (newSequences) => {
+                await updateDBEntry(BUSINESS_SCHEMA, JOBS_TABLE, {id: job.id, sequences: newSequences}, settings);
+                loadJobs();
+            });
+        });
 
         // Name
         const name = getTableDataWithText(job.name);
@@ -869,4 +882,53 @@ function appendChildren(parent, childList) {
     childList.forEach((childElement) => {
         parent.appendChild(childElement);
     });
+}
+
+function showChecklistPrompt(sequences, OKCallback, cancelCallback) {
+    checklistPromptBackground.style.display = "flex";
+    checklistPromptBackground.style.backgroundColor = "var(--background_transparent_color)";
+
+    checklistPromptCheckContainer.innerHTML = "";
+
+    sequences.forEach((sequence) => {
+        const sequenceContainer = document.createElement('div');
+        sequenceContainer.classList.add('checklist-prompt-checkbox-container');
+
+        const sequenceTitle = document.createElement('h2');
+        sequenceTitle.textContent = sequence.name;
+        sequenceTitle.classList.add('checklist-prompt-sequence-title');
+
+        sequenceContainer.appendChild(sequenceTitle);
+
+        sequence.tasks.forEach((task) => {
+            const checkLabel = document.createElement('label');
+            checkLabel.classList.add('checklist-prompt-check-label');
+    
+            const checkbox = document.createElement('input');
+            checkbox.setAttribute('type', 'checkbox');
+            if (task.completed) checkbox.setAttribute('checked', 'true');
+            checkbox.onchange = (event) => {
+                task.completed = event.target.checked;
+            }
+    
+            checkLabel.innerText = task.name;
+            checkbox.id = task.id;
+    
+            checkLabel.appendChild(checkbox);
+            sequenceContainer.appendChild(checkLabel);
+        });
+
+        checklistPromptCheckContainer.appendChild(sequenceContainer);
+    });
+
+    // OK click
+    checklistPromptOKBtn.onclick = () => {
+        OKCallback(sequences);
+        checklistPromptBackground.style.display = "none";
+    };
+
+    checklistPromptCancelBtn.onclick = cancelClick;
+    function cancelClick() {
+        checklistPromptBackground.style.display = "none";
+    }
 }
