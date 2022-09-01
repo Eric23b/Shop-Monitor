@@ -235,3 +235,163 @@ body *{
     color: var(--yes);
     text-decoration: underline;
 }
+
+
+.add-job-btn{
+    position: absolute;
+    bottom: 1rem;
+    right: 1rem;
+    z-index: 10;
+    width: 2.5ch;
+    height: 2.5ch;
+    /* padding: 0.25rem; */
+    font-size: x-large;
+    /* font-weight: 100; */
+    border: 2px solid var(--yes);
+    border-radius: 50%;
+    color: var(--yes);
+    opacity: 0.7;
+    cursor: pointer;
+}
+.add-job-btn:hover{
+    opacity: 1;
+}
+.add-job-btn:active{
+    color: var(--border_color);
+}
+
+
+
+.add-job-modal-background{
+    display: flex;
+    justify-content: center;
+    /* align-items: center; */
+    position: absolute;
+    inset: 0;
+    z-index: 100;
+    background-color: var(--background_transparent_color);
+    overflow: scroll;
+}
+.add-job-modal-window{
+    display: flex;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+    align-items: center;
+    align-content: center;
+    gap: 0.5em;
+    /* width: max-content;
+    max-width: 100%; */
+    height: max-content;
+    padding: 1rem;
+    padding-top: 0;
+    border: 1px solid var(--border_color);
+}
+/* .add-job-modal-title{
+    
+} */
+.add-job-name-label{
+    font-size: 1.2em;
+}
+.add-job-name-input{
+    min-width: 20rem;
+    padding: 0.25rem;
+    font-size: 1em;
+    border: 1px solid var(--border_color);
+}
+.add-job-job-notes-label{
+    font-size: 1.2em;
+}
+.add-job-job-notes-textarea{
+    width: 100%;
+    height: 5rem;
+    border: 1px solid var(--border_color);
+}
+.add-job-sequence-label{
+    font-size: 1.2em;
+}
+.add-job-modal-sequence-container{
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    min-height: 2rem;
+    border: 1px solid var(--border_color);
+    overflow: scroll;
+}
+.add-job-modal-sequence{
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+}
+.flex-row{
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    /* justify-content: center; */
+    align-items: flex-start;
+    gap: 1rem;
+    width: max-content;
+}
+.add-job-modal-sequence-container h3{
+    width: max-content;
+    padding: 0.5rem;
+    margin: 0;
+}
+.add-job-modal-sequence-container h3:hover{
+    color: var(--background_color);
+    background-color: var(--color);
+}
+.add-job-modal-sequence-task{
+    margin: 0.5rem;
+    padding: 0.25rem 1rem;
+    cursor: pointer;
+    border-left: 2px solid transparent;
+}
+.add-job-modal-sequence-task:hover{
+    color: var(--background_color);
+    background-color: var(--color);
+}
+.add-job-task-drag-over{
+    border-left: 2px solid var(--color);
+    background-color: var(--background_hover_color);
+}
+
+.add-job-ok-cancel-btn-container{
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    width: 100%;
+    margin-top: 1rem;
+    gap: 1rem
+}
+.add-job-ok-cancel-btn{
+    padding: 0.5rem 1rem;
+    font-size: 1.25em;
+    border: 1px solid var(--border_color);
+    cursor: pointer;
+}
+.add-job-ok-cancel-btn:hover{
+    color: var(--background_color);
+    background-color: var(--color);
+}
+.add-job-ok-cancel-btn:active{
+    color: var(--color);
+    background-color: var(--background_color);
+}
+.task-modal-btn{
+    width: max-content;
+    padding: 0.5rem 1rem;
+    font-size: 1em;
+    border: 1px solid var(--border_color);
+    cursor: pointer;
+    font-size: 1.2em;
+}
+.task-modal-btn:hover{
+    color: var(--background_color);
+    background-color: var(--color);
+}
+.task-modal-btn:active{
+    color: var(--color);
+    background-color: var(--background_color);
+}

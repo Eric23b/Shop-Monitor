@@ -58,6 +58,33 @@ let draggingJobID = 0;
 
 const calenderContainer = document.querySelector('#calender');
 
+// Job modal
+const addModal= document.querySelector('#add-job-modal');
+const addJobNameInput = document.querySelector('#add-job-name-input');
+const addJobShipDateInput = document.querySelector('#add-job-ship-date');
+const addJobNotesInput = document.querySelector('#add-job-job-notes-textarea');
+const addJobSequenceContainer = document.querySelector('#add-job-modal-sequence-container');
+const addJobAddTaskBtn= document.querySelector('#add-task-btn');
+const addJobAddTasksFromTextBtn= document.querySelector('#add-tasks-from-text-btn');
+const addJobOKBtn = document.querySelector('#add-job-ok');
+const addJobCancelBtn = document.querySelector('#add-job-cancel');
+
+// Add/Update Task Modal
+const taskModalBackground = document.querySelector('#task-modal-background');
+const taskModalSequenceName = document.querySelector('#task-modal-sequence-input');
+const taskModalTaskSelect = document.querySelector('#task-modal-task-select');
+const taskModalHours = document.querySelector('#task-modal-hours-input');
+const taskModalMinutes = document.querySelector('#task-modal-minutes-input');
+const taskModalCancelBtn = document.querySelector('#task-modal-cancel-btn');
+const taskModalOKBtn = document.querySelector('#task-modal-ok-btn');
+
+// Add Tasks From Text
+const addTaskFromTextModalBackground = document.querySelector('#add-task-from-text-modal-background');
+const addTaskFromTextModalSequenceName = document.querySelector('#tasks-from-text-sequence-name');
+const addTasksFromTextTextArea = document.querySelector('#add-tasks-from-text-textarea');
+const addTasksFromTextOKBtn = document.querySelector('#tasks-from-text-ok-btn');
+const addTasksFromTextCancelBtn = document.querySelector('#tasks-from-text-cancel-btn');
+
 
 settings.url = getLocalStorageValue('serverURL') || "";
 settings.authorization = getLocalStorageValue('serverAuthorization') || "";
@@ -82,6 +109,24 @@ document.documentElement.setAttribute('data-color-theme', theme);
 
 buildCalender();
 
+
+// Add Task Button Click
+addJobAddTaskBtn.addEventListener('click', async () => {
+    showAddUpdateTaskModal(
+        "",
+        {},
+        async (sequenceName, task) => {
+            const data = {
+                name: task.name,
+                id: task.id,
+                hours: task.hours,
+                minutes: task.minutes,
+                completed: false,
+            }
+            addTask(sequenceName, data);
+        }
+    );
+});
 
 // FUNCTIONS
 async function buildCalender() {
@@ -156,7 +201,7 @@ async function buildCalender() {
                     jobTitle.textContent = job.name;
                     jobTitle.style.cursor = 'pointer';
                     jobTitle.onclick = () => {
-                        // log(job.id)
+                        showAddJobModal();
                     };
                     jobsContainer.appendChild(jobTitle);
                 }
@@ -202,7 +247,176 @@ function getDates(jobs) {
     return {earliestDate, latestDate, firstSunday, lastSaturday, today}
 }
 
+async function showAddUpdateTaskModal(sequenceName, task, OKCallback, cancelCallback) {
+    await loadTasksSelect();
+    taskModalBackground.style.display = "flex";
+    taskModalSequenceName.value = sequenceName || "";
+    // taskModalTaskSelect.textContent = task ? task.name : "";
+    taskModalTaskSelect.value = 1;
+    taskModalHours.value = task ? task.hours : "";
+    taskModalMinutes.value = task ? task.minutes : "";
+
+    taskModalOKBtn.onclick = async () => {
+        if (taskModalSequenceName.value) {
+            OKCallback(taskModalSequenceName.value, {
+                name: taskModalTaskSelect[taskModalTaskSelect.value].textContent,
+                id: taskModalTaskSelect[taskModalTaskSelect.value].id,
+                hours: Number(taskModalHours.value),
+                minutes: Number(taskModalMinutes.value),
+            });
+            hideAddTaskModal();
+        }
+        else {
+            showAlert("Missing sequence name", "Add a sequence name");
+        }
+    };
+
+    taskModalCancelBtn.onclick = async () => {
+        if (cancelCallback) cancelCallback();
+        hideAddTaskModal();
+    };
+}
+
 function getLocalStorageValue(key) {
     if (window.localStorage[key])
         return JSON.parse(window.localStorage.getItem(key));
 }
+async function showAddJobModal(){
+    addModal.style.display = 'flex';
+    await loadTasksSelect();
+}
+
+function hideAddJobModal(){
+    addModal.style.display = 'none';
+}
+
+function loadJobModal() {
+    addJobNameInput.value = currentJob.name;
+    addJobShipDateInput.value = currentJob.shipDate;
+    addJobNotesInput.value = currentJob.note;
+
+    loadSequences(currentJob.sequences);
+}
+
+function loadSequences(sequences) {
+    addJobSequenceContainer.innerHTML = "";
+
+    if (!sequences) return;
+
+    sequences.forEach((sequence, sequenceIndex) => {
+        const sequenceTitle = document.createElement('h3');
+        sequenceTitle.textContent = sequence.name;
+        sequenceTitle.onclick = async () => {
+            showYesNoModal(`Delete "${sequence.name}" and it's tasks?`,
+                () => {
+                    sequences.splice(sequenceIndex, 1);
+                    loadSequences(currentJob.sequences);
+                }
+            );
+        }
+        addJobSequenceContainer.appendChild(sequenceTitle);
+
+        const sequenceBlock = document.createElement('div');
+        sequenceBlock.classList.add('add-job-modal-sequence');
+        sequence.tasks.forEach((task, index) => {
+            const taskElement = document.createElement('p');
+            taskElement.setAttribute('draggable', 'true');
+            taskElement.setAttribute('sequence-name', sequence.name);
+
+            taskElement.classList.add('add-job-modal-sequence-task');
+            taskElement.textContent = `${task.name} ${task.hours}:${task.minutes}`;
+
+            taskElement.addEventListener('click', () => {
+                // addJobSequenceName.value = sequence.name;
+                showAddUpdateTaskModal(
+                    sequence.name,
+                    task,
+                    async (sequenceName, newTask) => {
+                        task.name = newTask.name;
+                        task.id = newTask.id;
+                        task.hours = newTask.hours;
+                        task.minutes = newTask.minutes;
+                        // task.completed = false;
+                            
+                        loadSequences(currentJob.sequences);
+                    });
+            });
+            taskElement.addEventListener('contextmenu', (event) => {
+                event.preventDefault();
+                showYesNoModal(`Delete "${task.name}" from ${sequence.name}?`,
+                    () => {
+                        sequence.tasks.splice(index, 1);
+                        loadSequences(currentJob.sequences);
+                    }
+                );
+            });
+            
+            taskElement.addEventListener('dragstart', () => {
+                draggingTask.sequenceName = sequence.name;
+                draggingTask.taskIndex = index;
+            });
+            taskElement.addEventListener('dragover', (event) => {
+                event.preventDefault();
+            });
+
+            taskElement.addEventListener('dragenter', (event) => {
+                event.preventDefault();
+                const draggersSequence = event.target.attributes['sequence-name'].value;
+                if (draggingTask.sequenceName === draggersSequence) {
+                    taskElement.classList.add('add-job-task-drag-over');
+                }
+            });
+
+            taskElement.addEventListener('dragleave', () => {
+                taskElement.classList.remove('add-job-task-drag-over');
+            });
+
+            taskElement.addEventListener('drop', (event) => {
+                const draggersSequence = event.target.attributes['sequence-name'].value;
+                if (draggingTask.sequenceName === draggersSequence) {
+                    const temp = sequence.tasks.splice(draggingTask.taskIndex, 1);
+                    sequence.tasks.splice(index, 0, ...temp);
+                    loadSequences(currentJob.sequences);
+                }
+                taskElement.classList.remove('add-job-task-drag-over');
+            });
+
+            sequenceBlock.appendChild(taskElement);
+        });
+        addJobSequenceContainer.appendChild(sequenceBlock);
+    });
+}
+async function loadTasksSelect() {
+    const tasksResponse = await getDBEntrees(BUSINESS_SCHEMA, TASKS_TABLE, "id", "*", settings);
+    if ((!tasksResponse) || (tasksResponse.error)) return;
+    if (tasksResponse.length == 0) return;
+
+    // taskModalTaskSelect.innerHTML = "";
+    tasksResponse.forEach((task, index) => {
+        const timerOption = document.createElement("option");
+        timerOption.textContent = task.name;
+        timerOption.id = task.id;
+        timerOption.value = index;
+        taskModalTaskSelect.appendChild(timerOption);
+    });
+}
+function addTask(sequenceName, data) {
+    let sequenceFound = false;
+
+    if (!currentJob.sequences) currentJob.sequences = [];
+
+    currentJob.sequences.forEach((sequence) => {
+        if (sequence.name === sequenceName) {
+            sequence.tasks.push(data);
+            sequenceFound = true;
+        }
+    });
+
+    if (!sequenceFound) {
+        currentJob.sequences.push({
+            name: sequenceName,
+            tasks: [data]
+        },)
+    }
+    loadSequences(currentJob.sequences);
+};
