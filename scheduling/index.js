@@ -44,6 +44,11 @@ import {
     getTableDataWithDeleteButton
 } from "../table-utilities.js";
 
+import {
+    showYesNoDialog,
+    showAlertDialog,
+} from "../dialogs.js";
+
 const settings = {
     url: "",
     authorization: ""
@@ -86,16 +91,6 @@ const addTaskFromTextModalSequenceName = document.querySelector('#tasks-from-tex
 const addTasksFromTextTextArea = document.querySelector('#add-tasks-from-text-textarea');
 const addTasksFromTextOKBtn = document.querySelector('#tasks-from-text-ok-btn');
 const addTasksFromTextCancelBtn = document.querySelector('#tasks-from-text-cancel-btn');
-
-const yesNoModal = document.querySelector('#yes-no-modal');
-const yesNoModalTitle = document.querySelector('#yes-no-modal-title');
-const yesNoModalNoBtn = document.querySelector('#no-btn');
-const yesNoModalYesBtn = document.querySelector('#yes-btn');
-
-const alert = document.querySelector('#alert');
-const alertLabel = document.querySelector('#alert-modal-label');
-const alertMessage = document.querySelector('#alert-modal-message');
-const alertOKBtn = document.querySelector('#alert-ok-btn');
 
 const prompt = document.querySelector('#prompt');
 const promptLabel = document.querySelector('#prompt-modal-label');
@@ -161,7 +156,7 @@ addJobAddTasksFromTextBtn.addEventListener('click', async () => {
     showAddTaskFromTextModal(
         async (sequenceName, text) => {
             if (!sequenceName) {
-                showAlert("Missing sequence name", "Add a sequence name");
+                showAlertDialog("Please add a sequence name.");
                 return;
             }
 
@@ -193,7 +188,7 @@ addJobAddTasksFromTextBtn.addEventListener('click', async () => {
                     }
                 }
                 if (!taskFound) {
-                    showAlert("Task not found",`Task "${ownTask.name} not found.\nPlease added "${ownTask.name}" to Tasks in the Admin page.`);
+                    showAlertDialog(`Task "${ownTask.name} not found.\nPlease added "${ownTask.name}" to Tasks in the Admin page.`);
                 }
             }
         }
@@ -242,30 +237,6 @@ async function showPrompt(title, defaultText, OKCallback, cancelCallback, inputT
     }
 }
 
-async function showAlert(title, message, OKCallback) {
-    alert.style.display = 'flex';
-    alertLabel.textContent = title;
-    alertMessage.textContent = message;
-    alertOKBtn.focus();
-    alertOKBtn.onclick = async () => {
-            if (OKCallback) OKCallback();
-            alert.style.display = 'none';
-    }
-}
-
-async function showYesNoModal(title, OKCallback) {
-    yesNoModalTitle.textContent = title;
-    yesNoModal.style.display = 'flex';
-    yesNoModalYesBtn.focus();
-
-    yesNoModalYesBtn.onclick = () => {
-        OKCallback();
-        yesNoModal.style.display = 'none';
-    };
-
-    yesNoModalNoBtn.onclick = () => {yesNoModal.style.display = 'none';};
-}
-
 async function showAddTaskFromTextModal(OKCallback, cancelCallback) {
     addTaskFromTextModalBackground.style.display = 'flex';
 
@@ -304,7 +275,7 @@ async function showAddUpdateTaskModal(sequenceName, task, OKCallback, cancelCall
             hideAddTaskModal();
         }
         else {
-            showAlert("Missing sequence name", "Add a sequence name");
+            showAlertDialog("Please add a sequence name.");
         }
     };
 
@@ -614,7 +585,7 @@ async function loadJobs(jobs) {
         });
 
         const deleteTD = getTableDataWithDeleteButton(async () => {
-            if (showYesNoModal(`Delete Job ${job.name}?`, async () => {
+            if (showYesNoDialog(`Delete Job ${job.name}?`, async () => {
                 await deleteDBEntry(BUSINESS_SCHEMA, JOBS_TABLE, job.id, settings);
                 loadJobs();
             }));
@@ -746,7 +717,7 @@ function loadSequences(sequences) {
         const sequenceTitle = document.createElement('h3');
         sequenceTitle.textContent = sequence.name;
         sequenceTitle.onclick = async () => {
-            showYesNoModal(`Delete "${sequence.name}" and it's tasks?`,
+            showYesNoDialog(`Delete "${sequence.name}" and it's tasks?`,
                 () => {
                     sequences.splice(sequenceIndex, 1);
                     loadSequences(currentJob.sequences);
@@ -782,7 +753,7 @@ function loadSequences(sequences) {
             });
             taskElement.addEventListener('contextmenu', (event) => {
                 event.preventDefault();
-                showYesNoModal(`Delete "${task.name}" from ${sequence.name}?`,
+                showYesNoDialog(`Delete "${task.name}" from ${sequence.name}?`,
                     () => {
                         sequence.tasks.splice(index, 1);
                         loadSequences(currentJob.sequences);
@@ -841,9 +812,7 @@ async function addJobToDB(){
     }
     else {
         if (await jobNameExists(jobName)) {
-            showAlert("Job name already exists", `Sorry, ${jobName} already exists.`)
-            // alert("Job name already exists", `Sorry, ${jobName} already exists.`);
-            // showAlert("Job name already exists", `Sorry, ${jobName} already exists.`);
+            showAlertDialog(`Sorry, ${jobName} already exists.`);
         } else {
             await insertDBEntry(BUSINESS_SCHEMA, JOBS_TABLE, currentJob, settings);
         }
