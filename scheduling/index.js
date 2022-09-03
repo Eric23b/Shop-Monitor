@@ -47,7 +47,14 @@ import {
 import {
     showYesNoDialog,
     showAlertDialog,
+    showInputDialog,
 } from "../dialogs.js";
+
+// showInputDialog("title", "default text", (value) => {
+//     console.log(value);
+// }, (defaultText) => {
+//     console.log(defaultText);
+// }, 'text', "poo");
 
 const settings = {
     url: "",
@@ -91,12 +98,6 @@ const addTaskFromTextModalSequenceName = document.querySelector('#tasks-from-tex
 const addTasksFromTextTextArea = document.querySelector('#add-tasks-from-text-textarea');
 const addTasksFromTextOKBtn = document.querySelector('#tasks-from-text-ok-btn');
 const addTasksFromTextCancelBtn = document.querySelector('#tasks-from-text-cancel-btn');
-
-const prompt = document.querySelector('#prompt');
-const promptLabel = document.querySelector('#prompt-modal-label');
-const promptInput = document.querySelector('#prompt-modal-input');
-const promptCancelBtn = document.querySelector('#prompt-modal-cancel-btn');
-const promptOKBtn = document.querySelector('#prompt-modal-ok-btn');
 
 const tableRows = document.querySelectorAll('.jobs-table tr');
 const jobsTable = document.querySelector('#jobs-table');
@@ -209,33 +210,6 @@ await loadJobs();
 
 
 // FUNCTIONS
-
-async function showPrompt(title, defaultText, OKCallback, cancelCallback, inputType) {
-    prompt.style.display = 'flex';
-
-    promptLabel.textContent = title;
-
-    promptInput.value = defaultText || "";
-    promptInput.setAttribute('type', inputType || 'text');
-    promptInput.focus();
-
-    promptInput.onkeypress = (event) => {
-        if (event.key === "Enter") {
-            OKCallback(promptInput.value);
-            prompt.style.display = 'none';
-        }
-    };
-
-    promptOKBtn.onclick = async () => {
-        OKCallback(promptInput.value);
-        prompt.style.display = 'none';
-    }
-    
-    promptCancelBtn.onclick = async () => {
-        if (cancelCallback) cancelCallback();
-        prompt.style.display = 'none';
-    }
-}
 
 async function showAddTaskFromTextModal(OKCallback, cancelCallback) {
     addTaskFromTextModalBackground.style.display = 'flex';
@@ -510,7 +484,7 @@ async function loadJobs(jobs) {
         // Name
         const name = getTableDataWithText(job.name);
         name.onclick = async () => {
-            showPrompt("Rename job", job.name, async (name) => {
+            showInputDialog("Rename job", job.name, async (name) => {
                 job.name = name;
                 await updateDBEntry(BUSINESS_SCHEMA, JOBS_TABLE, {id: job.id, name: job.name}, settings);
                 loadJobs();
@@ -539,7 +513,7 @@ async function loadJobs(jobs) {
         // const month = new Date(job.shipDate).toLocaleString("en-CA", { month: "long" }).toLowerCase();
         // shipDate.classList.add(month);
         shipDate.onclick = async () => {
-            showPrompt("Ship Date", job.shipDate, async (shipDate) => {
+            showInputDialog("Ship Date", job.shipDate, async (shipDate) => {
                 job.shipDate = shipDate;
                 await updateDBEntry(BUSINESS_SCHEMA, JOBS_TABLE, {id: job.id, shipDate: job.shipDate}, settings);
                 loadJobs();
@@ -549,7 +523,7 @@ async function loadJobs(jobs) {
         // Note
         const note = getTableDataWithEditText(job.index || "");
         note.onclick = async () => {
-            showPrompt("Note", job.note, async (note) => {
+            showInputDialog("Note", job.note, async (note) => {
                 job.note = note;
                 await updateDBEntry(BUSINESS_SCHEMA, JOBS_TABLE, {id: job.id, note: job.note}, settings);
                 loadJobs();
