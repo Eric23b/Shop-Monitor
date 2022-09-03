@@ -146,7 +146,17 @@ async function buildCalender() {
 
     const dates = getDates(jobs);
 
-    const dateIndex = new Date(dates.firstSunday);
+    let dateIndex;
+    if (dates.firstSunday.toLocaleDateString('en-CA') < new Date().toLocaleDateString('en-CA')) {
+        dateIndex = new Date(dates.firstSunday);
+    }
+    else {
+        // Find earliest Sunday
+        dateIndex = new Date();
+        while (dateIndex.toLocaleString('default', {weekday: 'short'}) !== "Sun") {
+            dateIndex.setDate(dateIndex.getDate() - 1);
+        }
+    }
 
     const lastDatePlusOneMonth = new Date(dates.lastSaturday);
 
