@@ -160,30 +160,20 @@ body *{
     flex-direction: row;
     flex-wrap: nowrap;
     justify-content: space-between;
-    align-items: center;
+    /* align-items: center; */
     align-content: center;
     width: 100%;
     height: max-content;
     align-items: stretch;
-}
-.day{
-    position: relative;
-    flex-grow: 1;
-    flex-grow: 1;
-    min-height: 14vw;
-    height: max-content;
-    border-right: 1px solid var(--border_color);
-    border-bottom: 1px solid var(--border_color);
+    /* align-items: flex-start; */
 }
 .day{
     display: flex;
     flex-direction: column;
     justify-content: flex-start;
-    align-items: stretch;
-    /* flex-grow: 1; */
     width: 100%;
     min-height: 14vw;
-    /* height: max-content; */
+    height: 100%;
     border-right: 1px solid var(--border_color);
     border-bottom: 1px solid var(--border_color);
     font-size: clamp(0.25em, 1.5vw, 1.125em);
