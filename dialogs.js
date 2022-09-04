@@ -1,13 +1,13 @@
 const modalBackgroundStyles = `
         position: fixed;
         inset: 0;
-        display: flex;
-        flex-direction: row;
+        display: grid;
         justify-content: center;
         align-items: center;
         background: var(--background_color_transparent);
         background-color: var(--background_transparent_color);
         z-index: 10;
+        overflow: scroll;
     `;
 
 const modalWindowStyles = `
@@ -15,6 +15,9 @@ const modalWindowStyles = `
         flex-direction: column;
         gap: 1rem;
         padding: 0.5rem;
+        width: max-content;
+        max-width: 100%;
+        height: max-content;
         border: 1px solid var(--border_color);
         background-color: var(--background_color);
     `;
@@ -27,6 +30,7 @@ const modalTitleStyles = `
 const modalButtonContainerStyles = `
         display: flex;
         flex-direction: row;
+        flex-wrap: wrap;
         justify-content: flex-end;
         gap: 1rem;
         font-size: larger;
