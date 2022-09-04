@@ -6,7 +6,7 @@ const modalBackgroundStyles = `
         align-items: center;
         background: var(--background_color_transparent);
         background-color: var(--background_transparent_color);
-        z-index: 10;
+        z-index: 100;
         overflow: scroll;
     `;
 
@@ -58,29 +58,12 @@ const modalInputTextAreaStyles = `
         border: 1px solid var(--border_color);
     `;
 
-const btnMouseOver = (event) => {
-    event.target.style.color = 'var(--background_color)';
-    event.target.style.backgroundColor = 'var(--color)';
-}
-
-const btnMouseLeave = (event) => {
-    event.target.style.color = 'var(--color)';
-    event.target.style.backgroundColor = 'var(--background_color)';
-}
-
 // Input Dialog
-export function showInputDialog(title, defaultText, OKCallback, cancelCallback, inputType, placeholder) {
+export function showInputDialog(message, defaultText, OKCallback, cancelCallback, inputType, placeholder) {
     const body = document.querySelector('body');
-
-    const modalBackground = document.createElement('section');
-    modalBackground.style.cssText = modalBackgroundStyles;
-
-    const modalWindow = document.createElement('div');
-    modalWindow.style.cssText = modalWindowStyles;
-
-    const modalTitle = document.createElement('h2');
-    modalTitle.style.cssText = modalTitleStyles;
-    modalTitle.textContent = title;
+    const modalBackground = getModalBackground();
+    const modalWindow = getModalWindow();
+    const modalTitle = getModalTitle(message);
 
     let modalInput;
     if (inputType === 'textarea') {
@@ -95,129 +78,115 @@ export function showInputDialog(title, defaultText, OKCallback, cancelCallback, 
     modalInput.value = defaultText;
     if (placeholder) modalInput.setAttribute('placeholder', placeholder);
 
-    const modalButtonContainer = document.createElement('div');
-    modalButtonContainer.style.cssText = modalButtonContainerStyles;
+    const modalOKButton = getButton("OK", () => {
+        if (OKCallback) OKCallback(modalInput.value);
+        body.removeChild(modalBackground);
+    });
 
-    const modalOKButton = document.createElement('button');
-    modalOKButton.textContent = "OK";
-    modalOKButton.style.cssText = modalButtonStyles;
+    const modalCancelButton = getButton("Cancel", () => {
+        if (cancelCallback) cancelCallback(defaultText);
+        body.removeChild(modalBackground);
+    });
 
-    const modalCancelButton = document.createElement('button');
-    modalCancelButton.textContent = "Cancel";
-    modalCancelButton.style.cssText = modalButtonStyles;
+    const modalButtonContainer = getButtonContainer(modalCancelButton, modalOKButton);
 
-    modalButtonContainer.appendChild(modalCancelButton);
-    modalButtonContainer.appendChild(modalOKButton);
-    modalWindow.appendChild(modalTitle);
-    modalWindow.appendChild(modalInput);
-    modalWindow.appendChild(modalButtonContainer);
+    modalWindow.append(modalTitle, modalInput, modalButtonContainer);
     modalBackground.appendChild(modalWindow);
     body.appendChild(modalBackground);
 
     modalInput.focus();
-
-    modalOKButton.onclick = () => {
-        if (OKCallback) OKCallback(modalInput.value);
-        body.removeChild(modalBackground);
-    }
-
-    modalOKButton.onmouseover = btnMouseOver;
-    modalOKButton.onmouseleave = btnMouseLeave;
-
-    modalCancelButton.onclick = () => {
-        if (cancelCallback) cancelCallback(defaultText);
-        body.removeChild(modalBackground);
-    }
-
-    modalCancelButton.onmouseover = btnMouseOver;
-    modalCancelButton.onmouseleave = btnMouseLeave;
 }
 
 // Alert
 export function showAlertDialog(message, okCallback) {
     const body = document.querySelector('body');
+    const modalBackground = getModalBackground();
+    const modalWindow = getModalWindow();
+    const modalTitle = getModalTitle(message);
+    
+    const modalOKButton = getButton("OK", () => {
+        if (okCallback) okCallback();
+        body.removeChild(modalBackground);
+    });
 
-    const modalBackground = document.createElement('section');
-    modalBackground.style.cssText = modalBackgroundStyles;
-
-    const modalWindow = document.createElement('div');
-    modalWindow.style.cssText = modalWindowStyles;
-
-    const modalTitle = document.createElement('h2');
-    modalTitle.style.cssText = modalTitleStyles;
-    modalTitle.textContent = message;
-
-    const modalButtonContainer = document.createElement('div');
-    modalButtonContainer.style.cssText = modalButtonContainerStyles;
-
-    const modalOKButton = document.createElement('button');
-    modalOKButton.textContent = "Ok";
-    modalOKButton.style.cssText = modalButtonStyles;
+    const modalButtonContainer = getButtonContainer(modalOKButton);
 
     modalButtonContainer.appendChild(modalOKButton);
-    modalWindow.appendChild(modalTitle);
-    modalWindow.appendChild(modalButtonContainer);
+    modalWindow.append(modalTitle, modalButtonContainer);
     modalBackground.appendChild(modalWindow);
     body.appendChild(modalBackground);
 
-    modalOKButton.focus();
-
-    modalOKButton.onclick = () => {
-        if (okCallback) okCallback();
-        body.removeChild(modalBackground);
-    }
-
-    modalOKButton.onmouseover = btnMouseOver;
-    modalOKButton.onmouseleave = btnMouseLeave;
+    // modalOKButton.focus();
 }
 
 // Yes/No or Confirm Dialog
 export function showYesNoDialog(message, yesCallback, noCallback) {
     const body = document.querySelector('body');
+    const modalBackground = getModalBackground();
+    const modalWindow = getModalWindow();
+    const modalTitle = getModalTitle(message);
 
-    const modalBackground = document.createElement('section');
-    modalBackground.style.cssText = modalBackgroundStyles;
-
-    const modalWindow = document.createElement('div');
-    modalWindow.style.cssText = modalWindowStyles;
-
-    const modalTitle = document.createElement('h2');
-    modalTitle.style.cssText = modalTitleStyles;
-    modalTitle.textContent = message;
-
-    const modalButtonContainer = document.createElement('div');
-    modalButtonContainer.style.cssText = modalButtonContainerStyles;
-
-    const modalYesButton = document.createElement('button');
-    modalYesButton.textContent = "Yes";
-    modalYesButton.style.cssText = modalButtonStyles;
-
-    const modalNoButton = document.createElement('button');
-    modalNoButton.textContent = "No";
-    modalNoButton.style.cssText = modalButtonStyles;
-
-    modalButtonContainer.appendChild(modalNoButton);
-    modalButtonContainer.appendChild(modalYesButton);
-    modalWindow.appendChild(modalTitle);
-    modalWindow.appendChild(modalButtonContainer);
-    modalBackground.appendChild(modalWindow);
-    body.appendChild(modalBackground);
-
-    modalYesButton.focus();
-
-    modalYesButton.onclick = () => {
+    const modalYesButton = getButton("Yes", () => {
         if (yesCallback) yesCallback();
         body.removeChild(modalBackground);
-    }
+    });
 
-    modalYesButton.onmouseover = btnMouseOver;
-    modalYesButton.onmouseleave = btnMouseLeave;
-
-    modalNoButton.onclick = () => {
+    const modalNoButton = getButton("No", () => {
         if (noCallback) noCallback();
         body.removeChild(modalBackground);
-    }
+    });
 
-    modalNoButton.onmouseover = btnMouseOver;
-    modalNoButton.onmouseleave = btnMouseLeave;
+    const modalButtonContainer = getButtonContainer(modalNoButton, modalYesButton);
+
+    modalWindow.append(modalTitle, modalButtonContainer);
+    modalBackground.appendChild(modalWindow);
+    body.appendChild(modalBackground);
+    
+    // modalYesButton.focus();
+}
+
+function getModalBackground() {
+    const background = document.createElement('section');
+    background.style.cssText = modalBackgroundStyles;
+    return background
+}
+
+function getModalWindow() {
+    const window = document.createElement('div');
+    window.style.cssText = modalWindowStyles;
+    return window
+}
+
+function getModalTitle(message) {
+    const title = document.createElement('h2');
+    title.style.cssText = modalTitleStyles;
+    title.textContent = message;
+    return title;
+}
+
+function getButton(text, callback) {
+    const btn = document.createElement('button');
+    btn.textContent = text;
+    btn.style.cssText = modalButtonStyles;
+    btn.onclick = callback;
+    btn.onmouseover = btnMouseOver;
+    btn.onmouseleave = btnMouseLeave;
+    return btn;
+}
+
+function getButtonContainer() {
+    const buttonContainer = document.createElement('div');
+    buttonContainer.style.cssText = modalButtonContainerStyles;
+    buttonContainer.append(...arguments);
+    return buttonContainer;
+}
+
+const btnMouseOver = (event) => {
+    event.target.style.color = 'var(--background_color)';
+    event.target.style.backgroundColor = 'var(--color)';
+}
+
+const btnMouseLeave = (event) => {
+    event.target.style.color = 'var(--color)';
+    event.target.style.backgroundColor = 'var(--background_color)';
 }
