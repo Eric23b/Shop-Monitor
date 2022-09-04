@@ -50,12 +50,6 @@ import {
     showInputDialog,
 } from "../dialogs.js";
 
-// showInputDialog("title", "default text", (value) => {
-//     console.log(value);
-// }, (defaultText) => {
-//     console.log(defaultText);
-// }, 'text', "poo");
-
 const settings = {
     url: "",
     authorization: ""
@@ -521,13 +515,14 @@ async function loadJobs(jobs) {
         }
 
         // Note
-        const note = getTableDataWithEditText(job.index || "");
+        // const note = getTableDataWithEditText(job.index || "");
+        const note = getTableDataWithEditText(job.note);
         note.onclick = async () => {
             showInputDialog("Note", job.note, async (note) => {
                 job.note = note;
                 await updateDBEntry(BUSINESS_SCHEMA, JOBS_TABLE, {id: job.id, note: job.note}, settings);
                 loadJobs();
-            });
+            }, null, 'textarea', "job notes");
         }
         note.style.cursor = "pointer";
 
