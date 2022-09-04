@@ -52,6 +52,12 @@ const modalInputStyles = `
         border: 1px solid var(--border_color);
     `;
 
+const modalInputTextAreaStyles = `
+        padding: 0.25rem;
+        font-size: larger;
+        border: 1px solid var(--border_color);
+    `;
+
 const btnMouseOver = (event) => {
     event.target.style.color = 'var(--background_color)';
     event.target.style.backgroundColor = 'var(--color)';
@@ -62,6 +68,7 @@ const btnMouseLeave = (event) => {
     event.target.style.backgroundColor = 'var(--background_color)';
 }
 
+// Input Dialog
 export function showInputDialog(title, defaultText, OKCallback, cancelCallback, inputType, placeholder) {
     const body = document.querySelector('body');
 
@@ -75,10 +82,17 @@ export function showInputDialog(title, defaultText, OKCallback, cancelCallback, 
     modalTitle.style.cssText = modalTitleStyles;
     modalTitle.textContent = title;
 
-    const modalInput = document.createElement('input');
-    modalInput.style.cssText = modalInputStyles;
+    let modalInput;
+    if (inputType === 'textarea') {
+        modalInput = document.createElement('textarea');
+        modalInput.style.cssText = modalInputTextAreaStyles;
+    }
+    else {
+        modalInput = document.createElement('input');
+        modalInput.style.cssText = modalInputStyles;
+        if (inputType) modalInput.setAttribute('type', inputType);
+    }
     modalInput.value = defaultText;
-    if (inputType) modalInput.setAttribute('type', inputType);
     if (placeholder) modalInput.setAttribute('placeholder', placeholder);
 
     const modalButtonContainer = document.createElement('div');
@@ -119,6 +133,7 @@ export function showInputDialog(title, defaultText, OKCallback, cancelCallback, 
     modalCancelButton.onmouseleave = btnMouseLeave;
 }
 
+// Alert
 export function showAlertDialog(message, okCallback) {
     const body = document.querySelector('body');
 
@@ -156,6 +171,7 @@ export function showAlertDialog(message, okCallback) {
     modalOKButton.onmouseleave = btnMouseLeave;
 }
 
+// Yes/No or Confirm Dialog
 export function showYesNoDialog(message, yesCallback, noCallback) {
     const body = document.querySelector('body');
 
