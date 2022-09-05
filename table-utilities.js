@@ -38,6 +38,7 @@ export function getTableDataWithEditText(text, promptText, editCallback) {
 }
 
 export function getTableDataWithProgressBar(percentage) {
+    percentage = isNaN(percentage) ? 0 : percentage;
     const td = document.createElement('td');
     const bar = document.createElement('div');
     bar.style.width = percentage + "%";
@@ -49,7 +50,6 @@ export function getTableDataWithProgressBar(percentage) {
     return td;
 }
 
-{/* <td class="grabber" draggable="true">⁝</td> */}
 export function getTableDataWithGrabber() {
     const td = document.createElement('td');
     td.classList.add("grabber");
