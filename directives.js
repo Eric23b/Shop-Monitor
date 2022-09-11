@@ -17,6 +17,7 @@ export const EMPLOYEES_TABLE = "employees";
 export const JOBS_TABLE = "jobs";
 export const STATIONS_TABLE = "stations";
 export const TASKS_TABLE = "tasks";
+export const CALENDAR_TABLE = "calendar";
 
 export const SYSTEM_SCHEMA = "system_schema";
 export const MESSAGES_TABLE = "message";
@@ -37,4 +38,5 @@ export const TABLE_ATTRIBUTES = {
     jobs: ["active", "finishType", "name", "checklist", "shipDate", "note"],
     stations: ["active", "name", "tasks"],
     tasks: ["active", "name", "hours", "minutes"],
+    calendar: ["name", "date", "note"],
 }

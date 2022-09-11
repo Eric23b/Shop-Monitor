@@ -41,6 +41,7 @@ import {
     JOBS_TABLE,
     STATIONS_TABLE,
     TASKS_TABLE,
+    CALENDAR_TABLE,
     TABLE_ATTRIBUTES,
     SYSTEM_SCHEMA,
     MESSAGES_TABLE,
@@ -490,6 +491,9 @@ runDBSetupBtn.addEventListener('click', async () => {
     message += await createAttributes(TABLE_ATTRIBUTES.stations, STATIONS_TABLE, BUSINESS_SCHEMA, settings, dbActive) + "\n";
     message += await createTable(TASKS_TABLE, BUSINESS_SCHEMA, settings, dbActive) + "\n";
     message += await createAttributes(TABLE_ATTRIBUTES.tasks, TASKS_TABLE, BUSINESS_SCHEMA, settings, dbActive) + "\n";
+
+    message += await createTable(CALENDAR_TABLE, BUSINESS_SCHEMA, settings, dbActive) + "\n";
+    message += await createAttributes(TABLE_ATTRIBUTES.calendar, CALENDAR_TABLE, BUSINESS_SCHEMA, settings, dbActive) + "\n";
     
     message += await createSchema(SYSTEM_SCHEMA, settings, dbActive) + "\n";
     message += await createTable(MESSAGES_TABLE, SYSTEM_SCHEMA, settings, dbActive) + "\n";
