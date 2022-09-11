@@ -47,6 +47,13 @@ import {
     MESSAGES_TABLE,
 } from "../directives.js";
 
+import {
+    showYesNoDialog,
+    showAlertDialog,
+    showInputDialog,
+    showJobDialog,
+} from "../dialogs.js";
+
 const pageTitle = "Admin";
 
 const settings = {
@@ -97,9 +104,9 @@ const saveTimerLogsBtn = document.querySelector("#save-timer-log-btn");
 const timersTable = document.querySelector("#timers-table");
 
 const jobsTabContainer = document.querySelector("#jobs-container");
-const newJobNameInput = document.querySelector("#job-input");
-const newJobShipDateInput = document.querySelector("#job-ship-date-input");
-const newJobNoteInput = document.querySelector("#job-note-input");
+// const newJobNameInput = document.querySelector("#job-input");
+// const newJobShipDateInput = document.querySelector("#job-ship-date-input");
+// const newJobNoteInput = document.querySelector("#job-note-input");
 const addJobButton = document.querySelector("#add-job-btn");
 const sort = document.querySelector("#sort");
 const employeeTable = document.querySelector("#jobs-table");
@@ -288,34 +295,21 @@ saveTimerLogsBtn.addEventListener('click', () => {
 
 // Add job button
 addJobButton.addEventListener('click', async () => {
-    const jobName = newJobNameInput.value.trim();
-    const jobShipDate = newJobShipDateInput.value;
-    const jobNote = newJobNoteInput.value;
+    const jobsResponse = await getDBEntrees(BUSINESS_SCHEMA, JOBS_TABLE, "id", "*", settings);
+    if ((!jobsResponse) || (jobsResponse.error)) return;
 
-    if (!jobName) return;
+    const tasksResponse = await getDBEntrees(BUSINESS_SCHEMA, TASKS_TABLE, "id", "*", settings);
+    if ((!tasksResponse) || (tasksResponse.error)) return;
 
-    if (!await jobNameExists(jobName)) {
-        const data = {name: jobName, shipDate: jobShipDate, note: jobNote, active: true};
-    
-        await insertDBEntry(BUSINESS_SCHEMA, JOBS_TABLE, data, settings, dbActive);
-        await loadJobsTable();
-    }
-    else {
-        showAlert("Job name already exists", `Sorry, ${jobName} already exists.`);
-    }
-
-    async function jobNameExists(jobName) {
-        const response = await getDBEntrees(BUSINESS_SCHEMA, JOBS_TABLE, "__createdtime__", "*", settings, dbActive);
-        
-        if ((!response) || (response.error)) return;
-        
-        const jobsNameArray = [];
-        response.forEach((job) => {
-            jobsNameArray.push(String(job.name));
-        });
-
-        return jobsNameArray.indexOf(jobName) > -1;
-    }
+    showJobDialog(null, jobsResponse, tasksResponse, 
+        async (newJob) => {
+            await insertDBEntry(BUSINESS_SCHEMA, JOBS_TABLE, newJob, settings);
+            await loadJobsTable();
+        },
+        async (oldJob) => {
+            await loadJobsTable();
+        }
+    );
 });
 
 // Add employee button
