@@ -417,19 +417,6 @@ function getJobTimes(job) {
     return times;
 }
 
-async function jobNameExists(jobName) {
-    const response = await getDBEntrees(BUSINESS_SCHEMA, JOBS_TABLE, "__createdtime__", "*", settings);
-    
-    if ((!response) || (response.error)) return;
-    
-    const jobsNameArray = [];
-    response.forEach((job) => {
-        jobsNameArray.push(String(job.name));
-    });
-
-    return jobsNameArray.indexOf(jobName) > -1;
-};
-
 function getLocalStorageValue(key) {
     if (window.localStorage[key])
         return JSON.parse(window.localStorage.getItem(key));
