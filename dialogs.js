@@ -363,13 +363,23 @@ async function showAddTaskDialog(sequenceName, task, allTasks, OKCallback, cance
 
     // Sequence name
     const sequenceNameInput = document.createElement('input');
+    sequenceNameInput.setAttribute('list', 'sequence-name-data-list');
     sequenceNameInput.style.cssText = modalInputStyles;
     sequenceNameInput.value = sequenceName;
     sequenceNameInput.disabled = sequenceName ? true : false;
+    const sequenceNameDataList = document.createElement('datalist');
+    sequenceNameDataList.setAttribute('id','sequence-name-data-list')
+    const optionsText = ["Cabinets", "Veneers", "Doors", "Add-on"];
+    optionsText.forEach((sequenceNameOption) => {
+        const sequenceName = document.createElement('option');
+        sequenceName.value = sequenceNameOption;
+        sequenceNameDataList.appendChild(sequenceName);
+    });
     const sequenceNameLabel = document.createElement('label');
     sequenceNameLabel.textContent = "Sequence Name";
     sequenceNameLabel.style.cssText = blockInputLabelStyles;
     sequenceNameLabel.appendChild(sequenceNameInput);
+    sequenceNameLabel.appendChild(sequenceNameDataList);
 
     // Task name
     const taskNameSelect = document.createElement('select');
@@ -453,11 +463,21 @@ function showAddTaskFromTextDialog(sequences, allTasks, OKCallback, cancelCallba
 
     // Sequence name
     const sequenceNameInput = document.createElement('input');
+    sequenceNameInput.setAttribute('list', 'sequence-name-data-list');
     sequenceNameInput.style.cssText = modalInputStyles;
+    const sequenceNameDataList = document.createElement('datalist');
+    sequenceNameDataList.setAttribute('id','sequence-name-data-list')
+    const optionsText = ["Cabinets", "Veneers", "Doors", "Add-on"];
+    optionsText.forEach((sequenceNameOption) => {
+        const sequenceName = document.createElement('option');
+        sequenceName.value = sequenceNameOption;
+        sequenceNameDataList.appendChild(sequenceName);
+    });
     const sequenceNameLabel = document.createElement('label');
     sequenceNameLabel.textContent = "Sequence Name";
     sequenceNameLabel.style.cssText = blockInputLabelStyles;
     sequenceNameLabel.appendChild(sequenceNameInput);
+    sequenceNameLabel.appendChild(sequenceNameDataList);
 
     // Text
     const TextArea = document.createElement('textarea');
