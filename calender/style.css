@@ -10,12 +10,20 @@
     --yes: forestgreen;
     --no: tomato;
     --accent_color: #0ba27a;
-    --color-1: #ff990060;
-    --color-2: #f1ee3260;
-    --color-3: #97f23d60;
-    --color-4: #53eec260;
-    --color-5: #51c4f560;
-    --color-6: #f1a4ec60;
+    /* --color-1: #ff9900;
+    --color-2: #f9f400;
+    --color-3: #6edb00;
+    --color-4: #00dd9e;
+    --color-5: #00b3ff;
+    --color-6: #ff00ee;
+    --color-7: #ff4c5b; */
+    --color-1: #ffc062;
+    --color-2: #fcfa79;
+    --color-3: #b6ff6d;
+    --color-4: #72ffd7;
+    --color-5: #74d5ff;
+    --color-6: #ff7af6;
+    --color-7: #ff7681;
 }
 /* @media (prefers-color-scheme: dark) { */
 [data-color-theme='dark']{
@@ -209,10 +217,28 @@ body *{
     overflow: visible;
     /* white-space: nowrap; */
     margin: 0;
-    z-index: 1;
+    /* z-index: 1; */
     /* font-size: clamp(0.25em, 1.5vw, 1.125em); */
 }
 .jobs-container p:hover{
+    color: var(--yes);
+}
+.events-container{
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 1px;
+    background: transparent;
+}
+.events-container p{
+    overflow: visible;
+    padding: 0 0.25em;
+    margin: 0;
+    /* z-index: 1; */
+    /* font-size: clamp(0.25em, 1.5vw, 1.125em); */
+}
+.events-container p:hover{
     color: var(--yes);
 }
 .drag-over{
@@ -248,6 +274,29 @@ body *{
     opacity: 1;
 }
 .add-job-btn:active{
+    color: var(--border_color);
+}
+
+
+.add-event-btn{
+    position: absolute;
+    bottom: 1rem;
+    right: 5rem;
+    z-index: 10;
+    width: 2.5ch;
+    height: 2.5ch;
+    /* padding: 0.25rem; */
+    font-size: x-large;
+    /* font-weight: 100; */
+    border: none;
+    color: var(--yes);
+    opacity: 0.7;
+    cursor: pointer;
+}
+.add-event-btn:hover{
+    opacity: 1;
+}
+.add-event-btn:active{
     color: var(--border_color);
 }
 
@@ -386,3 +435,14 @@ body *{
     color: var(--color);
     background-color: var(--background_color);
 }
+
+/* Mobile */
+@media screen and (max-width: 600px) {
+    .week{
+        flex-direction: column;
+    }
+    .day{
+        font-size: large;
+        height: max-content;
+    }
+  }
