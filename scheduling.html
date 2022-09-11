@@ -9,7 +9,7 @@
     <title>Scheduling</title>
 </head>
 <body>
-    <button id="add-job-btn" class="add-job-btn">✚</button>
+    <button id="add-job-btn" class="add-job-btn" title="New Job">✚</button>
 
     <section class="main-container">
         <section class="header">
@@ -26,28 +26,6 @@
                 <table id="jobs-table" class="jobs-table"></table>
             </section>
         </section>
-    </section>
-
-    <!-- Add Job Modal -->
-    <section id="add-job-modal" class="add-job-modal-background" style="display: none;">
-        <div class="add-job-modal-window">
-            <h2  class="add-job-modal-title">Add Job</h2>
-            <label class="add-job-name-label">Job Name <input id="add-job-name-input" class="add-job-name-input" type="text" placeholder="13777"></label>
-            <!-- DATE -->
-            <label class="add-job-job-notes-label">Ship Date<input id="add-job-ship-date" class="add-job-name-input" type="date"></label>
-            <label class="add-job-job-notes-label" for="add-job-job-notes-label">Notes</label>
-            <textarea id="add-job-job-notes-textarea" class="add-job-job-notes-textarea" cols="30" rows="10"></textarea>
-            <label class="add-job-sequence-label">Sequence</label>
-            <div id="add-job-modal-sequence-container" class="add-job-modal-sequence-container"></div>
-            <div class="btn-group">
-                <button id="add-task-btn" class="task-modal-btn">Add tasks</button>
-                <button id="add-tasks-from-text-btn" class="task-modal-btn">Add tasks from text</button>
-            </div>
-            <div class="add-job-ok-cancel-btn-container">
-                <button id="add-job-cancel" class="add-job-ok-cancel-btn">Cancel</button>
-                <button id="add-job-ok" class="add-job-ok-cancel-btn">Ok</button>
-            </div>
-        </div>
     </section>
 
     <!-- Task Modal -->

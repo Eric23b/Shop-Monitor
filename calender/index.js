@@ -10,6 +10,7 @@ import {
     describeDatabase,
     getUniqueColumnValues,
     isSuperUser,
+    getUserInfo,
 } from "../db-utilities.js";
 
 import {
@@ -29,6 +30,7 @@ import {
     JOBS_TABLE,
     STATIONS_TABLE,
     TASKS_TABLE,
+    CALENDAR_TABLE,
     TABLE_ATTRIBUTES,
     SYSTEM_SCHEMA,
     MESSAGES_TABLE,
@@ -45,6 +47,14 @@ import {
     getTableDataWithDeleteButton
 } from "../table-utilities.js";
 
+import {
+    showYesNoDialog,
+    showAlertDialog,
+    showInputDialog,
+    showJobDialog,
+    showCalendarEventDialog,
+} from "../dialogs.js";
+
 const log = console.log;
 
 const daysOfTheWeek = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
@@ -54,36 +64,13 @@ const settings = {
     authorization: ""
 }
 
-let draggingJobID = 0;
+let draggingJobID = "";
+let draggingEventID = "";
+
+const addNewJobBtn = document.querySelector('#add-job-btn');
+const addNewEventBtn = document.querySelector('#add-event-btn');
 
 const calenderContainer = document.querySelector('#calender');
-
-// Job modal
-const addModal= document.querySelector('#add-job-modal');
-const addJobNameInput = document.querySelector('#add-job-name-input');
-const addJobShipDateInput = document.querySelector('#add-job-ship-date');
-const addJobNotesInput = document.querySelector('#add-job-job-notes-textarea');
-const addJobSequenceContainer = document.querySelector('#add-job-modal-sequence-container');
-const addJobAddTaskBtn= document.querySelector('#add-task-btn');
-const addJobAddTasksFromTextBtn= document.querySelector('#add-tasks-from-text-btn');
-const addJobOKBtn = document.querySelector('#add-job-ok');
-const addJobCancelBtn = document.querySelector('#add-job-cancel');
-
-// Add/Update Task Modal
-const taskModalBackground = document.querySelector('#task-modal-background');
-const taskModalSequenceName = document.querySelector('#task-modal-sequence-input');
-const taskModalTaskSelect = document.querySelector('#task-modal-task-select');
-const taskModalHours = document.querySelector('#task-modal-hours-input');
-const taskModalMinutes = document.querySelector('#task-modal-minutes-input');
-const taskModalCancelBtn = document.querySelector('#task-modal-cancel-btn');
-const taskModalOKBtn = document.querySelector('#task-modal-ok-btn');
-
-// Add Tasks From Text
-const addTaskFromTextModalBackground = document.querySelector('#add-task-from-text-modal-background');
-const addTaskFromTextModalSequenceName = document.querySelector('#tasks-from-text-sequence-name');
-const addTasksFromTextTextArea = document.querySelector('#add-tasks-from-text-textarea');
-const addTasksFromTextOKBtn = document.querySelector('#tasks-from-text-ok-btn');
-const addTasksFromTextCancelBtn = document.querySelector('#tasks-from-text-cancel-btn');
 
 
 settings.url = getLocalStorageValue('serverURL') || "";
@@ -97,6 +84,7 @@ const theme = getLocalStorageValue('theme') || "light";
 // INITIALIZE CODE
 
 
+
 const superUser = await isSuperUser(settings);
 if (superUser) {
     const superUserElements = document.querySelectorAll('.super-user');
@@ -107,31 +95,58 @@ if (superUser) {
 
 document.documentElement.setAttribute('data-color-theme', theme);
 
+document.querySelector('#calender').addEventListener('contextmenu', (event) => {
+    event.preventDefault();
+});
+
 buildCalender();
 
 
-// Add Task Button Click
-addJobAddTaskBtn.addEventListener('click', async () => {
-    showAddUpdateTaskModal(
-        "",
-        {},
-        async (sequenceName, task) => {
-            const data = {
-                name: task.name,
-                id: task.id,
-                hours: task.hours,
-                minutes: task.minutes,
-                completed: false,
-            }
-            addTask(sequenceName, data);
+
+// New Job Button
+addNewJobBtn.addEventListener('click', async () => {
+    const jobsResponse = await getDBEntrees(BUSINESS_SCHEMA, JOBS_TABLE, "id", "*", settings);
+    if ((!jobsResponse) || (jobsResponse.error)) return;
+
+    const tasksResponse = await getDBEntrees(BUSINESS_SCHEMA, TASKS_TABLE, "id", "*", settings);
+    if ((!tasksResponse) || (tasksResponse.error)) return;
+
+    showJobDialog(null, jobsResponse, tasksResponse, 
+        async (newJob) => {
+            await insertDBEntry(BUSINESS_SCHEMA, JOBS_TABLE, newJob, settings);
+            await buildCalender();
+        },
+        async (oldJob) => {
+            // await buildCalender();
         }
     );
 });
+
+addNewEventBtn.addEventListener('click', async () => {
+    showCalendarEventDialog(null, async (calendarEvent) => {
+        await insertDBEntry(BUSINESS_SCHEMA, CALENDAR_TABLE, calendarEvent, settings);
+        buildCalender();
+    });
+});
+
+
+
 
 // FUNCTIONS
 async function buildCalender() {
     const jobs = await getDBEntrees(BUSINESS_SCHEMA, JOBS_TABLE, "active", true, settings);
     if ((!jobs) || (jobs.error) || jobs.length === 0) return;
+
+    const calendarResponse = await getDBEntrees(BUSINESS_SCHEMA, CALENDAR_TABLE, "id", "*", settings);
+
+    // Sort events date
+    calendarResponse.sort((a, b) => {
+        const nameA = a.date;
+        const nameB = b.date;
+        if (nameA < nameB) return -1;
+        if (nameA > nameB) return 1;
+        return 0;
+    });
 
     // Sort by ship date
     jobs.sort((a, b) => {
@@ -142,9 +157,12 @@ async function buildCalender() {
         return 0;
     });
 
+    const canEditJob = await canEditJobs();
+    const canEditCalendar = await canEditCalendarEvent();
+
     calenderContainer.innerHTML = "";
 
-    const dates = getDates(jobs);
+    const dates = getDates(jobs, calendarResponse);
 
     let dateIndex;
     if (dates.firstSunday.toLocaleDateString('en-CA') < new Date().toLocaleDateString('en-CA')) {
@@ -158,7 +176,7 @@ async function buildCalender() {
         }
     }
 
-    const lastDatePlusOneMonth = new Date(dates.lastSaturday);
+    const lastDatePlusOneMonth = new Date(getCorrectDate(dates.lastSaturday));
 
     lastDatePlusOneMonth.setDate(lastDatePlusOneMonth.getDate() + 28);
 
@@ -167,7 +185,7 @@ async function buildCalender() {
         const weekContainer = document.createElement('div');
         weekContainer.classList.add('week');
     
-        for (let index = 0; index < 7; index++) {
+        for (let dayOfTheWeekIndex = 0; dayOfTheWeekIndex < 7; dayOfTheWeekIndex++) {
             const date = dateIndex.toLocaleDateString('en-CA');
             const dayContainer = document.createElement('div');
             dayContainer.classList.add('day');
@@ -176,7 +194,10 @@ async function buildCalender() {
             dayContainer.addEventListener('dragover', (event) => {event.preventDefault()});
             dayContainer.addEventListener('drop', async () => {
                 dayContainer.classList.remove('drag-over');
-                await updateDBEntry(BUSINESS_SCHEMA, JOBS_TABLE, {id: draggingJobID, shipDate: date}, settings);
+                if (draggingJobID) await updateDBEntry(BUSINESS_SCHEMA, JOBS_TABLE, {id: draggingJobID, shipDate: date}, settings);
+                if (draggingEventID) await updateDBEntry(BUSINESS_SCHEMA, CALENDAR_TABLE, {id: draggingEventID, date: date}, settings);
+                draggingJobID = "";
+                draggingEventID = "";
                 await buildCalender();
             });
 
@@ -201,19 +222,81 @@ async function buildCalender() {
             }
             dayNumberElement.textContent = dateIndex.toLocaleString('default', {day: 'numeric'});
 
+            // Add Jobs
             const jobsContainer = document.createElement('div');
             jobsContainer.classList.add('jobs-container');
             jobs.forEach((job) => {
                 if (job.shipDate === dateIndex.toLocaleDateString('en-CA')) {
                     const jobTitle = document.createElement('p');
                     jobTitle.setAttribute('draggable', 'true');
+                    jobTitle.setAttribute('title', job.note || "");
                     jobTitle.addEventListener('dragstart', () => {draggingJobID = job.id});
                     jobTitle.textContent = job.name;
-                    jobTitle.style.cursor = 'pointer';
-                    jobTitle.onclick = () => {
-                        showAddJobModal();
-                    };
+                    if (canEditJob) {
+                        jobTitle.style.cursor = 'pointer';
+                        jobTitle.onclick = async () => {
+                            const jobsResponse = await getDBEntrees(BUSINESS_SCHEMA, JOBS_TABLE, "id", "*", settings);
+                            if ((!jobsResponse) || (jobsResponse.error)) return;
+                
+                            const tasksResponse = await getDBEntrees(BUSINESS_SCHEMA, TASKS_TABLE, "id", "*", settings);
+                            if ((!tasksResponse) || (tasksResponse.error)) return;
+                            
+                            showJobDialog(job, jobsResponse, tasksResponse, 
+                                async (newJob) => {
+                                    await updateDBEntry(BUSINESS_SCHEMA, JOBS_TABLE, newJob, settings);
+                                    await buildCalender();
+                                },
+                                async (oldJob) => {
+                                    // await buildCalender();
+                                }
+                            );
+                        };
+                        jobTitle.addEventListener('contextmenu', async (event) => {
+                            event.preventDefault();
+                            showYesNoDialog(`Delete "${job.name}"?`, async () => {
+                                await deleteDBEntry(BUSINESS_SCHEMA, JOBS_TABLE, job.id, settings);
+                                await buildCalender();
+                            });
+                        });
+                    }
                     jobsContainer.appendChild(jobTitle);
+                }
+            });
+
+            // Add Calender Events
+            const eventContainer = document.createElement('div');
+            eventContainer.classList.add('events-container');
+            calendarResponse.forEach((event) => {
+                if (event.date === dateIndex.toLocaleDateString('en-CA')) {
+                    const eventTitle = document.createElement('p');
+                    eventTitle.setAttribute('draggable', 'true');
+                    eventTitle.setAttribute('title', event.note || "");
+                    eventTitle.addEventListener('dragstart', () => {draggingEventID = event.id});
+                    eventTitle.textContent = event.name;
+                    eventTitle.style.color = "black";
+                    eventTitle.style.backgroundColor = `var(--color-${event.color || 1})`;
+                    if (canEditCalendar) {
+                        eventTitle.style.cursor = 'pointer';
+                        eventTitle.onclick = async () => {
+                            showCalendarEventDialog(event, 
+                                async (newEvent) => {
+                                    await updateDBEntry(BUSINESS_SCHEMA, CALENDAR_TABLE, newEvent, settings);
+                                    await buildCalender();
+                                },
+                                async (oldJob) => {
+                                    // await buildCalender();
+                                }
+                            );
+                        };
+                        eventTitle.addEventListener('contextmenu', async (e) => {
+                            e.preventDefault();
+                            showYesNoDialog(`Delete "${event.name}"?`, async () => {
+                                await deleteDBEntry(BUSINESS_SCHEMA, CALENDAR_TABLE, event.id, settings);
+                                await buildCalender();
+                            });
+                        });
+                    }
+                    eventContainer.appendChild(eventTitle);
                 }
             });
 
@@ -222,6 +305,7 @@ async function buildCalender() {
     
             dayContainer.appendChild(dayHeader);
             dayContainer.appendChild(jobsContainer);
+            dayContainer.appendChild(eventContainer);
     
             weekContainer.appendChild(dayContainer);
 
@@ -236,17 +320,19 @@ async function buildCalender() {
     }
 }
 
-function getDates(jobs) {
-    const earliestDate = jobs[jobs.length - 1].shipDate;
-    const latestDate = jobs[0].shipDate;
+function getDates(jobs, events) {
+    if (!events) events = [];
 
-    const firstSunday = new Date(earliestDate);
+    const earliestDate = jobs[jobs.length - 1].shipDate || (new Date()).toLocaleDateString('en-CA');
+    const latestDate = jobs[0].shipDate || (new Date()).toLocaleDateString('en-CA');
+
+    const firstSunday = new Date(getCorrectDate(earliestDate));
 
     while (firstSunday.toLocaleString('default', {weekday: 'short'}) !== "Sun") {
         firstSunday.setDate(firstSunday.getDate() - 1);
     }
 
-    const lastSaturday = new Date(latestDate);
+    const lastSaturday = new Date(getCorrectDate(latestDate));
 
     while (lastSaturday.toLocaleString('default', {weekday: 'short'}) !== "Sat") {
         lastSaturday.setDate(lastSaturday.getDate() + 1);
@@ -257,176 +343,36 @@ function getDates(jobs) {
     return {earliestDate, latestDate, firstSunday, lastSaturday, today}
 }
 
-async function showAddUpdateTaskModal(sequenceName, task, OKCallback, cancelCallback) {
-    await loadTasksSelect();
-    taskModalBackground.style.display = "flex";
-    taskModalSequenceName.value = sequenceName || "";
-    // taskModalTaskSelect.textContent = task ? task.name : "";
-    taskModalTaskSelect.value = 1;
-    taskModalHours.value = task ? task.hours : "";
-    taskModalMinutes.value = task ? task.minutes : "";
+function getCorrectDate(date) {
+    // Stupid javascript
+    const utcDate = new Date(date);
+    return new Date(utcDate.getTime() + utcDate.getTimezoneOffset() * 60000);
+}
 
-    taskModalOKBtn.onclick = async () => {
-        if (taskModalSequenceName.value) {
-            OKCallback(taskModalSequenceName.value, {
-                name: taskModalTaskSelect[taskModalTaskSelect.value].textContent,
-                id: taskModalTaskSelect[taskModalTaskSelect.value].id,
-                hours: Number(taskModalHours.value),
-                minutes: Number(taskModalMinutes.value),
-            });
-            hideAddTaskModal();
-        }
-        else {
-            showAlert("Missing sequence name", "Add a sequence name");
-        }
-    };
+function offsetMonthBecauseJSIsStupid(date) {
+    return [date.split("-")[0], Number(date.split("-")[1]) - 1, date.split("-")[2]].join("-")
+}
 
-    taskModalCancelBtn.onclick = async () => {
-        if (cancelCallback) cancelCallback();
-        hideAddTaskModal();
-    };
+async function canEditJobs() {
+    if (superUser) return true;
+    const userInfo = await getUserInfo(settings);
+    const readJobs = userInfo.role.permission.business_schema.tables.jobs.read;
+    const insertJobs = userInfo.role.permission.business_schema.tables.jobs.insert;
+    const deleteJobs = userInfo.role.permission.business_schema.tables.jobs.delete;
+    const updateJobs = userInfo.role.permission.business_schema.tables.jobs.update;
+    return (readJobs && insertJobs && deleteJobs && updateJobs);
+}
+async function canEditCalendarEvent() {
+    if (superUser) return true;
+    const userInfo = await getUserInfo(settings);
+    const readJobs = userInfo.role.permission.business_schema.tables.calendar.read;
+    const insertJobs = userInfo.role.permission.business_schema.tables.calendar.insert;
+    const deleteJobs = userInfo.role.permission.business_schema.tables.calendar.delete;
+    const updateJobs = userInfo.role.permission.business_schema.tables.calendar.update;
+    return (readJobs && insertJobs && deleteJobs && updateJobs);
 }
 
 function getLocalStorageValue(key) {
     if (window.localStorage[key])
         return JSON.parse(window.localStorage.getItem(key));
 }
-async function showAddJobModal(){
-    addModal.style.display = 'flex';
-    await loadTasksSelect();
-}
-
-function hideAddJobModal(){
-    addModal.style.display = 'none';
-}
-
-function loadJobModal() {
-    addJobNameInput.value = currentJob.name;
-    addJobShipDateInput.value = currentJob.shipDate;
-    addJobNotesInput.value = currentJob.note;
-
-    loadSequences(currentJob.sequences);
-}
-
-function loadSequences(sequences) {
-    addJobSequenceContainer.innerHTML = "";
-
-    if (!sequences) return;
-
-    sequences.forEach((sequence, sequenceIndex) => {
-        const sequenceTitle = document.createElement('h3');
-        sequenceTitle.textContent = sequence.name;
-        sequenceTitle.onclick = async () => {
-            showYesNoModal(`Delete "${sequence.name}" and it's tasks?`,
-                () => {
-                    sequences.splice(sequenceIndex, 1);
-                    loadSequences(currentJob.sequences);
-                }
-            );
-        }
-        addJobSequenceContainer.appendChild(sequenceTitle);
-
-        const sequenceBlock = document.createElement('div');
-        sequenceBlock.classList.add('add-job-modal-sequence');
-        sequence.tasks.forEach((task, index) => {
-            const taskElement = document.createElement('p');
-            taskElement.setAttribute('draggable', 'true');
-            taskElement.setAttribute('sequence-name', sequence.name);
-
-            taskElement.classList.add('add-job-modal-sequence-task');
-            taskElement.textContent = `${task.name} ${task.hours}:${task.minutes}`;
-
-            taskElement.addEventListener('click', () => {
-                // addJobSequenceName.value = sequence.name;
-                showAddUpdateTaskModal(
-                    sequence.name,
-                    task,
-                    async (sequenceName, newTask) => {
-                        task.name = newTask.name;
-                        task.id = newTask.id;
-                        task.hours = newTask.hours;
-                        task.minutes = newTask.minutes;
-                        // task.completed = false;
-                            
-                        loadSequences(currentJob.sequences);
-                    });
-            });
-            taskElement.addEventListener('contextmenu', (event) => {
-                event.preventDefault();
-                showYesNoModal(`Delete "${task.name}" from ${sequence.name}?`,
-                    () => {
-                        sequence.tasks.splice(index, 1);
-                        loadSequences(currentJob.sequences);
-                    }
-                );
-            });
-            
-            taskElement.addEventListener('dragstart', () => {
-                draggingTask.sequenceName = sequence.name;
-                draggingTask.taskIndex = index;
-            });
-            taskElement.addEventListener('dragover', (event) => {
-                event.preventDefault();
-            });
-
-            taskElement.addEventListener('dragenter', (event) => {
-                event.preventDefault();
-                const draggersSequence = event.target.attributes['sequence-name'].value;
-                if (draggingTask.sequenceName === draggersSequence) {
-                    taskElement.classList.add('add-job-task-drag-over');
-                }
-            });
-
-            taskElement.addEventListener('dragleave', () => {
-                taskElement.classList.remove('add-job-task-drag-over');
-            });
-
-            taskElement.addEventListener('drop', (event) => {
-                const draggersSequence = event.target.attributes['sequence-name'].value;
-                if (draggingTask.sequenceName === draggersSequence) {
-                    const temp = sequence.tasks.splice(draggingTask.taskIndex, 1);
-                    sequence.tasks.splice(index, 0, ...temp);
-                    loadSequences(currentJob.sequences);
-                }
-                taskElement.classList.remove('add-job-task-drag-over');
-            });
-
-            sequenceBlock.appendChild(taskElement);
-        });
-        addJobSequenceContainer.appendChild(sequenceBlock);
-    });
-}
-async function loadTasksSelect() {
-    const tasksResponse = await getDBEntrees(BUSINESS_SCHEMA, TASKS_TABLE, "id", "*", settings);
-    if ((!tasksResponse) || (tasksResponse.error)) return;
-    if (tasksResponse.length == 0) return;
-
-    // taskModalTaskSelect.innerHTML = "";
-    tasksResponse.forEach((task, index) => {
-        const timerOption = document.createElement("option");
-        timerOption.textContent = task.name;
-        timerOption.id = task.id;
-        timerOption.value = index;
-        taskModalTaskSelect.appendChild(timerOption);
-    });
-}
-function addTask(sequenceName, data) {
-    let sequenceFound = false;
-
-    if (!currentJob.sequences) currentJob.sequences = [];
-
-    currentJob.sequences.forEach((sequence) => {
-        if (sequence.name === sequenceName) {
-            sequence.tasks.push(data);
-            sequenceFound = true;
-        }
-    });
-
-    if (!sequenceFound) {
-        currentJob.sequences.push({
-            name: sequenceName,
-            tasks: [data]
-        },)
-    }
-    loadSequences(currentJob.sequences);
-};
