@@ -57,12 +57,6 @@ const settings = {
 }
 
 let draggingJobIndex = 0;
-let draggingTask = {taskIndex: 0, sequenceName: ""};
-
-let currentJob = {
-    active: true,
-    sequences: null,
-}
 
 const theme = getLocalStorageValue('theme') || "light";
 
@@ -122,49 +116,6 @@ addNewJobBtn.addEventListener('click', async () => {
     );
 });
 
-// addJobAddTasksFromTextBtn.addEventListener('click', );
-function addTasksFromTextBtn(){
-    showAddTaskFromTextModal(
-        async (sequenceName, text) => {
-            if (!sequenceName) {
-                showAlertDialog("Please add a sequence name.");
-                return;
-            }
-
-            const totalShopTime = getTotalShopHours(text);
-        
-            const taskList = getTaskTimes(text);
-        
-            const tasksResponse = await getDBEntrees(BUSINESS_SCHEMA, TASKS_TABLE, "id", "*", settings);
-            if ((!tasksResponse) || (tasksResponse.error)) return;
-            if (tasksResponse.length == 0) return;
-        
-            const errors = [];
-        
-            for (const ownTask of taskList) {
-                let taskFound = false;
-                for (const task of tasksResponse) {
-                    if (task.name === ownTask.name) {
-                        taskFound = true;
-                        addTask(
-                            sequenceName,
-                            {
-                                name: ownTask.name,
-                                id: task.id,
-                                hours: ownTask.hours,
-                                minutes: ownTask.minutes,
-                                completed: false,
-                            }
-                        );
-                    }
-                }
-                if (!taskFound) {
-                    showAlertDialog(`Task "${ownTask.name} not found.\nPlease added "${ownTask.name}" to Tasks in the Admin page.`);
-                }
-            }
-        }
-    );
-};
 
 await loadJobs();
 
@@ -173,112 +124,7 @@ await loadJobs();
 
 // FUNCTIONS
 
-async function showAddTaskFromTextModal(OKCallback, cancelCallback) {
-    addTaskFromTextModalBackground.style.display = 'flex';
 
-    addTasksFromTextOKBtn.onclick = async () => {
-        OKCallback(addTaskFromTextModalSequenceName.value, addTasksFromTextTextArea.value);
-        if (addTaskFromTextModalSequenceName.value) hideAddTaskFromTextModal();
-    };
-
-    addTasksFromTextCancelBtn.onclick = async () => {
-        if (cancelCallback) cancelCallback();
-        hideAddTaskFromTextModal();
-    }
-}
-
-async function hideAddTaskFromTextModal() {
-    addTaskFromTextModalBackground.style.display = 'none';
-}
-
-function getTaskTimes(text) {
-    const textArray = text.split('\n');
-
-    // Remove all spaces
-    for (let i = 0; i < textArray.length; i++) {
-        textArray[i] = textArray[i].replace(/\s/g, "");
-    }
-    
-    // Find first line
-    let jobLaborLineIndex = 0;
-    for (let i = 0; i < textArray.length; i++) {
-        if (textArray[i].startsWith("JobLabor")) jobLaborLineIndex = i;
-    }
-
-    let tasks = [];
-    for (let i = jobLaborLineIndex + 1; i < textArray.length; i++) {
-        // skip empty lines
-        if (!textArray[i]) continue;
-
-        const task = {};
-
-        // Find task name
-        if (textArray[i].match(/^\D+/)) {
-            task.name = textArray[i].match(/^\D+/)[0];
-        }
-        else {
-            task.name = "Missing task name";
-        }
-
-        // Find task hours
-        if (textArray[i].match(/\d+hours/)) {
-            task.hours = Number(textArray[i].match(/\d+hours/)[0].split("hours")[0]);
-        }
-        else {
-            task.hours = 0;
-        }
-        
-        // Find task minutes
-        if (textArray[i].match(/\d+minutes/)) {
-            task.minutes = Number(textArray[i].match(/\d+minutes/)[0].split("minutes")[0]);
-        }
-        else {
-            task.minutes = 0;
-        }
-
-        tasks.push(task);
-    }
-    return tasks;
-}
-
-function getTotalShopHours(text) {
-    const textArray = text.split('\n');
-
-    for (let i = 0; i < textArray.length; i++) {
-        textArray[i] = textArray[i].replace(/\s/g, "");
-    }
-    
-    let jobLaborLine = "";
-    for (const line of textArray) {
-        if (line.startsWith("JobLabor")) jobLaborLine = line;
-    }
-
-    const jobHours = getJobLaborHours(jobLaborLine);
-    const jobMinutes = getJobLaborMinutes(jobLaborLine);
-    return jobHours + ":" + jobMinutes;
-
-    function getJobLaborMinutes(line) {
-        jobLaborLine = line.replace("JobLabor", "");
-        if (jobLaborLine.includes("minutes")) {
-            let minutes = jobLaborLine.split("hours");
-            return Number(minutes[1].replace("minutes", ""));
-        }
-        else {
-            return 0;
-        }
-    }
-
-    function getJobLaborHours(line) {
-        jobLaborLine = line.replace("JobLabor", "");
-        if (jobLaborLine.includes("hours")) {
-            let hours = jobLaborLine.split("hours");
-            return Number(hours[0]);
-        }
-        else {
-            return 0;
-        }
-    }
-}
 
 async function loadJobs(jobs) {
     if (jobs == null) {
