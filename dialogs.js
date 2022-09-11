@@ -30,12 +30,12 @@ const modalButtonContainerStyles = `
     justify-content: flex-end;
     gap: 1rem;
     width: 100%;
-    font-size: larger;`;
+    font-size: 1.2rem;`;
 
  const modalButtonStyles = `
     cursor: pointer;
     padding: 0.5rem 1rem;
-    font-size: large;
+    font-size: 1.2rem;
     border: 1px solid var(--border_color);
     border-radius: 0.25rem;
     color: var(--color);
@@ -44,38 +44,38 @@ const modalButtonContainerStyles = `
 const modalInputStyles = `
     width: 100%;
     padding: 0.25rem;
-    font-size: larger;
+    font-size: 1.2rem;
     border: 1px solid var(--border_color); `;
 
 const modalInputTextAreaStyles = `
     width: 100%;
     padding: 0.25rem;
-    font-size: large;
+    font-size: 1.2rem;
     border: 1px solid var(--border_color); `;
 
 const inlineInputLabelStyles = `
-    font-size: 1.2em;`;
+    font-size: 1.2rem;`;
 const blockInputLabelStyles = `
     width: 100%;
     display: flex;
     flex-direction: column;
-    font-size: 1.2em;`;
+    font-size: 1.2rem;`;
 const jobNameInputStyles = `
     width: 100%;
     padding: 0.25rem;
-    font-size: 1em;
+    font-size: 1.2rem;
     border: 1px solid var(--border_color);`;
 const jobNotesLabelStyles = `
     text-align: center;
-    font-size: 1.2em;`;
+    font-size: 1.2rem;`;
 const jobTextAreaNotesStyles = `
     width: 100%;
-    height: 5rem;
+height: 5rem;
     border: 1px solid var(--border_color);`;
 const jobShipDateLabelStyles = ``;
 const jobShipDateInputStyles = ``;
 const addJobSequenceLabelStyles = `
-    font-size: 1.2em;`;
+    font-size: 1.2rem;`;
 const addJobSequenceContainerStyles = `
     display: flex;
     flex-direction: column;
@@ -108,7 +108,7 @@ const addJobTaskDragOver = `
     
 const jobShopTimeLabelStyles = `
     padding: 0.25rem;
-    font-size: larger;
+    font-size: 1.2rem;
     border: 1px solid var(--border_color);`;
 const jobShopTimeContainer = `
     display: flex;
@@ -118,13 +118,13 @@ const jobShopTimeContainer = `
     align-items: center;
     gap: 1rem;
     width: 100%;
-    font-size: large;`;
+    font-size: 1.2rem;`;
 const jobShopTimeInputStyles = `
     flex-grow: 1;
     width: 100%;
     max-width: 8rem;
     padding: 0.25rem;
-    font-size: larger;
+    font-size: 1.2rem;
     border: 1px solid var(--border_color);`;
 
 const colorContainerStyles = `
