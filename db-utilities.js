@@ -23,6 +23,16 @@
 
 
 
+export async function getUserInfo(serverSettings) {    
+    const headers = getBasicHeaders(serverSettings.authorization);
+    const raw = JSON.stringify({
+        operation: "user_info",
+    });
+    const requestOptions = buildRequestOptions(headers, raw);
+    const response = await sendDBRequest(serverSettings.url, requestOptions);
+
+    return response || false;
+}
 
 
 export async function isSuperUser(serverSettings) {    
