@@ -162,7 +162,10 @@ async function loadJobs(jobs) {
             return 0;
         });
 
-        const dailyAvailableShopHoursDec = await getTotalAvailableShopHoursDec();
+        const tasksResponse = await getDBEntrees(BUSINESS_SCHEMA, TASKS_TABLE, "id", "*", settings);
+        if ((!tasksResponse) || (tasksResponse.error)) return;
+        if (tasksResponse.length == 0) return;
+        const dailyAvailableShopHoursDec = await getTotalAvailableShopHoursDec(tasksResponse);
     
         const dayIndex = new Date();
         let dayFraction = 0;
@@ -366,8 +369,8 @@ function incWorkDay(date, amount) {
     }
 }
 
-async function getTotalAvailableShopHoursDec() {
-    const tasksResponse = await getDBEntrees(BUSINESS_SCHEMA, TASKS_TABLE, "id", "*", settings);
+async function getTotalAvailableShopHoursDec(tasksResponse) {
+    // const tasksResponse = await getDBEntrees(BUSINESS_SCHEMA, TASKS_TABLE, "id", "*", settings);
     if ((!tasksResponse) || (tasksResponse.error)) return;
     if (tasksResponse.length == 0) return;
 
