@@ -2,7 +2,8 @@
 :root{
     --color: #191d25;
     --background_color: #edeff3;
-    --background_color_transparent: rgba(237, 239, 243, 0.8);
+    /* --background_color_transparent: rgba(237, 239, 243, 0.8); */
+    --background_transparent_color: #edeff3c2;
     --background_hover_color: #b2b8c6;
     --border_color: #454750;
     --active: #191d25;
@@ -16,7 +17,8 @@
     /* :root{ */
         --color: #e0e0eb;
         --background_color: #13131a;
-        --background_color_transparent: rgba(19, 19, 26, 0.8);
+        /* --background_color_transparent: rgba(19, 19, 26, 0.8); */
+        --background_transparent_color: #13131abb;
         --background_hover_color: #2b2b31;
         --border_color: #51525a;
         --active: #e0e0eb;
@@ -412,4 +414,8 @@ button:disabled{
 .modal-button:active{
     color: var(--background_color);
     background: var(--color);
+}
+
+.super-user{
+    display: none;
 }

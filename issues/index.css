@@ -291,3 +291,7 @@ input{
         order: -1;
     }
   } */
+
+.super-user{
+    display: none;
+}

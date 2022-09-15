@@ -47,6 +47,7 @@ html{
     box-sizing: border-box;
     scrollbar-width: thin;
     scrollbar-color: var(--border_color) transparent;
+    scroll-behavior: smooth;
     /* position: relative; */
 }
 *::-webkit-scrollbar-thumb:hover {
@@ -98,10 +99,6 @@ body *{
     /* accent-color: var(--accent_color); */
 }
 
-
-.super-user{
-    display: none;
-}
 
 
 .main-container{
@@ -445,4 +442,8 @@ body *{
         font-size: large;
         height: max-content;
     }
+  }
+
+  .super-user{
+      display: none;
   }

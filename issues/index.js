@@ -2,6 +2,8 @@ import {
     insertDBEntry, 
     getDBEntrees,
     updateDBEntry,
+    isSuperUser,
+    getUserInfo,
 } from "../db-utilities.js";
 
 import {
@@ -22,9 +24,17 @@ import {
     startOverTimeTimer,
 } from "../timer-utilities.js";
 
+import {
+    showYesNoDialog,
+    showAlertDialog,
+    showInputDialog,
+    showJobDialog,
+    showCalendarEventDialog,
+} from "../dialogs.js";
+
 const isDev = false;
 
-const serverSettings = {
+const settings = {
     url: "",
     authorization: ""
 }
@@ -82,11 +92,21 @@ let itemsArray = [];
 
 setTheme();
 
-serverSettings.url = getLocalStorageValue('serverURL') || "";
-serverSettings.authorization = getLocalStorageValue('serverAuthorization') || "";
+settings.url = getLocalStorageValue('serverURL') || "";
+settings.authorization = getLocalStorageValue('serverAuthorization') || "";
 station = getLocalStorageValue('stationName') || "";
 
-if (serverSettings.url && serverSettings.authorization) {
+
+const superUser = await isSuperUser(settings);
+if (superUser) {
+    const superUserElements = document.querySelectorAll('.super-user');
+    superUserElements.forEach((element) => {
+        element.classList.remove('super-user');
+    });
+}
+
+
+if (settings.url && settings.authorization) {
     try {
         loadPartIssues();
         loadSuppliesIssues();
@@ -94,7 +114,7 @@ if (serverSettings.url && serverSettings.authorization) {
         loadJobs();
         loadDataListWithSupplies();
     } catch (error) {
-        showMessage(error);
+        showAlertDialog(error);
     }
 
     setInterval(() => {
@@ -103,10 +123,10 @@ if (serverSettings.url && serverSettings.authorization) {
     }, 60000); // 60000 * 20
 }
 else {
-    showMessage("Missing server settings");
+    showAlertDialog("Missing server settings");
 }
 
-startOverTimeTimer(station, serverSettings, stopRunningTimer);
+startOverTimeTimer(station, settings, stopRunningTimer);
 
 
 
@@ -162,7 +182,7 @@ sendButton.addEventListener('click', async (event) => {
             data.part = partSelect.value;
             data.sent = false;
             data.show = true;
-            await insertDBEntry("issues_schema", "parts_issues", data, serverSettings);
+            await insertDBEntry("issues_schema", "parts_issues", data, settings);
             loadFormMessageForPartIssue();
             console.log('Part Issue sent');
             sendEmail = true;
@@ -170,7 +190,7 @@ sendButton.addEventListener('click', async (event) => {
 
         case "supplies":
             if (itemList.length <= 0) {
-                showMessage("Add items to list first");
+                showAlertDialog("Add items to list first");
                 event.preventDefault();
                 return;
             }
@@ -180,7 +200,7 @@ sendButton.addEventListener('click', async (event) => {
                 data.currently = item.currentAmount;
                 data.ordered = false
                 data.show = true;
-                await insertDBEntry("issues_schema", "supply_issues", data, serverSettings);
+                await insertDBEntry("issues_schema", "supply_issues", data, settings);
             }
             loadFormMessageForSupplyIssue();
             console.log('Supply Issue sent');
@@ -192,7 +212,7 @@ sendButton.addEventListener('click', async (event) => {
             data.acknowledged = false;
             data.missedTime = `${clockInOut.toLocaleDateString()} ${clockInOut.toLocaleTimeString()}`;
             data.firstName = clockFirstNameInput.value;
-            await insertDBEntry("issues_schema", "time_clock_issues", data, serverSettings);
+            await insertDBEntry("issues_schema", "time_clock_issues", data, settings);
             loadFormMessageForClockIssue();
             console.log('Time Clock Issue sent');
             sendEmail = true;
@@ -200,7 +220,7 @@ sendButton.addEventListener('click', async (event) => {
 
         case "other":
             data.acknowledged = false;
-            await insertDBEntry("issues_schema", "other_issues", data, serverSettings);
+            await insertDBEntry("issues_schema", "other_issues", data, settings);
             loadFormMessageForOtherIssue();
             console.log('Other Issue sent');
             sendEmail = true;
@@ -208,12 +228,12 @@ sendButton.addEventListener('click', async (event) => {
 
         case "additional":
             const jobID = additionalSuppliesJob.children[additionalSuppliesJob.value].getAttribute("db_id");
-            const jobs = await getDBEntrees(BUSINESS_SCHEMA, JOBS_TABLE, "id", jobID, serverSettings);
+            const jobs = await getDBEntrees(BUSINESS_SCHEMA, JOBS_TABLE, "id", jobID, settings);
             if (jobs[0].additionalSupplies == null) {
                 jobs[0].additionalSupplies = [];
             }
             jobs[0].additionalSupplies.push({supplies: additionalSuppliesSupply.value, note: note.value});
-            await updateDBEntry(BUSINESS_SCHEMA, JOBS_TABLE, jobs[0], serverSettings);
+            await updateDBEntry(BUSINESS_SCHEMA, JOBS_TABLE, jobs[0], settings);
             loadFormMessageForAdditionalSupplies();
             console.log('Additional supplies sent');
             sendEmail = false;
@@ -317,7 +337,7 @@ async function loadCategoriesSelect() {
             option.value = index;
             categorySelect.appendChild(option);
     
-            const items = await getDBEntrees("inventory_schema", "supply_list", "category", category, serverSettings);
+            const items = await getDBEntrees("inventory_schema", "supply_list", "category", category, settings);
             itemsArray[index] = [];
             items.forEach((item) => {
                 itemsArray[index].push(item.item);
@@ -325,13 +345,13 @@ async function loadCategoriesSelect() {
             updateCategoryItems();
         };
     } catch (error) {
-        // showMessage(error);
+        // showAlertDialog(error);
     }
 }
 
 async function getItemCategories() {
     const categories = [];
-    const response = await getDBEntrees("inventory_schema", "supply_list", "category", "*", serverSettings);
+    const response = await getDBEntrees("inventory_schema", "supply_list", "category", "*", settings);
 
     if ((!response) || (response.error)) return;
 
@@ -374,7 +394,7 @@ function updateContainer() {
 }
 
 async function loadPartIssues() {
-    const response = await getDBEntrees("issues_schema", "parts_issues", "show", true, serverSettings);
+    const response = await getDBEntrees("issues_schema", "parts_issues", "show", true, settings);
 
     if ((!response) || (response.error)) return;
     
@@ -411,7 +431,7 @@ async function loadPartIssues() {
 }
 
 async function loadSuppliesIssues() {
-    const response = await getDBEntrees("issues_schema", "supply_issues", "show", true, serverSettings);
+    const response = await getDBEntrees("issues_schema", "supply_issues", "show", true, settings);
 
     if ((!response) || (response.error)) return;
     
@@ -448,31 +468,31 @@ function formFilled() {
 
     switch (issuesSelect.value) {
         case "part":
-            if (!jobNumberInput.value) showMessage("Missing job name");
-            else if (!cabinetNumberInput.value) showMessage("Missing cabinet number");
+            if (!jobNumberInput.value) showAlertDialog("Missing job name");
+            else if (!cabinetNumberInput.value) showAlertDialog("Missing cabinet number");
             return !!jobNumberInput.value && !!cabinetNumberInput.value && !!partSelect.value;
 
         case "supplies":
-            if (itemList.length <= 0) showMessage("Remember to add items to list");
+            if (itemList.length <= 0) showAlertDialog("Remember to add items to list");
             return itemList.length > 0;
 
         case "clock":
-            if (!timeInput.value) showMessage("Missing date/time");
-            else if (!clockFirstNameInput.value) showMessage("Missing first name");
+            if (!timeInput.value) showAlertDialog("Missing date/time");
+            else if (!clockFirstNameInput.value) showAlertDialog("Missing first name");
             return !!timeInput.value && !!clockFirstNameInput.value;
 
         case "other":
-            if (!note.value) showMessage("Add a note");
+            if (!note.value) showAlertDialog("Add a note");
             return !!note.value;
 
         case "additional":
             const jobName = additionalSuppliesJob.children[additionalSuppliesJob.value].textContent;
-            if (!jobName) showMessage("Missing job name");
-            else if (!additionalSuppliesSupply.value) showMessage("Missing supply name");
+            if (!jobName) showAlertDialog("Missing job name");
+            else if (!additionalSuppliesSupply.value) showAlertDialog("Missing supply name");
             return !!jobName && !!additionalSuppliesSupply.value;
 
         default:
-            showMessage("Select an Issue from the drop-down");
+            showAlertDialog("Select an Issue from the drop-down");
             return false;
     }
 }
@@ -493,17 +513,17 @@ function setLocalStorageValue(key, value) {
     window.localStorage.setItem(key, JSON.stringify(value));
 }
 
-function showMessage(messageText) {
-    errorMessage.textContent = messageText;
-    setTimeout(() => {
-        errorMessage.textContent = "";
-    }, 6000);
-}
+// function showMessage(messageText) {
+//     errorMessage.textContent = messageText;
+//     setTimeout(() => {
+//         errorMessage.textContent = "";
+//     }, 6000);
+// }
 
 async function loadJobs() {
-    const jobsResponse = await getDBEntrees(BUSINESS_SCHEMA, JOBS_TABLE, "active", true, serverSettings);
+    const jobsResponse = await getDBEntrees(BUSINESS_SCHEMA, JOBS_TABLE, "active", true, settings);
     if ((!jobsResponse) || (jobsResponse.error)) {
-        showMessage("Error loading jobs", true);
+        showAlertDialog("Error loading jobs");
     }
     else {
         jobsResponse.sort((a, b) => {
@@ -541,7 +561,7 @@ function loadSelectFromArray(selectElement, textAttribute, setID, array, addBlan
 async function loadDataListWithSupplies() {
     // const filter = categoryFilterInput.value || "*";
     
-    const response = await getDBEntrees(INVENTORY_SCHEMA, SUPPLY_LIST_TABLE, "__createdtime__", "*", serverSettings);
+    const response = await getDBEntrees(INVENTORY_SCHEMA, SUPPLY_LIST_TABLE, "__createdtime__", "*", settings);
     
     if ((!response) || (response.error)) return;
     

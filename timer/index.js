@@ -1,6 +1,8 @@
 import {getDBEntrees,
     insertDBEntry,
     deleteDBEntry,
+    isSuperUser,
+    getUserInfo,
 } from "../db-utilities.js";
 
 import {
@@ -21,8 +23,15 @@ import {
     timeToDecimal,
 } from "../timer-utilities.js";
 
+import {
+    showYesNoDialog,
+    showAlertDialog,
+    showInputDialog,
+    showJobDialog,
+    showCalendarEventDialog,
+} from "../dialogs.js";
 
-const serverSettings = {}
+const settings = {}
 
 const message = document.querySelector("#message");
 
@@ -69,7 +78,7 @@ startBtn.addEventListener('click', async () => {
         }
     }
     else {
-        showMessage("Missing info.", true);
+        showAlertDialog("Missing info.");
     }
 });
 
@@ -79,7 +88,7 @@ addTimeBtn.addEventListener('click', async () => {
         clearAddTimeFields();
     }
     else {
-        showMessage("Missing info.", true);
+        showAlertDialog("Missing info.");
     }
 });
 
@@ -89,27 +98,35 @@ addTimeBtn.addEventListener('click', async () => {
 
 setTheme();
 
-serverSettings.url = getLocalStorageValue('serverURL') || "";
-serverSettings.authorization = getLocalStorageValue('serverAuthorization') || "";
+settings.url = getLocalStorageValue('serverURL') || "";
+settings.authorization = getLocalStorageValue('serverAuthorization') || "";
 const thisStationName = getLocalStorageValue('stationName') || "";
 const thisStationID = await getStationID(thisStationName);
 
 
-if (serverSettings.url && serverSettings.authorization && thisStationName) {
+const superUser = await isSuperUser(settings);
+if (superUser) {
+    const superUserElements = document.querySelectorAll('.super-user');
+    superUserElements.forEach((element) => {
+        element.classList.remove('super-user');
+    });
+}
+
+if (settings.url && settings.authorization && thisStationName) {
     await loadFromDB();
 }
 else {
-    if (!serverSettings.url) showMessage("Missing server URL");
-    if (!serverSettings.authorization) showMessage("Missing server Authorization");
-    if (!thisStationName) showMessage("Missing station name");
+    if (!settings.url) showAlertDialog("Missing server URL");
+    if (!settings.authorization) showAlertDialog("Missing server Authorization");
+    if (!thisStationName) showAlertDialog("Missing station name");
 }
-startOverTimeTimer(thisStationName, serverSettings, stopRunningTimer, loadRunningTimers);
+startOverTimeTimer(thisStationName, settings, stopRunningTimer, loadRunningTimers);
 
 
 // FUNCTIONS
 
 async function loadRunningTimers() {
-    const runningTimersResponse = await getDBEntrees(LOGS_SCHEMA, RUNNING_TIMER_TABLE, "__createdtime__", "*", serverSettings);
+    const runningTimersResponse = await getDBEntrees(LOGS_SCHEMA, RUNNING_TIMER_TABLE, "__createdtime__", "*", settings);
     if ((!runningTimersResponse) || (runningTimersResponse.error)) return true;
 
     runningTimersContainer.innerHTML = "";
@@ -134,7 +151,7 @@ async function loadRunningTimers() {
         stopBtn.classList.add('stop-btn');
         stopBtn.textContent = "Stop";
         stopBtn.addEventListener('click', async () => {
-            stopRunningTimer(runningTimer, thisStationName, serverSettings, loadRunningTimers);
+            stopRunningTimer(runningTimer, thisStationName, settings, loadRunningTimers);
             await updateStartBtn();
         });
 
@@ -143,7 +160,7 @@ async function loadRunningTimers() {
         cancelBtn.textContent = "Cancel";
         cancelBtn.addEventListener('click', async () => {
             await showYesNoModal(async () => {
-                await deleteDBEntry(LOGS_SCHEMA, RUNNING_TIMER_TABLE, runningTimer.id, serverSettings);
+                await deleteDBEntry(LOGS_SCHEMA, RUNNING_TIMER_TABLE, runningTimer.id, settings);
                 await loadRunningTimers();
                 await updateStartBtn();
             });
@@ -162,7 +179,7 @@ async function getStationID(stationName) {
     }
     else {
         // Find station id with station name
-        const stationsResponse = await getDBEntrees(BUSINESS_SCHEMA, STATIONS_TABLE, "__createdtime__", "*", serverSettings);
+        const stationsResponse = await getDBEntrees(BUSINESS_SCHEMA, STATIONS_TABLE, "__createdtime__", "*", settings);
         if ((!stationsResponse) || (stationsResponse.error)) return;
         // stationsResponse.forEach((station) => {
         for (const station of stationsResponse) {
@@ -189,7 +206,7 @@ async function updateAddTimeBtn() {
 }
 
 async function employeeHasRunningTimer(selectedEmployeeID) {
-    const employeeResponse = await getDBEntrees(LOGS_SCHEMA, RUNNING_TIMER_TABLE, "__createdtime__", "*", serverSettings);
+    const employeeResponse = await getDBEntrees(LOGS_SCHEMA, RUNNING_TIMER_TABLE, "__createdtime__", "*", settings);
     if ((!employeeResponse) || (employeeResponse.error)) return true;
 
     const employeeIds = [];
@@ -208,11 +225,11 @@ async function loadFromDB() {
 }
 
 async function loadEmployees() {
-    const employeeResponse = await getDBEntrees(BUSINESS_SCHEMA, EMPLOYEES_TABLE, "active", "*", serverSettings);
+    const employeeResponse = await getDBEntrees(BUSINESS_SCHEMA, EMPLOYEES_TABLE, "active", "*", settings);
     // console.log(employeeResponse);
 
     if ((!employeeResponse) || (employeeResponse.error)) {
-        showMessage("Error loading employees", true);
+        showAlertDialog("Error loading employees");
         return;
     }
 
@@ -231,14 +248,11 @@ async function loadEmployees() {
         }
         // New system
         else if (Array.isArray(employee.stations)) {
-            console.log(employee.stations);
-            console.log(thisStationID);
             if (employee.stations.indexOf(thisStationID) >= 0) {
                 stationsEmployees.push(employee);
             }
         }
     }
-    console.log(stationsEmployees);
 
     stationsEmployees.sort((a, b) => {
         const nameA = String(a.name).toUpperCase();
@@ -252,9 +266,9 @@ async function loadEmployees() {
 }
 
 async function loadJobs() {
-    const jobsResponse = await getDBEntrees(BUSINESS_SCHEMA, JOBS_TABLE, "active", true, serverSettings);
+    const jobsResponse = await getDBEntrees(BUSINESS_SCHEMA, JOBS_TABLE, "active", true, settings);
     if ((!jobsResponse) || (jobsResponse.error)) {
-        showMessage("Error loading jobs", true);
+        showAlertDialog("Error loading jobs");
     }
     else {
         jobsResponse.sort((a, b) => {
@@ -270,14 +284,14 @@ async function loadJobs() {
 }
 
 async function loadTasks() {
-    const stationResponse = await getDBEntrees(BUSINESS_SCHEMA, STATIONS_TABLE, "name", thisStationName, serverSettings);
+    const stationResponse = await getDBEntrees(BUSINESS_SCHEMA, STATIONS_TABLE, "name", thisStationName, settings);
     if ((!stationResponse) || (stationResponse.error)) {
-        showMessage("Error loading tasks", true);
+        showAlertDialog("Error loading tasks");
         return;
     }
 
     if (stationResponse.length == 0) {
-        showMessage(`Error: No tasks for ${thisStationName}`, true);
+        showAlertDialog(`Error: No tasks for ${thisStationName}`);
         return;
     }
 
@@ -291,7 +305,7 @@ async function loadTasks() {
         loadSelectFromArray(addTimeTaskSelect, "", false, tasks);
     } // New system
     else if (Array.isArray(stationResponse[0].tasks)) {
-        const tasksResponse = await getDBEntrees(BUSINESS_SCHEMA, TASKS_TABLE, "id", "*", serverSettings);
+        const tasksResponse = await getDBEntrees(BUSINESS_SCHEMA, TASKS_TABLE, "id", "*", settings);
         if ((!tasksResponse) || (tasksResponse.error)) return;
 
         taskSelect.innerHTML = "";
@@ -353,7 +367,7 @@ async function addRunningTimerToDB() {
             date: (new Date()).toLocaleDateString(),
             time: (new Date()).toLocaleTimeString(),
         }, 
-        serverSettings
+        settings
     );
 }
 
@@ -364,11 +378,11 @@ async function manuallyAddTimeToDB() {
     const milliseconds = (hours * 60 * 60000) + (minutes * 60000);
 
     if (hours + minutes < 1) {
-        showMessage("Please add time", true);
+        showAlertDialog("Please add time");
         return;
     }
     else {
-        showMessage(`${addTimeHoursInput.value || "0"}:${addTimeMinutesInput.value || "0"} added to ${addTimeJobsSelect[addTimeJobsSelect.value].textContent}`);
+        showAlertDialog(`${addTimeHoursInput.value || "0"}:${addTimeMinutesInput.value || "0"} added to ${addTimeJobsSelect[addTimeJobsSelect.value].textContent}`);
     }
    
     await insertDBEntry(
@@ -389,7 +403,7 @@ async function manuallyAddTimeToDB() {
             durationTime: `${hours}:${minutes}:0`,
             submitType: "manual",
         }, 
-        serverSettings
+        settings
     );
 }
 
@@ -403,13 +417,13 @@ function setTheme() {
     document.documentElement.setAttribute('data-color-theme', theme);
 }
 
-function showMessage(messageText, isError) {
-    message.style.color = isError ? "red" : "var(--color)";
-    message.textContent = messageText;
-    setTimeout(() => {
-        message.textContent = "";
-    }, 4000);
-}
+// function showMessage(messageText, isError) {
+//     message.style.color = isError ? "red" : "var(--color)";
+//     message.textContent = messageText;
+//     setTimeout(() => {
+//         message.textContent = "";
+//     }, 4000);
+// }
 
 function allFieldsSelected() {
     return employeesSelect.value && jobsSelect.value && taskSelect.value;
@@ -436,4 +450,22 @@ async function showYesNoModal(yesCallback) {
     yesNoModalNoBtn.onclick = () => {
         yesNoModal.style.display = 'none';
     };
+}
+async function canEditJobs() {
+    if (superUser) return true;
+    const userInfo = await getUserInfo(settings);
+    const readJobs = userInfo.role.permission.business_schema.tables.jobs.read;
+    const insertJobs = userInfo.role.permission.business_schema.tables.jobs.insert;
+    const deleteJobs = userInfo.role.permission.business_schema.tables.jobs.delete;
+    const updateJobs = userInfo.role.permission.business_schema.tables.jobs.update;
+    return (readJobs && insertJobs && deleteJobs && updateJobs);
+}
+async function canEditCalendarEvent() {
+    if (superUser) return true;
+    const userInfo = await getUserInfo(settings);
+    const readJobs = userInfo.role.permission.business_schema.tables.calendar.read;
+    const insertJobs = userInfo.role.permission.business_schema.tables.calendar.insert;
+    const deleteJobs = userInfo.role.permission.business_schema.tables.calendar.delete;
+    const updateJobs = userInfo.role.permission.business_schema.tables.calendar.update;
+    return (readJobs && insertJobs && deleteJobs && updateJobs);
 }

@@ -99,7 +99,7 @@ document.querySelector('#calender').addEventListener('contextmenu', (event) => {
     event.preventDefault();
 });
 
-buildCalender();
+buildCalender("today");
 
 
 
@@ -133,7 +133,7 @@ addNewEventBtn.addEventListener('click', async () => {
 
 
 // FUNCTIONS
-async function buildCalender() {
+async function buildCalender(scrollTo) {
     const jobs = await getDBEntrees(BUSINESS_SCHEMA, JOBS_TABLE, "active", true, settings);
     if ((!jobs) || (jobs.error) || jobs.length === 0) return;
 
@@ -159,11 +159,9 @@ async function buildCalender() {
 
     const canEditJob = await canEditJobs();
     const canEditCalendar = await canEditCalendarEvent();
-
-    calenderContainer.innerHTML = "";
-
+    
     const dates = getDates(jobs, calendarResponse);
-
+    
     let dateIndex;
     if (dates.firstSunday.toLocaleDateString('en-CA') < new Date().toLocaleDateString('en-CA')) {
         dateIndex = new Date(dates.firstSunday);
@@ -175,10 +173,13 @@ async function buildCalender() {
             dateIndex.setDate(dateIndex.getDate() - 1);
         }
     }
-
+    dateIndex.setDate(dateIndex.getDate() - 98);
+    
     const lastDatePlusOneMonth = new Date(getCorrectDate(dates.lastSaturday));
+    
+    lastDatePlusOneMonth.setDate(lastDatePlusOneMonth.getDate() + 105);
 
-    lastDatePlusOneMonth.setDate(lastDatePlusOneMonth.getDate() + 28);
+    const weeks = [];
 
     let endCalender = false;
     while (!endCalender) {
@@ -188,6 +189,9 @@ async function buildCalender() {
         for (let dayOfTheWeekIndex = 0; dayOfTheWeekIndex < 7; dayOfTheWeekIndex++) {
             const date = dateIndex.toLocaleDateString('en-CA');
             const dayContainer = document.createElement('div');
+            if (dates.today.toDateString('en-CA') === dateIndex.toDateString('en-CA')) {
+                dayContainer.id = "today";
+            }
             dayContainer.classList.add('day');
             dayContainer.addEventListener('dragenter', () => {dayContainer.classList.add('drag-over')});
             dayContainer.addEventListener('dragleave', () => {dayContainer.classList.remove('drag-over')});
@@ -315,8 +319,15 @@ async function buildCalender() {
             if (dateIndex.toDateString('en-CA') === lastDatePlusOneMonth.toDateString('en-CA')) endCalender = true;
             // if (dateIndex.toDateString('en-CA') === dates.lastSaturday.toDateString('en-CA')) endCalender = true;
         };
-    
-        calenderContainer.appendChild(weekContainer);
+        
+        weeks.push(weekContainer);
+    }
+    calenderContainer.innerHTML = "";
+    calenderContainer.append(...weeks);
+
+    if (scrollTo === "today") {
+        const todayElement = document.querySelector('#today');
+        todayElement.scrollIntoView();
     }
 }
 

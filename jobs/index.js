@@ -63,7 +63,13 @@ const lateJobsDays = getLocalStorageValue('lateJobsDays') || 7;
 
 const cardOpenCloseState = {};
 
-const superUser = isSuperUser(settings);
+const superUser = await isSuperUser(settings);
+if (superUser) {
+    const superUserElements = document.querySelectorAll('.super-user');
+    superUserElements.forEach((element) => {
+        element.classList.remove('super-user');
+    });
+}
 
 setTheme();
 
@@ -314,7 +320,7 @@ async function loadJobs(event, searchValue) {
 
         const allSequencesContainer = document.createElement('div');
         allSequencesContainer.classList.add('main-sequence-container');
-        if (job.sequences) {
+        if (job.sequences && canEditJob) {
             job.sequences.forEach((sequence) => {
                 const sequenceContainer = document.createElement('div');
                 sequenceContainer.textContent = sequence.name;
