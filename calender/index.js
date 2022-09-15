@@ -198,8 +198,12 @@ async function buildCalender(scrollTo) {
             dayContainer.addEventListener('dragover', (event) => {event.preventDefault()});
             dayContainer.addEventListener('drop', async () => {
                 dayContainer.classList.remove('drag-over');
-                if (draggingJobID) await updateDBEntry(BUSINESS_SCHEMA, JOBS_TABLE, {id: draggingJobID, shipDate: date}, settings);
-                if (draggingEventID) await updateDBEntry(BUSINESS_SCHEMA, CALENDAR_TABLE, {id: draggingEventID, date: date}, settings);
+                if (draggingJobID && canEditJob) {
+                    await updateDBEntry(BUSINESS_SCHEMA, JOBS_TABLE, {id: draggingJobID, shipDate: date}, settings);
+                }
+                if (draggingEventID && canEditCalendar) {
+                    await updateDBEntry(BUSINESS_SCHEMA, CALENDAR_TABLE, {id: draggingEventID, date: date}, settings);
+                }
                 draggingJobID = "";
                 draggingEventID = "";
                 await buildCalender();
