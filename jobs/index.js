@@ -1,7 +1,9 @@
 import {
     getDBEntrees,
     updateDBEntry,
-    insertDBEntry} from "../db-utilities.js";
+    insertDBEntry,
+    getUserInfo,
+    isSuperUser,} from "../db-utilities.js";
 
 import {
     LOGS_SCHEMA,
@@ -60,6 +62,8 @@ station = getLocalStorageValue('stationName') || "";
 const lateJobsDays = getLocalStorageValue('lateJobsDays') || 7;
 
 const cardOpenCloseState = {};
+
+const superUser = isSuperUser(settings);
 
 setTheme();
 
@@ -143,15 +147,15 @@ function differenceInDays(dateOne, dateTwo) {
     return Math.floor(differenceInDays);
 }
 
-// Load Parts Issues Table
+// Load
 async function loadJobs(event, searchValue) {
-    const response = await getDBEntrees(BUSINESS_SCHEMA, JOBS_TABLE, "active", "true", settings);
+    const jobsResponse = await getDBEntrees(BUSINESS_SCHEMA, JOBS_TABLE, "active", "true", settings);
     
-    if ((!response) || (response.error)) return;
+    if ((!jobsResponse) || (jobsResponse.error)) return;
 
     switch (sort.value) {
         case "job-name-low-to-high":
-            response.sort((a, b) => {
+            jobsResponse.sort((a, b) => {
                 const nameA = String(a.name).toUpperCase();
                 const nameB = String(b.name).toUpperCase();
                 if (nameA < nameB) return 1;
@@ -160,7 +164,7 @@ async function loadJobs(event, searchValue) {
             });
             break;
         case "job-name-high-to-low":
-            response.sort((a, b) => {
+            jobsResponse.sort((a, b) => {
                 const nameA = String(a.name).toUpperCase();
                 const nameB = String(b.name).toUpperCase();
                 if (nameA < nameB) return -1;
@@ -169,7 +173,7 @@ async function loadJobs(event, searchValue) {
             });
             break;
         case "latest-ship-date":
-            response.sort((a, b) => {
+            jobsResponse.sort((a, b) => {
                 const shipDateA = a.shipDate;
                 const shipDateB = b.shipDate;
                 if (shipDateA < shipDateB) return 1;
@@ -178,7 +182,7 @@ async function loadJobs(event, searchValue) {
             });
             break;
         case "earliest-ship-date":
-            response.sort((a, b) => {
+            jobsResponse.sort((a, b) => {
                 const shipDateA = a.shipDate;
                 const shipDateB = b.shipDate;
                 if (shipDateA < shipDateB) return -1;
@@ -191,6 +195,9 @@ async function loadJobs(event, searchValue) {
             break;
     }
 
+
+    const canEditJob = await canEditJobs();
+
     cardsContainer.innerHTML = "";
 
     // Used for drop downs
@@ -200,34 +207,45 @@ async function loadJobs(event, searchValue) {
     let checkLabelID = 0;
 
     // Loop through cards
-    for (const entry of response) {
-        if (!entry.active) continue;
+    for (const job of jobsResponse) {
+        if (!job.active) continue;
 
         if (searchValue) {
-            if (!String(entry.name).toUpperCase().includes(String(searchValue).toUpperCase())) continue;
+            if (!String(job.name).toUpperCase().includes(String(searchValue).toUpperCase())) continue;
         }
 
         const card = document.createElement('details');
         card.classList.add('card');
-        card.setAttribute('jobID', entry.id);
+        card.setAttribute('jobID', job.id);
         card.addEventListener('toggle', (event) => {
-            cardOpenCloseState[entry.id] = event.target.open;
+            cardOpenCloseState[job.id] = event.target.open;
         });
         // Open/Close cards
-        cardOpenCloseState[entry.id] ? card.setAttribute('open', 'open') : card.removeAttribute('open');
+        cardOpenCloseState[job.id] ? card.setAttribute('open', 'open') : card.removeAttribute('open');
 
         const summary = document.createElement('summary');
+
+        // Progress bar
+        const progressBar = document.createElement('div');
+        const progressElement = document.createElement('div');
+        if (canEditJob) {
+            progressBar.setAttribute('title', getJobTimes(job).percentCompleted);
+            progressBar.classList.add('progress-bar');
+            progressElement.style.width = `${getJobTimes(job).percentCompleted}%`;
+            progressBar.appendChild(progressElement);
+        }
         
         const cardTitle = document.createElement('h2');
-        cardTitle.textContent = entry.name;
+        cardTitle.textContent = job.name;
         cardTitle.classList.add('card-title');
+        cardTitle.appendChild(progressBar);
         
         const shipDate = document.createElement('h3');
-        shipDate.textContent = `Ship: ${entry.shipDate ? entry.shipDate : ""}`;
+        shipDate.textContent = `Ship: ${job.shipDate ? job.shipDate : ""}`;
         shipDate.classList.add('ship-date');
         
         const dueInDays = document.createElement('p');
-        const dueInDaysFromNow = differenceInDays((new Date()).toLocaleDateString('en-CA'), entry.shipDate);
+        const dueInDaysFromNow = differenceInDays((new Date()).toLocaleDateString('en-CA'), job.shipDate);
         if (dueInDaysFromNow > 0) {
             const dueInDaysPlural = (dueInDaysFromNow > 1) ? "s" : "";
             dueInDays.textContent = `Due in ${dueInDaysFromNow} day${dueInDaysPlural}`;
@@ -242,7 +260,7 @@ async function loadJobs(event, searchValue) {
         dueInDays.classList.add('notes');
         
         const note = document.createElement('p');
-        note.textContent = entry.note;
+        note.textContent = job.note;
         note.classList.add('notes');
         
         const checkListContainer = document.createElement('section');
@@ -251,8 +269,8 @@ async function loadJobs(event, searchValue) {
         const checkValues = [];
 
         // Loop through checks
-        if (entry.checklist) {
-            for (const checkItem of entry.checklist) {
+        if (job.checklist) {
+            for (const checkItem of job.checklist) {
                 const checkboxItem = getCheckboxItem(checkItem);
 
                 checkListContainer.appendChild(checkboxItem);
@@ -262,7 +280,7 @@ async function loadJobs(event, searchValue) {
                 }
             }
         }
-        updateColorAndCheckInTitle(checkListContainer, cardTitle, entry.shipDate);
+        updateColorAndCheckInTitle(checkListContainer, cardTitle, job.shipDate);
 
         const addCheckboxButton = document.createElement('button');
         addCheckboxButton.textContent = "Add checkbox";
@@ -289,16 +307,43 @@ async function loadJobs(event, searchValue) {
                         stationName,
                     };
                     checkListContainer.appendChild(getCheckboxItem(checkItem));
-                    updateColorAndCheckInTitle(checkListContainer, cardTitle, entry.shipDate);
-                    await updateDBEntry(BUSINESS_SCHEMA, JOBS_TABLE, {id: entry.id, checklist: JSON.stringify(checklistArray)}, settings);
+                    updateColorAndCheckInTitle(checkListContainer, cardTitle, job.shipDate);
+                    await updateDBEntry(BUSINESS_SCHEMA, JOBS_TABLE, {id: job.id, checklist: JSON.stringify(checklistArray)}, settings);
                 });
         };
+
+        const allSequencesContainer = document.createElement('div');
+        allSequencesContainer.classList.add('main-sequence-container');
+        if (job.sequences) {
+            job.sequences.forEach((sequence) => {
+                const sequenceContainer = document.createElement('div');
+                sequenceContainer.textContent = sequence.name;
+                sequence.tasks.forEach((task) => {
+                    const checkbox = document.createElement('input');
+                    checkbox.setAttribute('type', 'checkbox');
+                    if (task.completed) checkbox.setAttribute('checked', 'true');
+                    checkbox.onchange = async () => {
+                        task.completed = checkbox.checked;
+                        await updateDBEntry(BUSINESS_SCHEMA, JOBS_TABLE, {id: job.id, sequences: job.sequences}, settings);
+                        progressElement.style.width = `${getJobTimes(job).percentCompleted}%`;
+                    }
+
+                    const taskCheckLabel = document.createElement('label');
+                    taskCheckLabel.appendChild(checkbox);
+                    taskCheckLabel.append(task.name)
+
+                    sequenceContainer.appendChild(taskCheckLabel);
+                });
+                allSequencesContainer.appendChild(sequenceContainer);
+            });
+        }
 
         summary.appendChild(cardTitle);
         card.appendChild(summary);
         card.appendChild(shipDate);
         card.appendChild(dueInDays);
         card.appendChild(note);
+        card.appendChild(allSequencesContainer);
         card.appendChild(checkListContainer);
         card.appendChild(addCheckboxButton);
 
@@ -311,8 +356,8 @@ async function loadJobs(event, searchValue) {
                     stationName: checkItem.stationName,
                 });
             });
-            updateColorAndCheckInTitle(checkListContainer, cardTitle, entry.shipDate);
-            await updateDBEntry(BUSINESS_SCHEMA, JOBS_TABLE, {id: entry.id, checklist: JSON.stringify(checklistArray)}, settings);
+            updateColorAndCheckInTitle(checkListContainer, cardTitle, job.shipDate);
+            await updateDBEntry(BUSINESS_SCHEMA, JOBS_TABLE, {id: job.id, checklist: JSON.stringify(checklistArray)}, settings);
         }
 
         cardsContainer.appendChild(card);
@@ -364,7 +409,7 @@ async function loadJobs(event, searchValue) {
                             stationName: checkItem.stationName,
                         });
                     });
-                    await updateDBEntry(BUSINESS_SCHEMA, JOBS_TABLE, {id: entry.id, checklist: JSON.stringify(checklistArray)}, settings);
+                    await updateDBEntry(BUSINESS_SCHEMA, JOBS_TABLE, {id: job.id, checklist: JSON.stringify(checklistArray)}, settings);
                     loadJobs();
                 });
             });
@@ -406,6 +451,40 @@ async function loadJobs(event, searchValue) {
     // else {
     //     closeAllCards();
     // }
+}
+
+function getJobTimes(job) {
+    // Calculate shop hours
+    let times = {};
+    times.totalHours = 0;
+    times.totalMinutes = 0;
+    times.completedHours = 0;
+    times.completedMinutes = 0;
+    times.allTasksCompleted = true;
+    if (job.sequences) {
+        job.sequences.forEach((sequence) => {
+            if (sequence.tasks) {
+                sequence.tasks.forEach((task) => {
+                    times.totalHours += Number(task.hours);
+                    times.totalMinutes += Number(task.minutes);
+                    if (task.completed) {
+                        times.completedHours += Number(task.hours);
+                        times.completedMinutes += Number(task.minutes);
+                    }
+                    else {
+                        times.allTasksCompleted = false;
+                    }
+                });
+            }
+        });
+    }
+    times.totalHours = Number(times.totalHours + Math.floor(times.totalMinutes / 60));
+    times.totalMinutes = Number((((times.totalMinutes / 60) % 1) * 60).toFixed(0));
+    times.totalTimeDec = times.totalHours + (times.totalMinutes / 60);
+    times.totalCompletedTimeDec = times.completedHours + (times.completedMinutes / 60);
+    times.totalTimeRemainingDec = times.totalTimeDec - times.totalCompletedTimeDec;
+    times.percentCompleted = ((times.totalCompletedTimeDec / times.totalTimeDec) * 100).toFixed(0);
+    return times;
 }
 
 async function showAddCheckboxModal(okCallback) {
@@ -455,4 +534,15 @@ function setTheme() {
 
 function updateDateTime() {
     dateLabel.textContent = `${(new Date()).toLocaleDateString()} ${(new Date()).toLocaleTimeString('en-US')}`;
+}
+
+async function canEditJobs() {
+    if (superUser) return true;
+    const userInfo = await getUserInfo(settings);
+    console.log(userInfo)
+    const readJobs = userInfo.role.permission.business_schema.tables.jobs.read;
+    const insertJobs = userInfo.role.permission.business_schema.tables.jobs.insert;
+    const deleteJobs = userInfo.role.permission.business_schema.tables.jobs.delete;
+    const updateJobs = userInfo.role.permission.business_schema.tables.jobs.update;
+    return (readJobs && insertJobs && deleteJobs && updateJobs);
 }
