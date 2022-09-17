@@ -79,19 +79,24 @@ const stationName = getLocalStorageValue('stationName') || "";
 
 const theme = getLocalStorageValue('theme') || "light";
 
+const superUser = await isSuperUser(settings);
+const canEditCalendar = await canEditCalendarEvent();
+const canEditJob = await canEditJobs();
 
 
 // INITIALIZE CODE
 
 
-
-const superUser = await isSuperUser(settings);
 if (superUser) {
     const superUserElements = document.querySelectorAll('.super-user');
     superUserElements.forEach((element) => {
         element.classList.remove('super-user');
     });
 }
+
+if (canEditCalendar) addNewEventBtn.style.display = "block";
+if (canEditJob) addNewJobBtn.style.display = "block";
+
 
 document.documentElement.setAttribute('data-color-theme', theme);
 

@@ -266,6 +266,10 @@ body *{
     color: var(--yes);
     opacity: 0.7;
     cursor: pointer;
+    background: transparent;
+}
+.add-job-btn svg{
+    background: transparent;
 }
 .add-job-btn:hover{
     opacity: 1;
@@ -289,6 +293,10 @@ body *{
     color: var(--yes);
     opacity: 0.7;
     cursor: pointer;
+    background: transparent;
+}
+.add-event-btn svg{
+    background: transparent;
 }
 .add-event-btn:hover{
     opacity: 1;
