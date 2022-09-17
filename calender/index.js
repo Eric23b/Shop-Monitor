@@ -69,6 +69,7 @@ let draggingEventID = "";
 
 const addNewJobBtn = document.querySelector('#add-job-btn');
 const addNewEventBtn = document.querySelector('#add-event-btn');
+const todayBtn = document.querySelector('#today-button');
 
 const calenderContainer = document.querySelector('#calender');
 
@@ -106,6 +107,14 @@ document.querySelector('#calender').addEventListener('contextmenu', (event) => {
 
 buildCalender("today");
 
+
+
+// Event listeners
+
+todayBtn.addEventListener('click', () => {
+    const todayElement = document.querySelector('#today');
+    todayElement.scrollIntoView();
+});
 
 
 // New Job Button
