@@ -177,7 +177,7 @@ body *{
     flex-direction: column;
     justify-content: flex-start;
     width: 100%;
-    min-height: 14vw;
+    min-height: 10vw;
     height: 100%;
     padding-bottom: 0.5em;
     border-right: 1px solid var(--border_color);
