@@ -229,7 +229,7 @@ async function buildCalender(scrollTo) {
             const dayNameElement = document.createElement('p');
             dayNameElement.classList.add('day-week-name');
             if (dateIndex.getDate() == 1) {
-                const options = { month: "short" };
+                const options = { month: "long" };
                 dayNameElement.textContent = (new Intl.DateTimeFormat("en-CA", options).format(dateIndex));
                 dayNameElement.classList.add('day-title-first-of-the-month');
             }
