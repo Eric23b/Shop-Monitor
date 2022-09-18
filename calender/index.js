@@ -114,6 +114,10 @@ buildCalender("today");
 todayBtn.addEventListener('click', () => {
     const todayElement = document.querySelector('#today');
     todayElement.scrollIntoView();
+    todayElement.style.backgroundColor = "var(--yes)";
+    setTimeout(() => {
+        todayElement.style.backgroundColor = "var(--background_color)";
+    }, 500);
 });
 
 

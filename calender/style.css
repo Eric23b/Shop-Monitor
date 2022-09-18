@@ -183,6 +183,7 @@ body *{
     border-right: 1px solid var(--border_color);
     border-bottom: 1px solid var(--border_color);
     font-size: clamp(0.25em, 1.5vw, 1.125em);
+    transition: background-color 0.5s;
 }
 .day-header-container{
     display: flex;
