@@ -116,13 +116,14 @@ window.onkeydown = (event) => {
     if (event.key === "8" && event.ctrlKey) window.location = "/";
 }
 
+// Jump to today
 todayBtn.addEventListener('click', () => {
     const todayElement = document.querySelector('#today');
     todayElement.scrollIntoView();
     todayElement.style.backgroundColor = "var(--yes)";
     setTimeout(() => {
         todayElement.style.backgroundColor = "var(--background_color)";
-    }, 500);
+    }, 1000);
 });
 
 
