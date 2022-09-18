@@ -183,7 +183,7 @@ body *{
     border-right: 1px solid var(--border_color);
     border-bottom: 1px solid var(--border_color);
     font-size: clamp(0.25em, 1.5vw, 1.125em);
-    transition: background-color 0.5s;
+    transition: background-color 1s;
 }
 .day-header-container{
     display: flex;
@@ -254,17 +254,10 @@ body *{
 
 .add-job-btn{
     position: absolute;
-    bottom: 1rem;
+    bottom: 0.75rem;
     right: 1rem;
     z-index: 10;
-    width: 2.5ch;
-    height: 2.5ch;
-    /* padding: 0.25rem; */
-    font-size: x-large;
-    /* font-weight: 100; */
     border: none;
-    border-radius: 50%;
-    color: var(--yes);
     opacity: 0.7;
     cursor: pointer;
     background: transparent;
@@ -285,13 +278,7 @@ body *{
     bottom: 0.75rem;
     right: 4rem;
     z-index: 10;
-    width: 2.5ch;
-    height: 2.5ch;
-    /* padding: 0.25rem; */
-    font-size: x-large;
-    /* font-weight: 100; */
     border: none;
-    color: var(--yes);
     opacity: 0.7;
     cursor: pointer;
     background: transparent;
