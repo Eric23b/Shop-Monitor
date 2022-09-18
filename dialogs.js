@@ -287,7 +287,7 @@ async function loadSequences(sequences, sequenceContainer, allTasks, updateSeque
             taskElement.setAttribute('sequence-name', sequence.name);
             addHoverColors(taskElement);
             taskElement.style.cssText = addJobModalSequenceTask;
-            taskElement.textContent = `${task.name} ${task.hours}:${task.minutes}`;
+            taskElement.textContent = `${task.name} ${task.hours}:${String(task.minutes).length < 2 ? "0" : ""}${task.minutes}`;
 
             taskElement.addEventListener('click', () => {
                 // addJobSequenceName.value = sequence.name;
@@ -434,8 +434,8 @@ async function showAddTaskDialog(sequenceName, task, allTasks, OKCallback, cance
         }
         task.name = taskName
         task.id = taskNameSelect[taskNameSelect.value].id,
-        task.hours = shopHoursInput.value;
-        task.minutes = shopMinutesInput.value;
+        task.hours = Number(shopHoursInput.value);
+        task.minutes = Number(shopMinutesInput.value);
         if (OKCallback) OKCallback(sequenceName, task);
         body.removeChild(modalBackground);
     });
