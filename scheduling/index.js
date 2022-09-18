@@ -173,6 +173,7 @@ async function loadJobs(jobs) {
         const dailyAvailableShopHoursDec = await getTotalAvailableShopHoursDec(tasksResponse);
     
         const dayIndex = new Date();
+        setToNextWorkDay(dayIndex);
         let dayFraction = 0;
 
         jobs.forEach((job) => {
@@ -260,9 +261,6 @@ async function loadJobs(jobs) {
             });
         }
 
-
-        
-        
         const shipDate = getTableDataWithEditText(job.shipDate);
         shipDate.setAttribute('title', getDateText(job.shipDate));
         // const month = new Date(job.shipDate).toLocaleString("en-CA", { month: "long" }).toLowerCase();
@@ -371,6 +369,20 @@ function incWorkDay(date, amount) {
             index += 2;
             date.setDate(date.getDate() + 2);
         }
+        if (dayName === "Sun") {
+            index += 1;
+            date.setDate(date.getDate() + 1);
+        }
+    }
+}
+    
+function setToNextWorkDay(date) {
+    const dayName = (date.toLocaleString('default', {weekday: 'short'}));
+    if (dayName === "Sat") {
+        date.setDate(date.getDate() + 2);
+    }
+    if (dayName === "Sun") {
+        date.setDate(date.getDate() + 1);
     }
 }
 
