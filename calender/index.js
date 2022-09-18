@@ -111,6 +111,11 @@ buildCalender("today");
 
 // Event listeners
 
+// Got to home page
+window.onkeydown = (event) => {
+    if (event.key === "8" && event.ctrlKey) window.location = "/";
+}
+
 todayBtn.addEventListener('click', () => {
     const todayElement = document.querySelector('#today');
     todayElement.scrollIntoView();
