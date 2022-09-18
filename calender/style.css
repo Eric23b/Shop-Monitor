@@ -158,6 +158,7 @@ body *{
     -moz-user-select: -moz-none;
     -o-user-select: none;
     user-select: none;
+    scroll-behavior: smooth;
 }
 .week{
     /* position: relative; */
