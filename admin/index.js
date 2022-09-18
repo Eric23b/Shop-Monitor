@@ -245,6 +245,11 @@ else {
 
 // ---EVENT LISTENERS---
 
+// Got to home page
+window.onkeydown = (event) => {
+    if (event.key === "8" && event.ctrlKey) window.location = "/";
+}
+
 sendMessageButton.addEventListener("click", () => {
     showSendMessagePrompt(
         async () => {
