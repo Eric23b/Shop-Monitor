@@ -10,20 +10,13 @@
     --yes: forestgreen;
     --no: tomato;
     --accent_color: #0ba27a;
-    /* --color-1: #ff9900;
-    --color-2: #f9f400;
-    --color-3: #6edb00;
-    --color-4: #00dd9e;
-    --color-5: #00b3ff;
-    --color-6: #ff00ee;
-    --color-7: #ff4c5b; */
-    --color-1: #ffc062;
-    --color-2: #fcfa79;
-    --color-3: #b6ff6d;
-    --color-4: #72ffd7;
-    --color-5: #74d5ff;
-    --color-6: #ff7af6;
-    --color-7: #ff7681;
+    --color-1: #f5b673;
+    --color-2: #fefe79;
+    --color-3: #75fb7a;
+    --color-4: #7bfceb;
+    --color-5: #85bafc;
+    --color-6: #fb82f3;
+    --color-7: #fd8282;
 }
 /* @media (prefers-color-scheme: dark) { */
 [data-color-theme='dark']{
