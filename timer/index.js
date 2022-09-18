@@ -55,13 +55,9 @@ const yesNoModalNoBtn = document.querySelector("#no-btn");
 
 // ---Event Listeners---
 
-// Admin Link
+// Got to home page
 window.onkeydown = (event) => {
-    if (event.key === "8" && event.ctrlKey) {
-        const adminLink = document.createElement('a');
-        adminLink.href = "/";
-        adminLink.click();
-    }
+    if (event.key === "8" && event.ctrlKey) window.location = "/";
 }
 
 employeesSelect.addEventListener('change', updateStartBtn);

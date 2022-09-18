@@ -94,12 +94,9 @@ startOverTimeTimer(station, settings, stopRunningTimer);
 
 // EVENT LISTENERS
 
+// Got to home page
 window.onkeydown = (event) => {
-    if (event.key === "8" && event.ctrlKey) {
-        const adminLink = document.createElement('a');
-        adminLink.href = "/";
-        adminLink.click();
-    }
+    if (event.key === "8" && event.ctrlKey) window.location = "/";
     timer.reset();
 }
 
