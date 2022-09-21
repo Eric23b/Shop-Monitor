@@ -133,7 +133,6 @@ async function loadRunningTimers() {
     runningTimersContainer.appendChild(title);
 
     runningTimersResponse.forEach((runningTimer) => {
-        console.log(runningTimer)
         if (runningTimer.station != getLocalStorageValue("stationName")) return;
 
         const card = document.createElement('card');
@@ -293,6 +292,7 @@ async function loadTasks() {
 
     // Old system
     if (typeof stationResponse[0].tasks === "string") {
+        console.log(typeof stationResponse[0].tasks);
         const tasks = stationResponse[0].tasks.split(',');
         tasks.forEach(task => {
             task = task.trim();
@@ -319,7 +319,7 @@ async function loadTasks() {
                 const manualTimeOption = document.createElement("option");
                 manualTimeOption.textContent = task.name;
                 manualTimeOption.id = task.id;
-                manualTimeOption.value = index++;
+                manualTimeOption.value = index;
                 addTimeTaskSelect.appendChild(manualTimeOption);
                 
             });
