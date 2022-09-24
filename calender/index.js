@@ -125,12 +125,7 @@ window.onkeydown = (event) => {
 
 // Jump to today
 todayBtn.addEventListener('click', () => {
-    const todayElement = document.querySelector('#today');
-    todayElement.scrollIntoView();
-    todayElement.style.backgroundColor = "var(--yes)";
-    setTimeout(() => {
-        todayElement.style.backgroundColor = "var(--background_color)";
-    }, 1000);
+    jumpToDate((new Date()).toLocaleDateString('en-CA'));
 });
 
 
@@ -146,6 +141,7 @@ addNewJobBtn.addEventListener('click', async () => {
         async (newJob) => {
             await insertDBEntry(BUSINESS_SCHEMA, JOBS_TABLE, newJob, settings);
             await buildCalender();
+            jumpToDate(newJob.shipDate);
         },
         async (oldJob) => {
             // await buildCalender();
@@ -227,6 +223,7 @@ async function buildCalender(scrollTo) {
             if (dates.today.toDateString('en-CA') === dateIndex.toDateString('en-CA')) {
                 dayContainer.id = "today";
             }
+            dayContainer.classList.add(`date-${date}`);
             dayContainer.classList.add('day');
             dayContainer.addEventListener('dragenter', () => {dayContainer.classList.add('drag-over')});
             dayContainer.addEventListener('dragleave', () => {dayContainer.classList.remove('drag-over')});
@@ -412,6 +409,16 @@ function getCorrectDate(date) {
     const utcDate = new Date(date);
     return new Date(utcDate.getTime() + utcDate.getTimezoneOffset() * 60000);
 }
+
+function jumpToDate(date) {
+    const todayElement = document.querySelector(`.date-${date}`);
+    if (todayElement === null) return;
+    todayElement.scrollIntoView();
+    todayElement.style.backgroundColor = "var(--yes)";
+    setTimeout(() => {
+        todayElement.style.backgroundColor = "var(--background_color)";
+    }, 1000);
+};
 
 function offsetMonthBecauseJSIsStupid(date) {
     return [date.split("-")[0], Number(date.split("-")[1]) - 1, date.split("-")[2]].join("-")
