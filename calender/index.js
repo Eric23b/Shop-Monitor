@@ -37,6 +37,11 @@ import {
 } from "../directives.js";
 
 import {
+    stopRunningTimer,
+    startOverTimeTimer,
+} from "../timer-utilities.js";
+
+import {
     getTableDataWithText,
     getTableDataWithProgressBar,
     getTableDataRow,
@@ -106,6 +111,8 @@ document.querySelector('#calender').addEventListener('contextmenu', (event) => {
 });
 
 buildCalender("today");
+
+startOverTimeTimer(stationName, settings, stopRunningTimer);
 
 
 
