@@ -146,6 +146,26 @@ export async function createTable(table, schema, serverSettings, dbActiveCallbac
     }
 }
 
+export async function dropTable(table, schema, serverSettings, dbActiveCallback) {
+    const headers = getBasicHeaders(serverSettings.authorization);
+    const raw = JSON.stringify({
+        "operation": "drop_table",
+        "schema": schema,
+        "table": table
+    });
+    const requestOptions = buildRequestOptions(headers, raw);
+    const response = await sendDBRequest(serverSettings.url, requestOptions);
+
+    if (dbActiveCallback) dbActiveCallback(!response.error);
+
+    if (response.message) {
+        return response.message;
+    }
+    else {
+        return response.error;
+    }
+}
+
 /**
  * Adds columns/attributes to a table 
  * @param {[String]} attributes - An array of column/attribute titles
