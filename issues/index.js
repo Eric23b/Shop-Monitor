@@ -22,6 +22,7 @@ import {
 import {
     stopRunningTimer,
     startOverTimeTimer,
+    addNumberOfRunningTimersToTimerPageLink,
 } from "../timer-utilities.js";
 
 import {
@@ -45,6 +46,8 @@ const itemList = [];
 const errorMessage = document.querySelector("#error-message");
 
 const reportContainer = document.querySelector("#report-container");
+
+const timerPageLink = document.querySelector('.timer-page-link');
 
 const issuesSelect = document.querySelector("#issues-select");
 
@@ -128,6 +131,7 @@ else {
 
 startOverTimeTimer(station, settings, stopRunningTimer);
 
+addNumberOfRunningTimersToTimerPageLink(timerPageLink, station, settings);
 
 
 

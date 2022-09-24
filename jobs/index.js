@@ -18,6 +18,7 @@ import {
     Timer,
     stopRunningTimer,
     startOverTimeTimer,
+    addNumberOfRunningTimersToTimerPageLink,
 } from "../timer-utilities.js";
 
 const settings = {
@@ -25,6 +26,8 @@ const settings = {
     authorization: ""
 }
 let station = "";
+
+const timerPageLink = document.querySelector('.timer-page-link');
 
 const cardsContainer = document.querySelector("#cards-container");
 
@@ -86,10 +89,9 @@ const timer = new Timer(() => {
 
 startOverTimeTimer(station, settings, stopRunningTimer);
 
-// await checkOverTimers(station, settings, stopRunningTimer);
-// setInterval( async () => {
-//     await checkOverTimers(station, settings, stopRunningTimer);
-// }, 30000);
+addNumberOfRunningTimersToTimerPageLink(timerPageLink, station, settings);
+
+
 
 
 // EVENT LISTENERS

@@ -39,6 +39,7 @@ import {
 import {
     stopRunningTimer,
     startOverTimeTimer,
+    addNumberOfRunningTimersToTimerPageLink,
 } from "../timer-utilities.js";
 
 import {
@@ -71,6 +72,8 @@ const settings = {
 
 let draggingJobID = "";
 let draggingEventID = "";
+
+const timerPageLink = document.querySelector('.timer-page-link');
 
 const addNewJobBtn = document.querySelector('#add-job-btn');
 const addNewEventBtn = document.querySelector('#add-event-btn');
@@ -114,6 +117,7 @@ buildCalender("today");
 
 startOverTimeTimer(stationName, settings, stopRunningTimer);
 
+addNumberOfRunningTimersToTimerPageLink(timerPageLink, stationName, settings);
 
 
 // Event listeners

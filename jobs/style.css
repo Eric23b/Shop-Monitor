@@ -83,6 +83,12 @@ summary{
     cursor: pointer;
 }
 
+.timer-page-link::after{
+    content: attr(data-number-of-running-timers);
+    margin-bottom: 0.5em;
+    color: var(--yes);
+}
+
 .view{
     display: flex;
     flex-direction: column;

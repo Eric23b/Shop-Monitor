@@ -102,6 +102,38 @@ export async function stopRunningTimer(runningTimer, station, serverSettings, re
     }
 }
 
+export function addNumberOfRunningTimersToTimerPageLink(timerPageLinkElement, stationName, settings) {
+    addTextToAfterElement();
+
+    setInterval(async () => {
+        await addTextToAfterElement();
+    }, 60000);
+
+    async function addTextToAfterElement() {
+        if (stationName === "") return;
+
+        const numberOfTimers = await numberOfRunningTimers(stationName, settings);
+        let linkText = "Timer";
+        let afterText = "";
+        if (numberOfTimers > 0) {
+            linkText = "Timers";
+            afterText = `(${numberOfTimers})`;
+        }
+        timerPageLinkElement.textContent = linkText;
+        timerPageLinkElement.setAttribute('data-number-of-running-timers', afterText);
+    }
+}
+
+export async function numberOfRunningTimers(station, serverSettings) {
+    const runningTimersResponse = await getDBEntrees(LOGS_SCHEMA, RUNNING_TIMER_TABLE, "station", station, serverSettings);
+    if ((!runningTimersResponse) || (runningTimersResponse.error || (runningTimersResponse.length == 0))) {
+        return 0;
+    }
+    else {
+        return runningTimersResponse.length;
+    }
+}
+
 export function timeToDecimal(time) {
     const hours24 = (time.includes("p") || time.includes("P")) ? 12 : 0;
     const nowHours = Number(time.split(':')[0]) + hours24;

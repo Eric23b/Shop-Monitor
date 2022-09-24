@@ -88,6 +88,12 @@ body{
     opacity: 1;
 }
 
+.timer-page-link::after{
+    content: attr(data-number-of-running-timers);
+    margin-bottom: 0.5em;
+    color: var(--yes);
+}
+
 #error-message{
     flex-grow: 10;
     overflow: hidden;
