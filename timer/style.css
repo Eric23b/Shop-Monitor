@@ -166,24 +166,6 @@ textarea{
     border-radius: .5rem;
 }
 
-/* button{
-    font-size: 1.25em;
-    width: 100%;
-    padding: 0.5rem;
-    margin: 0.5rem 0;
-    border: 1px solid #555;
-    border-radius: .5rem;
-    cursor: pointer;
-    color: var(--color);
-    background-color: var(--background_color);
-}
-button:hover{
-    color: var(--background_color);
-    background-color: var(--color);
-}
-button:disabled{
-    color: var(--border_color);
-} */
 
 #reset{
     display: block;
@@ -245,17 +227,6 @@ button:disabled{
     border-radius: .5rem;
     cursor: pointer;
 }
-/* .start-stop:hover{
-    color: var(--background_color);
-    background-color: var(--color);
-} */
-/* #start-btn{
-    color: var(--background_color);
-    background-color: limegreen;
-}
-#start-btn:active{
-    background-color: var(--color);
-} */
 #stop-btn{
     color: var(--background_color);
     background-color: red;
@@ -367,54 +338,6 @@ button:disabled{
     color: red;
 }
 
-
-/* MODAL */
-.modal-background{
-    position: fixed;
-    inset: 0;
-    display: none;
-    flex-direction: row;
-    justify-content: center;
-    align-items: center;
-    background: var(--background_color_transparent);
-    z-index: 10;
-}
-.modal-container{
-    padding: 1rem;
-    border: 1px solid var(--border_color);
-    border-radius: 0.5rem;
-    background: var(--background_color);
-}
-.modal-title{
-
-}
-.modal-input{
-    border: 1px solid var(--border_color);
-    border-radius: 0.25rem;
-    margin-bottom: 1rem;
-    font-size: larger;
-    color: var(--color);
-    background: var(--background_color);
-}
-.modal-buttons-container{
-    display: flex;
-    flex-direction: row;
-    justify-content: flex-end;
-    gap: 1rem;
-}
-.modal-button{
-    cursor: pointer;
-    padding: 0.5rem 1rem;
-    font-size: larger;
-    border: 1px solid var(--border_color);
-    border-radius: 0.5rem;
-    color: var(--color);
-    background: var(--background_color);
-}
-.modal-button:active{
-    color: var(--background_color);
-    background: var(--color);
-}
 
 .super-user{
     display: none;

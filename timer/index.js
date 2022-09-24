@@ -49,10 +49,6 @@ const addTimeHoursInput = document.querySelector("#hours-input");
 const addTimeMinutesInput = document.querySelector("#minutes-input");
 const addTimeBtn = document.querySelector("#add-time-btn");
 
-const yesNoModal = document.querySelector("#yes-no-item-modal");
-const yesNoModalYesBtn = document.querySelector("#yes-btn");
-const yesNoModalNoBtn = document.querySelector("#no-btn");
-
 // ---Event Listeners---
 
 // Got to home page
@@ -154,7 +150,7 @@ async function loadRunningTimers() {
         cancelBtn.classList.add('cancel-btn');
         cancelBtn.textContent = "Cancel";
         cancelBtn.addEventListener('click', async () => {
-            await showYesNoModal(async () => {
+            showYesNoDialog("Cancel timer?", async () => {
                 await deleteDBEntry(LOGS_SCHEMA, RUNNING_TIMER_TABLE, runningTimer.id, settings);
                 await loadRunningTimers();
                 await updateStartBtn();
@@ -292,7 +288,6 @@ async function loadTasks() {
 
     // Old system
     if (typeof stationResponse[0].tasks === "string") {
-        console.log(typeof stationResponse[0].tasks);
         const tasks = stationResponse[0].tasks.split(',');
         tasks.forEach(task => {
             task = task.trim();
@@ -437,16 +432,6 @@ function clearAddTimeFields() {
     addTimeMinutesInput.value = '';
 }
 
-async function showYesNoModal(yesCallback) {
-    yesNoModal.style.display = 'flex';
-    yesNoModalYesBtn.onclick = () => {
-        yesCallback();
-        yesNoModal.style.display = 'none';
-    };
-    yesNoModalNoBtn.onclick = () => {
-        yesNoModal.style.display = 'none';
-    };
-}
 async function canEditJobs() {
     if (superUser) return true;
     const userInfo = await getUserInfo(settings);
