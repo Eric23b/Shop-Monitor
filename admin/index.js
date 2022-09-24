@@ -10,6 +10,7 @@ import {
     deleteDBEntry,
     createSchema,
     createTable,
+    dropTable,
     createAttributes,
     describeDatabase,
     getUniqueColumnValues
@@ -102,6 +103,7 @@ const timersTabContainer = document.querySelector("#timers-container");
 // const timersJobFilter = document.querySelector("#timers-job-filter-input");
 const saveTimerLogsBtn = document.querySelector("#save-timer-log-btn");
 const timersTable = document.querySelector("#timers-table");
+const deleteTimerLogsBtn = document.querySelector("#delete-timer-logs-btn");
 
 const jobsTabContainer = document.querySelector("#jobs-container");
 // const newJobNameInput = document.querySelector("#job-input");
@@ -296,6 +298,16 @@ tabHeader.addEventListener('click', async (event) => {
 // Save timer logs
 saveTimerLogsBtn.addEventListener('click', () => {
     saveTextFile(timerLogCSV, `Timer Logs ${(new Date()).toLocaleDateString()}`, "csv");
+});
+// Delete Timer Logs
+deleteTimerLogsBtn.addEventListener('click', async () => {
+    showYesNoDialog("Are you sure you want to delete all timer logs?", async () => {
+        let message = await dropTable(COMPLETED_TIMER_TABLE, LOGS_SCHEMA, settings, dbActive) + "\n";
+        message += await createTable(COMPLETED_TIMER_TABLE, LOGS_SCHEMA, settings, dbActive) + "\n";
+        message += await createAttributes(TABLE_ATTRIBUTES.completed_timers, COMPLETED_TIMER_TABLE, LOGS_SCHEMA, settings, dbActive) + "\n";
+        showAlertDialog(message);
+        await loadTimersTable();
+    });
 });
 
 // Add job button
