@@ -21,6 +21,13 @@ import {
     addNumberOfRunningTimersToTimerPageLink,
 } from "../timer-utilities.js";
 
+import {
+    showYesNoDialog,
+    showAlertDialog,
+    showInputDialog,
+    showJobDialog,
+} from "../dialogs.js";
+
 const settings = {
     url: "",
     authorization: ""
@@ -42,14 +49,6 @@ const addCheckboxModal = document.querySelector("#add-check-item-modal");
 const addCheckboxModalInput = document.querySelector("#add-checkbox-input");
 const addCheckboxModalOk = document.querySelector("#add-checkbox-ok-btn");
 const addCheckboxModalCancel = document.querySelector("#add-checkbox-cancel-btn");
-
-const yesNoModal = document.querySelector("#yes-no-item-modal");
-const yesNoModalYesBtn = document.querySelector("#yes-btn");
-const yesNoModalNoBtn = document.querySelector("#no-btn");
-
-// const yesNoModal = document.querySelector("#yes-no-item-modal");
-// const yesNoModalYesBtn = document.querySelector("#yes-btn");
-// const yesNoModalNoBtn = document.querySelector("#no-btn");
 
 const tasksDataList = document.querySelector("#tasks");
 
@@ -403,7 +402,7 @@ async function loadJobs(event, searchValue) {
             checkContainer.classList.add('check-container');
             checkContainer.addEventListener('dblclick', async (event) => {
                 event.preventDefault();
-                showYesNoModal( async () => {
+                showYesNoDialog("Delete check item?", async () => {
                     checkValues.splice(checkValuesIndex, 1);
 
                     let checklistArray = [];
@@ -506,20 +505,8 @@ async function showAddCheckboxModal(okCallback) {
     };
 }
 
-
-async function showYesNoModal(yesCallback) {
-    yesNoModal.style.display = 'flex';
-    yesNoModalYesBtn.onclick = () => {
-        yesCallback();
-        yesNoModal.style.display = 'none';
-    };
-    yesNoModalNoBtn.onclick = () => {
-        yesNoModal.style.display = 'none';
-    };
-}
-
 function noModalsAreOpen() {
-    return !((addCheckboxModal.style.display == 'flex') || (yesNoModal.style.display == 'flex'));
+    return !((addCheckboxModal.style.display == 'flex'));
 }
 
 function getLocalStorageValue(key) {

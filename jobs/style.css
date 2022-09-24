@@ -2,7 +2,7 @@
 :root{
     --color: #191d25;
     --background_color: #edeff3;
-    --background_color_transparent: rgba(237, 239, 243, 0.8);
+    --background_transparent_color: rgba(237, 239, 243, 0.8);
     --background_hover_color: #b2b8c6;
     --border_color: #454750;
     --active: #191d25;
@@ -16,7 +16,7 @@
     /* :root{ */
         --color: #e0e0eb;
         --background_color: #13131a;
-        --background_color_transparent: rgba(19, 19, 26, 0.8);
+        --background_transparent_color: rgba(19, 19, 26, 0.8);
         --background_hover_color: #2b2b31;
         --border_color: #51525a;
         --active: #e0e0eb;
@@ -41,6 +41,24 @@
     color: var(--background_color);
     background-color: var(--color);
 }
+*::-webkit-scrollbar-thumb:hover {
+    background-color: var(--color);
+}
+*::-webkit-scrollbar {
+    width: 12px;
+    height: 12px;
+}
+*::-webkit-scrollbar-track {
+    background: var(--background_color);
+}
+*::-webkit-scrollbar-thumb {
+    background-color: var(--border_color);
+    border-radius: 20px;
+    border: 3px solid var(--background_color);
+}
+*::-webkit-scrollbar-corner {
+    background: var(--background_color);
+}
 
 /* html{
     color: var(--color);
@@ -64,7 +82,7 @@ main{
     justify-content: flex-start;
     /* gap: 1rem; */
     padding-bottom: 1rem;
-    background-color: var(--background_color_transparent);
+    background-color: var(--background_transparent_color);
     border-width: 0 0 1px 0;
     border-style: solid;
     border-color: var(--border_color);
@@ -248,7 +266,7 @@ label{
 .cards-container{
     /* margin-top: 10rem; */
     flex-grow: 1;
-    overflow: scroll;
+    overflow-y: scroll;
     padding-top: 1rem;
 }
 
@@ -446,7 +464,7 @@ label{
     flex-direction: row;
     justify-content: center;
     align-items: center;
-    background: var(--background_color_transparent);
+    background: var(--background_transparent_color);
     z-index: 10;
 }
 .modal-container{
