@@ -4,7 +4,6 @@ const modalBackgroundStyles = `
     display: grid;
     justify-content: center;
     align-items: center;
-    background: var(--background_color_transparent);
     background-color: var(--background_transparent_color);
     z-index: 100;
     overflow: scroll;`;
