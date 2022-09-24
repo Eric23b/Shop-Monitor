@@ -146,6 +146,8 @@ const colorSelectBlock = `
 let draggingTask = {taskIndex: 0, sequenceName: ""};
 
 export function showJobDialog(job, jobs, allTasks, OKCallback, cancelCallback) {
+    const isNewJob = job === null;
+
     if (!job) job = {active: true};
 
     // TODO: check if job name already exists
@@ -230,11 +232,13 @@ export function showJobDialog(job, jobs, allTasks, OKCallback, cancelCallback) {
             return;
         }
 
-        let jobFound = false;
-        jobs.forEach((job) => {if (job.name === jobName) jobFound = true;});
-        if (jobFound) {
-            showAlertDialog(`${jobName} job already exists.`);
-            return;
+        if (isNewJob) {
+            let jobFound = false;
+            jobs.forEach((aJob) => {if (String(aJob.name) === String(jobName)) jobFound = true;});
+            if (jobFound) {
+                showAlertDialog(`${jobName} job already exists.`);
+                return;
+            }
         }
 
         job.name = jobName;
