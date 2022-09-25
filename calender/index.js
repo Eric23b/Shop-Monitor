@@ -58,6 +58,7 @@ import {
     showAlertDialog,
     showInputDialog,
     showJobDialog,
+    showJobCardDialog,
     showCalendarEventDialog,
 } from "../dialogs.js";
 
@@ -234,6 +235,7 @@ async function buildCalender(scrollTo) {
             dayContainer.addEventListener('dragover', (event) => {event.preventDefault()});
             dayContainer.addEventListener('drop', async () => {
                 dayContainer.classList.remove('drag-over');
+
                 if (draggingJobID && canEditJob) {
                     await updateDBEntry(BUSINESS_SCHEMA, JOBS_TABLE, {id: draggingJobID, shipDate: date}, settings);
                 }
@@ -289,9 +291,6 @@ async function buildCalender(scrollTo) {
                                 async (newJob) => {
                                     await updateDBEntry(BUSINESS_SCHEMA, JOBS_TABLE, newJob, settings);
                                     await buildCalender();
-                                },
-                                async (oldJob) => {
-                                    // await buildCalender();
                                 }
                             );
                         };
@@ -303,6 +302,17 @@ async function buildCalender(scrollTo) {
                             });
                         });
                     }
+                    // else { // Can't edit jobs
+                    //     jobTitle.style.cursor = 'pointer';
+                    //     jobTitle.onclick = async () => {
+                    //         const jobsResponse = await getDBEntrees(BUSINESS_SCHEMA, JOBS_TABLE, "id", "*", settings);
+                    //         if ((!jobsResponse) || (jobsResponse.error)) return;
+                            
+                    //         showJobCardDialog(job, async (newJob) => {
+                    //             await updateDBEntry(BUSINESS_SCHEMA, JOBS_TABLE, newJob, settings);
+                    //         });
+                    //     };
+                    // }
                     jobsContainer.appendChild(jobTitle);
                 }
             });

@@ -141,15 +141,47 @@ const colorSelectBlock = `
     color: black;
     cursor: pointer;`;
 
+const jobCardTitleStyles = `
+    margin: 0;`;
+const jobCardShipDateStyles = `
+    margin: 0;`;
+const jobCardDueInDaysStyles = `
+    margin: 0;`;
 
 let draggingTask = {taskIndex: 0, sequenceName: ""};
+
+export function showJobCardDialog(job, OKCallback) {
+    const body = document.querySelector('body');
+    const modalBackground = getModalBackground();
+    const modalWindow = getModalWindow();
+    modalWindow.style.alignItems = 'center';
+
+    const jobTitle = document.createElement('h2');
+    jobTitle.textContent = job.name;
+    jobTitle.style.cssText = jobCardTitleStyles;
+    
+    const shipDate = document.createElement('h3');
+    shipDate.textContent = job.shipDate;
+    shipDate.style.cssText = jobCardShipDateStyles;
+
+    const dueInDays = document.createElement('p');
+    dueInDays.textContent = job.shipDate;
+    dueInDays.style.cssText = jobCardDueInDaysStyles;
+
+    // Ok button
+    const okBtn = getButton("OK", () => {
+        body.removeChild(modalBackground);
+    });
+    
+    modalWindow.append(jobTitle, shipDate, dueInDays, okBtn);
+    modalBackground.appendChild(modalWindow);
+    body.appendChild(modalBackground);
+}
 
 export function showJobDialog(job, jobs, allTasks, OKCallback, cancelCallback) {
     const isNewJob = job === null;
 
     if (!job) job = {active: true};
-
-    // TODO: check if job name already exists
 
     const body = document.querySelector('body');
     const modalBackground = getModalBackground();
