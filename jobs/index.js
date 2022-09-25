@@ -141,16 +141,6 @@ function search() {
     loadJobs(null, searchInput.value);
 }
 
-function differenceInDays(dateOne, dateTwo) {
-    const date1 = new Date(dateOne);
-    const date2 = new Date(dateTwo);
-    
-    const differenceInTime = date2.getTime() - date1.getTime();
-    const differenceInDays = differenceInTime / (1000 * 3600 * 24);
-
-    return Math.floor(differenceInDays);
-}
-
 // Load
 async function loadJobs(event, searchValue) {
     const jobsResponse = await getDBEntrees(BUSINESS_SCHEMA, JOBS_TABLE, "active", "true", settings);
@@ -457,6 +447,22 @@ async function loadJobs(event, searchValue) {
     // }
 }
 
+function differenceInDays(dateOne, dateTwo) {
+    const date1 = getCorrectDate(dateOne);
+    const date2 = getCorrectDate(dateTwo);
+    
+    const differenceInTime = date2.getTime() - date1.getTime();
+    const differenceInDays = differenceInTime / (1000 * 3600 * 24);
+
+    return Math.floor(differenceInDays);
+}
+
+function getCorrectDate(date) {
+    // Stupid javascript
+    const utcDate = new Date(date);
+    return new Date(utcDate.getTime() + utcDate.getTimezoneOffset() * 60000);
+}
+
 function getJobTimes(job) {
     // Calculate shop hours
     let times = {};
@@ -531,7 +537,6 @@ function updateDateTime() {
 async function canEditJobs() {
     if (superUser) return true;
     const userInfo = await getUserInfo(settings);
-    console.log(userInfo)
     const readJobs = userInfo.role.permission.business_schema.tables.jobs.read;
     const insertJobs = userInfo.role.permission.business_schema.tables.jobs.insert;
     const deleteJobs = userInfo.role.permission.business_schema.tables.jobs.delete;
