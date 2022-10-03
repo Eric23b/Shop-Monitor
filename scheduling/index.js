@@ -62,13 +62,6 @@ const theme = getLocalStorageValue('theme') || "light";
 
 const addNewJobBtn = document.querySelector('#add-job-btn');
 
-// Add Tasks From Text
-const addTaskFromTextModalBackground = document.querySelector('#add-task-from-text-modal-background');
-const addTaskFromTextModalSequenceName = document.querySelector('#tasks-from-text-sequence-name');
-const addTasksFromTextTextArea = document.querySelector('#add-tasks-from-text-textarea');
-const addTasksFromTextOKBtn = document.querySelector('#tasks-from-text-ok-btn');
-const addTasksFromTextCancelBtn = document.querySelector('#tasks-from-text-cancel-btn');
-
 const tableRows = document.querySelectorAll('.jobs-table tr');
 const jobsTable = document.querySelector('#jobs-table');
 const grabbers = document.querySelectorAll('.grabber');
@@ -170,7 +163,7 @@ async function loadJobs(jobs) {
         const tasksResponse = await getDBEntrees(BUSINESS_SCHEMA, TASKS_TABLE, "id", "*", settings);
         if ((!tasksResponse) || (tasksResponse.error)) return;
         if (tasksResponse.length == 0) return;
-        const dailyAvailableShopHoursDec = await getTotalAvailableShopHoursDec(tasksResponse);
+        const dailyAvailableShopHoursDec = await getAvailableShopHours(tasksResponse);
     
         const dayIndex = new Date();
         setToNextWorkDay(dayIndex);
@@ -180,7 +173,7 @@ async function loadJobs(jobs) {
             if (!job.active) return;
 
             const jobTimes = getJobTimes(job);
-            jobTimes.daysToCompleteDec = jobTimes.totalTimeRemainingDec / dailyAvailableShopHoursDec;
+            jobTimes.daysToCompleteDec = jobTimes.totalTimeRemainingDec / dailyAvailableShopHoursDec.total;
             
             jobTimes.startDay = new Date(dayIndex);
 
@@ -386,7 +379,7 @@ function setToNextWorkDay(date) {
     }
 }
 
-async function getTotalAvailableShopHoursDec(tasksResponse) {
+async function getAvailableShopHours(tasksResponse) {
     // const tasksResponse = await getDBEntrees(BUSINESS_SCHEMA, TASKS_TABLE, "id", "*", settings);
     if ((!tasksResponse) || (tasksResponse.error)) return;
     if (tasksResponse.length == 0) return;
@@ -400,7 +393,7 @@ async function getTotalAvailableShopHoursDec(tasksResponse) {
     totalHours = Number(totalHours + Math.floor(totalMinutes / 60));
     totalMinutes = Number((((totalMinutes / 60) % 1) * 60).toFixed(0));
     let totalDecimalTime = totalHours + (totalMinutes / 60);
-    return totalDecimalTime;
+    return {total: totalDecimalTime};
 }
 
 function getJobTimes(job) {
