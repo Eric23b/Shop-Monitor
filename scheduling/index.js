@@ -164,6 +164,8 @@ async function loadJobs(jobs) {
         if ((!tasksResponse) || (tasksResponse.error)) return;
         if (tasksResponse.length == 0) return;
         const dailyAvailableShopHoursDec = await getAvailableShopHours(tasksResponse);
+
+        console.log(dailyAvailableShopHoursDec);
     
         const dayIndex = new Date();
         setToNextWorkDay(dayIndex);
@@ -173,7 +175,8 @@ async function loadJobs(jobs) {
             if (!job.active) return;
 
             const jobTimes = getJobTimes(job);
-            jobTimes.daysToCompleteDec = jobTimes.totalTimeRemainingDec / dailyAvailableShopHoursDec.total;
+            console.log(jobTimes.remainingTimePerTaskInMinutes);
+            jobTimes.daysToCompleteDec = jobTimes.totalTimeRemainingInMinutes / dailyAvailableShopHoursDec.total;
             
             jobTimes.startDay = new Date(dayIndex);
 
@@ -384,16 +387,22 @@ async function getAvailableShopHours(tasksResponse) {
     if ((!tasksResponse) || (tasksResponse.error)) return;
     if (tasksResponse.length == 0) return;
 
+    const returnObject = {};
+
     let totalHours = 0;
     let totalMinutes = 0;
     tasksResponse.forEach((task) => {
         totalHours += task.hours;
         totalMinutes += task.minutes;
+
+        returnObject[task.id] = Number(task.hours * 60) + Number(task.minutes);
     });
     totalHours = Number(totalHours + Math.floor(totalMinutes / 60));
     totalMinutes = Number((((totalMinutes / 60) % 1) * 60).toFixed(0));
-    let totalDecimalTime = totalHours + (totalMinutes / 60);
-    return {total: totalDecimalTime};
+    returnObject.total = totalHours + (totalMinutes / 60);
+
+    returnObject.totalMinutes = Number(totalHours * 60) + Number(totalMinutes);
+    return returnObject;
 }
 
 function getJobTimes(job) {
@@ -404,6 +413,7 @@ function getJobTimes(job) {
     times.completedHours = 0;
     times.completedMinutes = 0;
     times.allTasksCompleted = true;
+    times.remainingTimePerTaskInMinutes = {};
     if (job.sequences) {
         job.sequences.forEach((sequence) => {
             if (sequence.tasks) {
@@ -413,8 +423,10 @@ function getJobTimes(job) {
                     if (task.completed) {
                         times.completedHours += Number(task.hours);
                         times.completedMinutes += Number(task.minutes);
+                        times.remainingTimePerTaskInMinutes[task.id] = 0;
                     }
                     else {
+                        times.remainingTimePerTaskInMinutes[task.id] = Number(task.hours * 60) + Number(task.minutes);
                         times.allTasksCompleted = false;
                     }
                 });
@@ -427,6 +439,10 @@ function getJobTimes(job) {
     times.totalCompletedTimeDec = times.completedHours + (times.completedMinutes / 60);
     times.totalTimeRemainingDec = times.totalTimeDec - times.totalCompletedTimeDec;
     times.percentCompleted = ((times.totalCompletedTimeDec / times.totalTimeDec) * 100).toFixed(0);
+
+    const totalTimeInMinutes = ((times.totalHours * 60) + times.totalMinutes);
+    const totalCompletedTimeInMinutes = ((times.completedHours * 60) + times.completedMinutes);
+    times.totalTimeRemainingInMinutes = totalTimeInMinutes - totalCompletedTimeInMinutes;
     return times;
 }
 
