@@ -114,7 +114,6 @@ addNewJobBtn.addEventListener('click', async () => {
     );
 });
 
-
 await loadJobs();
 
 
@@ -151,6 +150,41 @@ async function loadJobs(jobs) {
     await updateEstimateDates(jobs);
 
     async function updateEstimateDates(jobs) {
+
+        class ChronologicalTaskPointer {
+            constructor(tasksResponse) {
+                this.tasks = JSON.parse(JSON.stringify(tasksResponse));
+                this.tasks.forEach((task) => {
+                    task.dailyAvailableMinutes = (task.hours * 60) + task.minutes;
+                    task.minutePointer = 0;
+                });
+                this.lastMinutePointer = 0;
+            }
+
+            incTaskPointer(taskID, minutes, newSequence) {
+                const finishDate = this.#getToday();
+                let daysRemaining = 0;
+                let taskFound = false;
+                this.tasks.forEach((task) => {
+                    if (task.id === taskID) {
+                        taskFound = true;
+
+                        daysRemaining = Math.floor(((newSequence ? this.lastMinutePointer : 0) + task.minutePointer + minutes) / task.dailyAvailableMinutes);
+                        task.minutePointer += minutes;
+                        this.lastMinutePointer = task.minutePointer;
+                        incWorkDay(finishDate, daysRemaining);
+                    }
+                });
+                if (!taskFound) console.log("Task not found.");
+                return finishDate;
+            }
+
+            #getToday() {
+                const utcDate = new Date();
+                return new Date(utcDate.getTime() + utcDate.getTimezoneOffset() * 60000);
+            }
+        }
+
         // Sort by index
         jobs.sort((a, b) => {
             const nameA = a.index;
@@ -163,31 +197,30 @@ async function loadJobs(jobs) {
         const tasksResponse = await getDBEntrees(BUSINESS_SCHEMA, TASKS_TABLE, "id", "*", settings);
         if ((!tasksResponse) || (tasksResponse.error)) return;
         if (tasksResponse.length == 0) return;
-        const dailyAvailableShopHoursDec = await getAvailableShopHours(tasksResponse);
 
-        console.log(dailyAvailableShopHoursDec);
-    
-        const dayIndex = new Date();
-        setToNextWorkDay(dayIndex);
-        let dayFraction = 0;
+        const taskPointerObj = new ChronologicalTaskPointer(tasksResponse);
 
         jobs.forEach((job) => {
             if (!job.active) return;
+            if (!job.sequences) return;
 
-            const jobTimes = getJobTimes(job);
-            console.log(jobTimes.remainingTimePerTaskInMinutes);
-            jobTimes.daysToCompleteDec = jobTimes.totalTimeRemainingInMinutes / dailyAvailableShopHoursDec.total;
-            
-            jobTimes.startDay = new Date(dayIndex);
+            let dateOfCompletion = (new Date()).toLocaleDateString('en-CA');
+            job.sequences.forEach((sequence) => {
+                if (!sequence.tasks) return;
 
-            const fraction = Number((jobTimes.daysToCompleteDec % 1).toFixed(3));
-            incWorkDay(dayIndex, Math.floor(jobTimes.daysToCompleteDec) + Math.floor(dayFraction + fraction));
-            dayFraction = Number(((dayFraction + fraction) % 1).toFixed(3));
-            
-            jobTimes.shipDay = new Date(dayIndex);
-
-            job.estimatedDate = jobTimes.shipDay.toLocaleDateString('en-CA');
+                let newSequence = true;
+                sequence.tasks.forEach((task) => {
+                    if (!task.completed) {
+                        const remainingTimePerTaskInMinutes = Number(task.hours * 60) + Number(task.minutes);
+                        dateOfCompletion = taskPointerObj.incTaskPointer(task.id, remainingTimePerTaskInMinutes, newSequence).toLocaleDateString('en-CA');
+                    }
+                    newSequence = false;
+                });
+            });
+            job.estimatedDate = dateOfCompletion;
         });
+
+
 
         // Sort by index
         jobs.sort((a, b) => {
@@ -362,48 +395,46 @@ function incWorkDay(date, amount) {
         date.setDate(date.getDate() + 1);
         const dayName = (date.toLocaleString('default', {weekday: 'short'}));
         if (dayName === "Sat") {
-            index += 2;
             date.setDate(date.getDate() + 2);
         }
         if (dayName === "Sun") {
-            index += 1;
             date.setDate(date.getDate() + 1);
         }
     }
 }
     
-function setToNextWorkDay(date) {
-    const dayName = (date.toLocaleString('default', {weekday: 'short'}));
-    if (dayName === "Sat") {
-        date.setDate(date.getDate() + 2);
-    }
-    if (dayName === "Sun") {
-        date.setDate(date.getDate() + 1);
-    }
-}
+// function setToNextWorkDay(date) {
+//     const dayName = (date.toLocaleString('default', {weekday: 'short'}));
+//     if (dayName === "Sat") {
+//         date.setDate(date.getDate() + 2);
+//     }
+//     if (dayName === "Sun") {
+//         date.setDate(date.getDate() + 1);
+//     }
+// }
 
-async function getAvailableShopHours(tasksResponse) {
-    // const tasksResponse = await getDBEntrees(BUSINESS_SCHEMA, TASKS_TABLE, "id", "*", settings);
-    if ((!tasksResponse) || (tasksResponse.error)) return;
-    if (tasksResponse.length == 0) return;
+// async function getAvailableShopHours(tasksResponse) {
+//     // const tasksResponse = await getDBEntrees(BUSINESS_SCHEMA, TASKS_TABLE, "id", "*", settings);
+//     if ((!tasksResponse) || (tasksResponse.error)) return;
+//     if (tasksResponse.length == 0) return;
 
-    const returnObject = {};
+//     const returnObject = {};
 
-    let totalHours = 0;
-    let totalMinutes = 0;
-    tasksResponse.forEach((task) => {
-        totalHours += task.hours;
-        totalMinutes += task.minutes;
+//     let totalHours = 0;
+//     let totalMinutes = 0;
+//     tasksResponse.forEach((task) => {
+//         totalHours += task.hours;
+//         totalMinutes += task.minutes;
 
-        returnObject[task.id] = Number(task.hours * 60) + Number(task.minutes);
-    });
-    totalHours = Number(totalHours + Math.floor(totalMinutes / 60));
-    totalMinutes = Number((((totalMinutes / 60) % 1) * 60).toFixed(0));
-    returnObject.total = totalHours + (totalMinutes / 60);
+//         returnObject[task.id] = Number(task.hours * 60) + Number(task.minutes);
+//     });
+//     totalHours = Number(totalHours + Math.floor(totalMinutes / 60));
+//     totalMinutes = Number((((totalMinutes / 60) % 1) * 60).toFixed(0));
+//     returnObject.total = totalHours + (totalMinutes / 60);
 
-    returnObject.totalMinutes = Number(totalHours * 60) + Number(totalMinutes);
-    return returnObject;
-}
+//     returnObject.totalMinutes = Number(totalHours * 60) + Number(totalMinutes);
+//     return returnObject;
+// }
 
 function getJobTimes(job) {
     // Calculate shop hours
