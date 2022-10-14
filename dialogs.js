@@ -524,11 +524,11 @@ function showAddTaskFromTextDialog(sequences, allTasks, OKCallback, cancelCallba
     sequenceTextLabel.appendChild(TextArea);
 
     TextArea.value = `Job Labor   53 hours 47 minutes
-    Cutting   10 hours 54 minutes
-    Banding 2 hours 03 minutes
-    Assembly 8 hours 54 minutes
-    Finishing 28 hours 04 minutes
-    Packaging    3 hours 51 minutes`;
+    Cutting   10 hours 0 minutes
+    Banding 10 hours 0 minutes
+    Assembly 10 hours 0 minutes
+    Finishing 10 hours 0 minutes
+    Packaging    10 hours 0 minutes`;
 
     const modalOKButton = getButton("OK", () => {
         const sequenceName = sequenceNameInput.value;
