@@ -52,7 +52,10 @@ const modalInputTextAreaStyles = `
     font-size: 1.2rem;
     border: 1px solid var(--border_color); `;
 
-const inlineInputLabelStyles = `
+const inputLabelStyles = `
+    font-size: 1.2rem;`;
+const inLineInputLabelStyles = `
+    display: flex;
     font-size: 1.2rem;`;
 const blockInputLabelStyles = `
     width: 100%;
@@ -194,7 +197,7 @@ export function showJobDialog(job, jobs, allTasks, OKCallback, cancelCallback) {
     jobNameInput.value = job.name || "";
     const jobNameLabel = document.createElement('label');
     jobNameLabel.textContent = "Job Name ";
-    jobNameLabel.style.cssText = inlineInputLabelStyles;
+    jobNameLabel.style.cssText = inputLabelStyles;
     jobNameLabel.appendChild(jobNameInput);
 
     // Job Ship Date
@@ -204,8 +207,18 @@ export function showJobDialog(job, jobs, allTasks, OKCallback, cancelCallback) {
     jobShipDateInput.value = job.shipDate || "";
     const jobShipDateLabel = document.createElement('label');
     jobShipDateLabel.textContent = "Ship Date ";
-    jobShipDateLabel.style.cssText = inlineInputLabelStyles;
+    jobShipDateLabel.style.cssText = inputLabelStyles;
     jobShipDateLabel.appendChild(jobShipDateInput);
+
+    // Active
+    const jobActiveInput = document.createElement('input');
+    jobActiveInput.setAttribute('type', 'checkbox');
+    if ((isNewJob) || (job.active)) jobActiveInput.setAttribute('checked', 'checked');
+    jobActiveInput.style.cssText = jobNameInputStyles;
+    const jobActiveLabel = document.createElement('label');
+    jobActiveLabel.textContent = "Active ";
+    jobActiveLabel.style.cssText = inLineInputLabelStyles;
+    jobActiveLabel.appendChild(jobActiveInput);
 
     // Job Notes
     const jobNotesTextArea = document.createElement('textarea');
@@ -274,6 +287,7 @@ export function showJobDialog(job, jobs, allTasks, OKCallback, cancelCallback) {
 
         job.name = jobName;
         job.shipDate = jobShipDateInput.value;
+        job.active = jobActiveInput.checked;
         job.note = jobNotesTextArea.value;
 
         if (OKCallback) OKCallback(job);
@@ -287,7 +301,7 @@ export function showJobDialog(job, jobs, allTasks, OKCallback, cancelCallback) {
     // Button container
     const buttonContainer = getButtonContainer(cancelBtn, OKBtn);
 
-    modalWindow.append(jobNameLabel, jobShipDateLabel, jobNoteLabel, sequenceLabel, modalButtonContainer, buttonContainer);
+    modalWindow.append(jobNameLabel, jobShipDateLabel, jobActiveLabel, jobNoteLabel, sequenceLabel, modalButtonContainer, buttonContainer);
     modalBackground.appendChild(modalWindow);
     body.appendChild(modalBackground);
 }
@@ -689,7 +703,7 @@ export function showCalendarEventDialog(calendarEvent, OKCallback, cancelCallbac
     dateInput.value = calendarEvent.date || "";
     const dateLabel = document.createElement('label');
     dateLabel.textContent = "Date ";
-    dateLabel.style.cssText = inlineInputLabelStyles;
+    dateLabel.style.cssText = inputLabelStyles;
     dateLabel.appendChild(dateInput);
 
     // Text
