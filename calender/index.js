@@ -166,11 +166,9 @@ addNewEventBtn.addEventListener('click', async () => {
 
 // FUNCTIONS
 async function buildCalender(scrollTo) {
-    const jobs = await getDBEntrees(BUSINESS_SCHEMA, JOBS_TABLE, "active", true, settings);
+    const jobs = await getDBEntrees(BUSINESS_SCHEMA, JOBS_TABLE, "id", "*", settings);
+    // const jobs = await getDBEntrees(BUSINESS_SCHEMA, JOBS_TABLE, "active", true, settings);
     if ((!jobs) || (jobs.error) || jobs.length === 0) return;
-
-    const inActiveJobs = await getDBEntrees(BUSINESS_SCHEMA, JOBS_TABLE, "active", false, settings);
-    if ((!inActiveJobs) || (inActiveJobs.error) || inActiveJobs.length === 0) return;
 
     const calendarResponse = await getDBEntrees(BUSINESS_SCHEMA, CALENDAR_TABLE, "id", "*", settings);
 
@@ -277,6 +275,7 @@ async function buildCalender(scrollTo) {
                     jobTitle.setAttribute('draggable', 'true');
                     jobTitle.setAttribute('title', job.note || "");
                     jobTitle.addEventListener('dragstart', () => {draggingJobID = job.id});
+                    if (!job.active) jobTitle.style.color = "var(--inactive)"
                     jobTitle.textContent = job.name;
                     if (canEditJob) {
                         jobTitle.style.cursor = 'pointer';
@@ -314,19 +313,6 @@ async function buildCalender(scrollTo) {
                     //     };
                     // }
                     jobsContainer.appendChild(jobTitle);
-                }
-            });
-
-            // Add Inactive Jobs
-            const inActiveJobsContainer = document.createElement('div');
-            inActiveJobsContainer.classList.add('jobs-container');
-            inActiveJobs.forEach((job) => {
-                if (job.shipDate === dateIndex.toLocaleDateString('en-CA')) {
-                    const jobTitle = document.createElement('p');
-                    jobTitle.setAttribute('title', job.note || "");
-                    jobTitle.textContent = job.name;
-                    jobTitle.style.color = "var(--inactive)"
-                    inActiveJobsContainer.appendChild(jobTitle);
                 }
             });
 
@@ -373,7 +359,7 @@ async function buildCalender(scrollTo) {
             dayContainer.appendChild(dayHeader);
             dayContainer.appendChild(jobsContainer);
             dayContainer.appendChild(eventContainer);
-            dayContainer.appendChild(inActiveJobsContainer);
+            // dayContainer.appendChild(inActiveJobsContainer);
     
             weekContainer.appendChild(dayContainer);
 
