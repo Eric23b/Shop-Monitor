@@ -866,8 +866,14 @@ export function showYesNoDialog(message, yesCallback, noCallback) {
     // modalYesButton.focus();
 }
 
+export function dialogIsOpen () {
+    const openDialogs = document.querySelectorAll('.dialog-is-open');
+    return openDialogs.length > 0;
+}
+
 function getModalBackground() {
     const background = document.createElement('section');
+    background.classList.add('dialog-is-open');
     background.style.cssText = modalBackgroundStyles;
     return background
 }
