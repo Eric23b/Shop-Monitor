@@ -15,8 +15,18 @@ import {
 } from "/directives.js";
 
 export class Timer {
-    constructor(callback, duration) {
-        let timerObj = setInterval(callback, duration);
+    constructor(callback, duration, autoReset) {
+        this.mouseDown = false;
+        if (autoReset) {
+            window.addEventListener('keydown', () => {this.reset()});
+            window.addEventListener('mousedown', () => {
+                this.reset();
+                this.mouseDown = true;
+            });
+            window.addEventListener('mouseup', () => {this.mouseDown = false});
+        }
+
+        let timerObj = setInterval(this.runCallback, duration);
 
         this.stop = function () {
             if (timerObj) {
@@ -30,7 +40,7 @@ export class Timer {
         this.start = function () {
             if (!timerObj) {
                 this.stop();
-                timerObj = setInterval(callback, duration);
+                timerObj = setInterval(this.runCallback, duration);
             }
             return this;
         };
@@ -40,6 +50,13 @@ export class Timer {
             duration = newT;
             return this.stop().start();
         };
+
+        this.runCallback = function() {
+            if (this.mouseDown) return;
+            callback();
+        }
+
+        this.reset();
     }
 }
 
