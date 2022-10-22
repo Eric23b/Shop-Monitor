@@ -702,9 +702,19 @@ export function showCalendarEventDialog(calendarEvent, OKCallback, cancelCallbac
     dateInput.style.cssText = jobNameInputStyles;
     dateInput.value = calendarEvent.date || "";
     const dateLabel = document.createElement('label');
-    dateLabel.textContent = "Date ";
+    dateLabel.textContent = "Start Date ";
     dateLabel.style.cssText = inputLabelStyles;
     dateLabel.appendChild(dateInput);
+
+    // End Date
+    const endDateInput = document.createElement('input');
+    endDateInput.setAttribute('type', 'date');
+    endDateInput.style.cssText = jobNameInputStyles;
+    endDateInput.value = calendarEvent.endDate || calendarEvent.date || "";
+    const endDateLabel = document.createElement('label');
+    endDateLabel.textContent = "End Date ";
+    endDateLabel.style.cssText = inputLabelStyles;
+    endDateLabel.appendChild(endDateInput);
 
     // Text
     const TextArea = document.createElement('textarea');
@@ -741,8 +751,14 @@ export function showCalendarEventDialog(calendarEvent, OKCallback, cancelCallbac
                 (dateInput.value ? "": "Please select a date."));
             return;
         }
+
+        if (getCorrectDate(dateInput.value).valueOf() > getCorrectDate(endDateInput.value).valueOf()) {
+            showAlertDialog("Oops, the end date is before the start date.");
+            return;
+        }
         calendarEvent.name = eventNameInput.value;
         calendarEvent.date = dateInput.value;
+        calendarEvent.endDate = endDateInput.value || dateInput.value;
         calendarEvent.note = TextArea.value;
         calendarEvent.color = selectedColor;
         if (OKCallback) OKCallback(calendarEvent);
@@ -756,7 +772,7 @@ export function showCalendarEventDialog(calendarEvent, OKCallback, cancelCallbac
 
     const modalButtonContainer = getButtonContainer(modalCancelButton, modalOKButton);
 
-    modalWindow.append(modalTitle, eventNameLabel, dateLabel, eventNoteLabel, colorContainer, modalButtonContainer);
+    modalWindow.append(modalTitle, eventNameLabel, dateLabel, endDateLabel, eventNoteLabel, colorContainer, modalButtonContainer);
     modalBackground.appendChild(modalWindow);
     body.appendChild(modalBackground);
     
@@ -905,4 +921,10 @@ function btnMouseOver(event) {
 function btnMouseLeave(event) {
     event.target.style.color = 'var(--color)';
     event.target.style.backgroundColor = 'var(--background_color)';
+}
+
+function getCorrectDate(date) {
+    // Stupid javascript
+    const utcDate = new Date(date);
+    return new Date(utcDate.getTime() + utcDate.getTimezoneOffset() * 60000);
 }

@@ -63,6 +63,7 @@ import {
 } from "../dialogs.js";
 
 const log = console.log;
+let tIndex = 0;
 
 const daysOfTheWeek = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
@@ -72,7 +73,7 @@ const settings = {
 }
 
 let draggingJobID = "";
-let draggingEventID = "";
+let draggingCalendarEvent = {id: "", startDate: "", endDate: "", isStartDate: true};
 
 const timerPageLink = document.querySelector('.timer-page-link');
 
@@ -167,7 +168,6 @@ addNewEventBtn.addEventListener('click', async () => {
 // FUNCTIONS
 async function buildCalender(scrollTo) {
     const jobs = await getDBEntrees(BUSINESS_SCHEMA, JOBS_TABLE, "id", "*", settings);
-    // const jobs = await getDBEntrees(BUSINESS_SCHEMA, JOBS_TABLE, "active", true, settings);
     if ((!jobs) || (jobs.error) || jobs.length === 0) return;
 
     const calendarResponse = await getDBEntrees(BUSINESS_SCHEMA, CALENDAR_TABLE, "id", "*", settings);
@@ -179,6 +179,21 @@ async function buildCalender(scrollTo) {
         if (nameA < nameB) return -1;
         if (nameA > nameB) return 1;
         return 0;
+    });
+
+    // Sort calendar events by number of days
+    calendarResponse.sort((a, b) => {
+        const aEventsLength = Number((a.endDate || a.date ).replaceAll("-", "")) - Number(a.date.replaceAll("-", ""));
+        const bEventsLength = Number((b.endDate || b.date ).replaceAll("-", "")) - Number(b.date.replaceAll("-", ""));
+        if (aEventsLength < bEventsLength) {
+            return -1;
+        }
+        else if (aEventsLength > bEventsLength) {
+            return 1;
+        }
+        else {
+            return 0;
+        }
     });
 
     // Sort by ship date
@@ -208,9 +223,19 @@ async function buildCalender(scrollTo) {
     }
     dateIndex.setDate(dateIndex.getDate() - 98);
     
-    const lastDatePlusOneMonth = new Date(getCorrectDate(dates.lastSaturday));
+    const lastDatePlusOneMonth = getCorrectDate(dates.lastSaturday);
     
     lastDatePlusOneMonth.setDate(lastDatePlusOneMonth.getDate() + 105);
+
+    const allDatesInArray = getAllDatesInArray(dateIndex, lastDatePlusOneMonth);
+    calendarResponse.forEach((calendarEvent) => {
+        calendarEvent.dates = [];
+        allDatesInArray.forEach((date) => {
+            if ((date >= calendarEvent.date) && (date <= calendarEvent.endDate)) {
+                calendarEvent.dates.push(date);
+            }
+        });
+    });
 
     const weeks = [];
 
@@ -221,12 +246,12 @@ async function buildCalender(scrollTo) {
     
         // Loop through days of the week
         for (let dayOfTheWeekIndex = 0; dayOfTheWeekIndex < 7; dayOfTheWeekIndex++) {
-            const date = dateIndex.toLocaleDateString('en-CA');
+            const calendarDate = dateIndex.toLocaleDateString('en-CA');
             const dayContainer = document.createElement('div');
             if (dates.today.toDateString('en-CA') === dateIndex.toDateString('en-CA')) {
                 dayContainer.id = "today";
             }
-            dayContainer.classList.add(`date-${date}`);
+            dayContainer.classList.add(`date-${calendarDate}`);
             dayContainer.classList.add('day');
             dayContainer.addEventListener('dragenter', () => {dayContainer.classList.add('drag-over')});
             dayContainer.addEventListener('dragleave', () => {dayContainer.classList.remove('drag-over')});
@@ -235,13 +260,44 @@ async function buildCalender(scrollTo) {
                 dayContainer.classList.remove('drag-over');
 
                 if (draggingJobID && canEditJob) {
-                    await updateDBEntry(BUSINESS_SCHEMA, JOBS_TABLE, {id: draggingJobID, shipDate: date}, settings);
+                    await updateDBEntry(BUSINESS_SCHEMA, JOBS_TABLE, {id: draggingJobID, shipDate: calendarDate}, settings);
                 }
-                if (draggingEventID && canEditCalendar) {
-                    await updateDBEntry(BUSINESS_SCHEMA, CALENDAR_TABLE, {id: draggingEventID, date: date}, settings);
+                if (draggingCalendarEvent.id && canEditCalendar) {
+                    if (draggingCalendarEvent.startDate === draggingCalendarEvent.endDate) {
+                        await updateDBEntry(BUSINESS_SCHEMA, CALENDAR_TABLE, {id: draggingCalendarEvent.id, date: calendarDate}, settings);
+                    }
+                    else {
+                        let startDate = draggingCalendarEvent.startDate;
+                        let endDate = draggingCalendarEvent.endDate;
+                        if (draggingCalendarEvent.isStartDate) {
+                            if (calendarDate.replaceAll("-", "") > endDate.replaceAll("-", "")) {
+                                startDate = endDate;
+                                endDate = calendarDate;
+                            }
+                            else {
+                                startDate = calendarDate;
+                            }
+                        }
+                        else {
+                            if (calendarDate.replaceAll("-", "") > endDate.replaceAll("-", "")) {
+                                endDate = calendarDate;
+                            }
+                            if (calendarDate.replaceAll("-", "") < startDate.replaceAll("-", "")) {
+                                endDate = startDate;
+                                startDate = calendarDate;
+                            }
+                            else {
+                                endDate = calendarDate;
+                            }
+                        }
+                        await updateDBEntry(BUSINESS_SCHEMA, CALENDAR_TABLE, {
+                            id: draggingCalendarEvent.id,
+                            date: startDate,
+                            endDate: endDate}, settings);
+                    }
                 }
                 draggingJobID = "";
-                draggingEventID = "";
+                draggingCalendarEvent = {id: "", startDate: "", endDate: "", isStartDate: true};
                 await buildCalender();
             });
 
@@ -270,87 +326,100 @@ async function buildCalender(scrollTo) {
             const jobsContainer = document.createElement('div');
             jobsContainer.classList.add('jobs-container');
             jobs.forEach((job) => {
-                if (job.shipDate === dateIndex.toLocaleDateString('en-CA')) {
-                    const jobTitle = document.createElement('p');
-                    jobTitle.setAttribute('draggable', 'true');
-                    jobTitle.setAttribute('title', job.note || "");
-                    jobTitle.addEventListener('dragstart', () => {draggingJobID = job.id});
-                    if (!job.active) jobTitle.style.color = "var(--inactive)"
-                    jobTitle.textContent = job.name;
-                    if (canEditJob) {
-                        jobTitle.style.cursor = 'pointer';
-                        jobTitle.onclick = async () => {
-                            const jobsResponse = await getDBEntrees(BUSINESS_SCHEMA, JOBS_TABLE, "id", "*", settings);
-                            if ((!jobsResponse) || (jobsResponse.error)) return;
+                if (job.shipDate !== dateIndex.toLocaleDateString('en-CA')) return;
                 
-                            const tasksResponse = await getDBEntrees(BUSINESS_SCHEMA, TASKS_TABLE, "id", "*", settings);
-                            if ((!tasksResponse) || (tasksResponse.error)) return;
-                            
-                            showJobDialog(job, jobsResponse, tasksResponse, 
-                                async (newJob) => {
-                                    await updateDBEntry(BUSINESS_SCHEMA, JOBS_TABLE, newJob, settings);
-                                    await buildCalender();
-                                }
-                            );
-                        };
-                        jobTitle.addEventListener('contextmenu', async (event) => {
-                            event.preventDefault();
-                            showYesNoDialog(`Delete "${job.name}"?`, async () => {
-                                await deleteDBEntry(BUSINESS_SCHEMA, JOBS_TABLE, job.id, settings);
+                const jobTitle = document.createElement('p');
+                jobTitle.setAttribute('draggable', 'true');
+                jobTitle.setAttribute('title', job.note || "");
+                jobTitle.addEventListener('dragstart', () => {draggingJobID = job.id});
+                if (!job.active) jobTitle.style.color = "var(--inactive)"
+                jobTitle.textContent = job.name;
+                if (canEditJob) {
+                    jobTitle.style.cursor = 'pointer';
+                    jobTitle.onclick = async () => {
+                        const jobsResponse = await getDBEntrees(BUSINESS_SCHEMA, JOBS_TABLE, "id", "*", settings);
+                        if ((!jobsResponse) || (jobsResponse.error)) return;
+            
+                        const tasksResponse = await getDBEntrees(BUSINESS_SCHEMA, TASKS_TABLE, "id", "*", settings);
+                        if ((!tasksResponse) || (tasksResponse.error)) return;
+                        
+                        showJobDialog(job, jobsResponse, tasksResponse, 
+                            async (newJob) => {
+                                await updateDBEntry(BUSINESS_SCHEMA, JOBS_TABLE, newJob, settings);
                                 await buildCalender();
-                            });
+                            }
+                        );
+                    };
+                    jobTitle.addEventListener('contextmenu', async (event) => {
+                        event.preventDefault();
+                        showYesNoDialog(`Delete "${job.name}"?`, async () => {
+                            await deleteDBEntry(BUSINESS_SCHEMA, JOBS_TABLE, job.id, settings);
+                            await buildCalender();
                         });
-                    }
-                    // else { // Can't edit jobs
-                    //     jobTitle.style.cursor = 'pointer';
-                    //     jobTitle.onclick = async () => {
-                    //         const jobsResponse = await getDBEntrees(BUSINESS_SCHEMA, JOBS_TABLE, "id", "*", settings);
-                    //         if ((!jobsResponse) || (jobsResponse.error)) return;
-                            
-                    //         showJobCardDialog(job, async (newJob) => {
-                    //             await updateDBEntry(BUSINESS_SCHEMA, JOBS_TABLE, newJob, settings);
-                    //         });
-                    //     };
-                    // }
-                    jobsContainer.appendChild(jobTitle);
+                    });
                 }
+                // else { // Can't edit jobs
+                //     jobTitle.style.cursor = 'pointer';
+                //     jobTitle.onclick = async () => {
+                //         const jobsResponse = await getDBEntrees(BUSINESS_SCHEMA, JOBS_TABLE, "id", "*", settings);
+                //         if ((!jobsResponse) || (jobsResponse.error)) return;
+                        
+                //         showJobCardDialog(job, async (newJob) => {
+                //             await updateDBEntry(BUSINESS_SCHEMA, JOBS_TABLE, newJob, settings);
+                //         });
+                //     };
+                // }
+                jobsContainer.appendChild(jobTitle);
+            
             });
 
-            // Add Calender Events
+            // // Add Calender Events
             const eventContainer = document.createElement('div');
             eventContainer.classList.add('events-container');
-            calendarResponse.forEach((event) => {
-                if (event.date === dateIndex.toLocaleDateString('en-CA')) {
+
+            calendarResponse.forEach((calenderEvent) => {
+                const endDate = calenderEvent.endDate || calenderEvent.date;
+                const isMultiDayEvent = calenderEvent.dates.length > 1;
+
+                if (calenderEvent.dates.indexOf(calendarDate) !== -1) {
+
                     const eventTitle = document.createElement('p');
                     eventTitle.setAttribute('draggable', 'true');
-                    eventTitle.setAttribute('title', event.note || "");
-                    eventTitle.addEventListener('dragstart', () => {draggingEventID = event.id});
-                    eventTitle.textContent = event.name;
+                    eventTitle.setAttribute('title', calenderEvent.note || "");
+                    eventTitle.addEventListener('dragstart', () => {
+                        draggingCalendarEvent.id = calenderEvent.id;
+                        draggingCalendarEvent.startDate = calenderEvent.date;
+                        draggingCalendarEvent.endDate = endDate;
+                        draggingCalendarEvent.isStartDate = calenderEvent.dates[0] === calendarDate;
+                    });
+                    eventTitle.textContent = calenderEvent.name;
                     eventTitle.style.color = "black";
-                    eventTitle.style.backgroundColor = `var(--color-${event.color || 1})`;
-                    if (canEditCalendar) {
-                        eventTitle.style.cursor = 'pointer';
-                        eventTitle.onclick = async () => {
-                            showCalendarEventDialog(event, 
-                                async (newEvent) => {
-                                    await updateDBEntry(BUSINESS_SCHEMA, CALENDAR_TABLE, newEvent, settings);
+                    if (isMultiDayEvent) eventTitle.style.width = "100%";
+                    eventTitle.style.backgroundColor = `var(--color-${calenderEvent.color || 1})`;
+
+                        if (canEditCalendar) {
+                            eventTitle.style.cursor = 'pointer';
+                            eventTitle.onclick = async () => {
+                                showCalendarEventDialog(calenderEvent, 
+                                    async (newEvent) => {
+                                        await updateDBEntry(BUSINESS_SCHEMA, CALENDAR_TABLE, newEvent, settings);
+                                        await buildCalender();
+                                    },
+                                    async (oldJob) => {
+                                        // await buildCalender();
+                                    }
+                                );
+                            };
+                            eventTitle.addEventListener('contextmenu', async (e) => {
+                                e.preventDefault();
+                                showYesNoDialog(`Delete "${calenderEvent.name}"?`, async () => {
+                                    await deleteDBEntry(BUSINESS_SCHEMA, CALENDAR_TABLE, calenderEvent.id, settings);
                                     await buildCalender();
-                                },
-                                async (oldJob) => {
-                                    // await buildCalender();
-                                }
-                            );
-                        };
-                        eventTitle.addEventListener('contextmenu', async (e) => {
-                            e.preventDefault();
-                            showYesNoDialog(`Delete "${event.name}"?`, async () => {
-                                await deleteDBEntry(BUSINESS_SCHEMA, CALENDAR_TABLE, event.id, settings);
-                                await buildCalender();
+                                });
                             });
-                        });
+                        }
+                        eventContainer.appendChild(eventTitle);
                     }
-                    eventContainer.appendChild(eventTitle);
-                }
             });
 
             dayHeader.appendChild(dayNameElement);
@@ -367,11 +436,10 @@ async function buildCalender(scrollTo) {
             dateIndex.setDate(dateIndex.getDate() + 1);
 
             if (dateIndex.toDateString('en-CA') === lastDatePlusOneMonth.toDateString('en-CA')) endCalender = true;
-            // if (dateIndex.toDateString('en-CA') === dates.lastSaturday.toDateString('en-CA')) endCalender = true;
         };
-        
         weeks.push(weekContainer);
     }
+
     calenderContainer.innerHTML = "";
     calenderContainer.append(...weeks);
 
@@ -379,6 +447,19 @@ async function buildCalender(scrollTo) {
         const todayElement = document.querySelector('#today');
         todayElement.scrollIntoView();
     }
+}
+
+function getAllDatesInArray(startDate, endDate) {
+    const dateCounterIndex = getCorrectDate(startDate);
+    const endDateText = endDate.toLocaleDateString('en-CA');
+    const datesArray = [];
+    let currentDateText = startDate.toLocaleDateString('en-CA');
+    while (endDateText !== currentDateText) {
+        currentDateText = dateCounterIndex.toLocaleDateString('en-CA');
+        datesArray.push(currentDateText);
+        dateCounterIndex.setDate(dateCounterIndex.getDate() + 1);
+    }
+    return datesArray;
 }
 
 function getDates(jobs, events) {
