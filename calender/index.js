@@ -37,6 +37,7 @@ import {
 } from "../directives.js";
 
 import {
+    Timer,
     stopRunningTimer,
     startOverTimeTimer,
     addNumberOfRunningTimersToTimerPageLink,
@@ -60,6 +61,7 @@ import {
     showJobDialog,
     showJobCardDialog,
     showCalendarEventDialog,
+    dialogIsOpen,
 } from "../dialogs.js";
 
 const log = console.log;
@@ -122,7 +124,11 @@ startOverTimeTimer(stationName, settings, stopRunningTimer);
 addNumberOfRunningTimersToTimerPageLink(timerPageLink, stationName, settings);
 
 
-// Event listeners
+const autoUpdateTimer = new Timer(() => {
+    if (dialogIsOpen()) return;
+    buildCalender();
+}, 1000 * 60 * 1, true);
+
 
 // Got to home page
 window.onkeydown = (event) => {
@@ -168,9 +174,14 @@ addNewEventBtn.addEventListener('click', async () => {
 // FUNCTIONS
 async function buildCalender(scrollTo) {
     const jobs = await getDBEntrees(BUSINESS_SCHEMA, JOBS_TABLE, "id", "*", settings);
-    if ((!jobs) || (jobs.error) || jobs.length === 0) return;
+    if ((!jobs) || (jobs.error) || jobs.length === 0) {
+        jobs = [];
+    };
 
     const calendarResponse = await getDBEntrees(BUSINESS_SCHEMA, CALENDAR_TABLE, "id", "*", settings);
+    if ((!calendarResponse) || (calendarResponse.error) || calendarResponse.length === 0) {
+        calendarResponse = [];
+    };
 
     // Sort events date
     calendarResponse.sort((a, b) => {
