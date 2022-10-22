@@ -84,7 +84,7 @@ const timer = new Timer(() => {
     if (noModalsAreOpen()) {
         loadJobs();
     }
-}, 1000 * 60 * 1);
+}, 1000 * 60 * 1, true);
 
 startOverTimeTimer(station, settings, stopRunningTimer);
 
@@ -96,14 +96,9 @@ addNumberOfRunningTimersToTimerPageLink(timerPageLink, station, settings);
 // EVENT LISTENERS
 
 // Got to home page
-window.onkeydown = (event) => {
+window.addEventListener('keydown', (event) => {
     if (event.key === "8" && event.ctrlKey) window.location = "/";
-    timer.reset();
-}
-
-window.onmousedown = () => {
-    timer.reset();
-}
+});
 
 sort.addEventListener('change', loadJobs);
 
