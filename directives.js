@@ -36,7 +36,7 @@ export const TABLE_ATTRIBUTES = {
 
     employees: ["active", "name", "stations"],
     jobs: ["active", "finishType", "name", "checklist", "shipDate", "note"],
-    stations: ["active", "name", "tasks"],
+    stations: ["active", "name", "tasks", "editing"],
     tasks: ["active", "name", "hours", "minutes"],
     calendar: ["name", "date", "note"],
 }
