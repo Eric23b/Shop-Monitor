@@ -89,6 +89,15 @@ const calenderContainer = document.querySelector('#calender');
 settings.url = getLocalStorageValue('serverURL') || "";
 settings.authorization = getLocalStorageValue('serverAuthorization') || "";
 const stationName = getLocalStorageValue('stationName') || "";
+// const stationName = getLocalStorageValue('stationName') || "";
+let stationID = "";
+const stationIDResponse = await getDBEntrees(BUSINESS_SCHEMA, STATIONS_TABLE, "name", stationName, settings);
+if ((!stationIDResponse) || (stationIDResponse.error) || stationIDResponse.length === 0) {
+    stationID = "";
+}
+else {
+    stationID = stationIDResponse[0].id;
+};
 
 const theme = getLocalStorageValue('theme') || "light";
 
@@ -96,6 +105,9 @@ const superUser = await isSuperUser(settings);
 const canEditCalendar = await canEditCalendarEvent();
 const canEditJob = await canEditJobs();
 
+console.log('Is super user: ' + superUser);
+console.log('Can edit calendar events: ' + canEditCalendar);
+console.log('Can edit jobs: ' + canEditJob);
 
 // INITIALIZE CODE
 
@@ -128,6 +140,9 @@ const autoUpdateTimer = new Timer(() => {
     if (dialogIsOpen()) return;
     buildCalender();
 }, 1000 * 60 * 1, true);
+
+// Clear editing
+await updateDBEntry(BUSINESS_SCHEMA, STATIONS_TABLE, {id: stationID, editing: ""}, settings);
 
 
 // Got to home page
@@ -353,12 +368,23 @@ async function buildCalender(scrollTo) {
             
                         const tasksResponse = await getDBEntrees(BUSINESS_SCHEMA, TASKS_TABLE, "id", "*", settings);
                         if ((!tasksResponse) || (tasksResponse.error)) return;
-                        
+            
+                        const currentEditingResponse = await getDBEntrees(BUSINESS_SCHEMA, STATIONS_TABLE, "editing", job.id, settings);
+                        const whoIsEditingJob = getWhoIsEditing(currentEditingResponse);
+                        if (whoIsEditingJob === "") {
+                            await updateDBEntry(BUSINESS_SCHEMA, STATIONS_TABLE, {id: stationID, editing: job.id}, settings);
+                        }
+
                         showJobDialog(job, jobsResponse, tasksResponse, 
                             async (newJob) => {
                                 await updateDBEntry(BUSINESS_SCHEMA, JOBS_TABLE, newJob, settings);
+                                await updateDBEntry(BUSINESS_SCHEMA, STATIONS_TABLE, {id: stationID, editing: ""}, settings);
                                 await buildCalender();
-                            }
+                            },
+                            async (originalJob) => {
+                                await updateDBEntry(BUSINESS_SCHEMA, STATIONS_TABLE, {id: stationID, editing: ""}, settings);
+                            },
+                            whoIsEditingJob
                         );
                     };
                     jobTitle.addEventListener('contextmenu', async (event) => {
@@ -458,6 +484,13 @@ async function buildCalender(scrollTo) {
         const todayElement = document.querySelector('#today');
         todayElement.scrollIntoView();
     }
+}
+
+function getWhoIsEditing(currentEditingResponse) {
+    if ((!currentEditingResponse) || (currentEditingResponse.error) || (currentEditingResponse.length === 0)) {
+        return "";
+    }
+    return currentEditingResponse[0].name;
 }
 
 function getAllDatesInArray(startDate, endDate) {

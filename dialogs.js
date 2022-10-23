@@ -52,10 +52,14 @@ const modalInputTextAreaStyles = `
     font-size: 1.2rem;
     border: 1px solid var(--border_color); `;
 
+const currentEditorLabelStyles = `
+    font-size: 1.2rem;
+    color: var(--no);`;
 const inputLabelStyles = `
     font-size: 1.2rem;`;
 const inLineInputLabelStyles = `
     display: flex;
+    align-items: center;
     font-size: 1.2rem;`;
 const blockInputLabelStyles = `
     width: 100%;
@@ -63,7 +67,7 @@ const blockInputLabelStyles = `
     flex-direction: column;
     font-size: 1.2rem;`;
 const jobNameInputStyles = `
-    width: 100%;
+    
     padding: 0.25rem;
     font-size: 1.2rem;
     border: 1px solid var(--border_color);`;
@@ -181,15 +185,22 @@ export function showJobCardDialog(job, OKCallback) {
     body.appendChild(modalBackground);
 }
 
-export function showJobDialog(job, jobs, allTasks, OKCallback, cancelCallback) {
+export function showJobDialog(job, jobs, allTasks, OKCallback, cancelCallback, whoIsEditingTitle) {
+    const originalJob = JSON.parse(JSON.stringify(job));
+
     const isNewJob = job === null;
 
-    if (!job) job = {active: true};
+    if (isNewJob) job = {active: true};
 
     const body = document.querySelector('body');
     const modalBackground = getModalBackground();
     const modalWindow = getModalWindow();
     modalWindow.style.alignItems = 'center';
+
+    // Who is editing
+    const currentEditorLabel = document.createElement('label');
+    if (whoIsEditingTitle) currentEditorLabel.textContent = `${whoIsEditingTitle} is editing this job right now.`;
+    currentEditorLabel.style.cssText = currentEditorLabelStyles;
 
     // Job Name
     const jobNameInput = document.createElement('input');
@@ -295,13 +306,13 @@ export function showJobDialog(job, jobs, allTasks, OKCallback, cancelCallback) {
     });
     // Cancel button
     const cancelBtn = getButton("Cancel", () => {
-        if (cancelCallback) cancelCallback(job);
+        if (cancelCallback) cancelCallback(originalJob);
         body.removeChild(modalBackground);
     });
     // Button container
     const buttonContainer = getButtonContainer(cancelBtn, OKBtn);
 
-    modalWindow.append(jobNameLabel, jobShipDateLabel, jobActiveLabel, jobNoteLabel, sequenceLabel, modalButtonContainer, buttonContainer);
+    modalWindow.append(currentEditorLabel, jobNameLabel, jobShipDateLabel, jobActiveLabel, jobNoteLabel, sequenceLabel, modalButtonContainer, buttonContainer);
     modalBackground.appendChild(modalWindow);
     body.appendChild(modalBackground);
 }
