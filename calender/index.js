@@ -89,7 +89,6 @@ const calenderContainer = document.querySelector('#calender');
 settings.url = getLocalStorageValue('serverURL') || "";
 settings.authorization = getLocalStorageValue('serverAuthorization') || "";
 const stationName = getLocalStorageValue('stationName') || "";
-// const stationName = getLocalStorageValue('stationName') || "";
 let stationID = "";
 const stationIDResponse = await getDBEntrees(BUSINESS_SCHEMA, STATIONS_TABLE, "name", stationName, settings);
 if ((!stationIDResponse) || (stationIDResponse.error) || stationIDResponse.length === 0) {
@@ -142,7 +141,9 @@ const autoUpdateTimer = new Timer(() => {
 }, 1000 * 60 * 1, true);
 
 // Clear editing
-await updateDBEntry(BUSINESS_SCHEMA, STATIONS_TABLE, {id: stationID, editing: ""}, settings);
+if (canEditJob) {
+    await updateDBEntry(BUSINESS_SCHEMA, STATIONS_TABLE, {id: stationID, editing: ""}, settings);
+}
 
 
 // Got to home page
@@ -355,16 +356,12 @@ async function buildCalender(scrollTo) {
                 if (job.shipDate !== dateIndex.toLocaleDateString('en-CA')) return;
 
                 const percentCompleted = getJobTimes(job).percentCompleted;
-                console.log(percentCompleted);
                 
                 const jobTitle = document.createElement('p');
-                // jobTitle.setAttribute('data-percent', 50);
                 jobTitle.setAttribute('draggable', 'true');
                 jobTitle.setAttribute('title', job.note || "");
                 jobTitle.addEventListener('dragstart', () => {draggingJobID = job.id});
                 if (!job.active) jobTitle.style.color = "var(--inactive)";
-                // jobTitle.style.width = "100%";
-                // jobTitle.style.textAlign = "center";
                 jobTitle.textContent = job.name;
 
                 const jobProgressBar = document.createElement('div');
