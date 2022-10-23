@@ -209,18 +209,22 @@ body *{
     justify-content: center;
     align-items: center;
     background: transparent;
+    padding: 0 1px;
 }
 .jobs-container p{
     background: transparent;
     overflow: visible;
-    /* white-space: nowrap; */
     margin: 0;
-    /* z-index: 1; */
-    /* font-size: clamp(0.25em, 1.5vw, 1.125em); */
 }
 .jobs-container p:hover{
     color: var(--yes);
 }
+
+.job-progress-bar{
+    align-self: flex-start;
+    border-top: 2px solid var(--yes);
+}
+
 .events-container{
     display: flex;
     flex-direction: column;

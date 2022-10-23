@@ -353,13 +353,21 @@ async function buildCalender(scrollTo) {
             jobsContainer.classList.add('jobs-container');
             jobs.forEach((job) => {
                 if (job.shipDate !== dateIndex.toLocaleDateString('en-CA')) return;
+
+                const percentCompleted = getJobTimes(job).percentCompleted;
+                console.log(percentCompleted);
                 
                 const jobTitle = document.createElement('p');
+                // jobTitle.setAttribute('data-percent', 50);
                 jobTitle.setAttribute('draggable', 'true');
                 jobTitle.setAttribute('title', job.note || "");
                 jobTitle.addEventListener('dragstart', () => {draggingJobID = job.id});
-                if (!job.active) jobTitle.style.color = "var(--inactive)"
+                if (!job.active) jobTitle.style.color = "var(--inactive)";
+                // jobTitle.style.width = "100%";
+                // jobTitle.style.textAlign = "center";
                 jobTitle.textContent = job.name;
+
+                const jobProgressBar = document.createElement('div');
                 if (canEditJob) {
                     jobTitle.style.cursor = 'pointer';
                     jobTitle.onclick = async () => {
@@ -394,6 +402,10 @@ async function buildCalender(scrollTo) {
                             await buildCalender();
                         });
                     });
+
+                    jobProgressBar.style.width = `${percentCompleted}%`;
+                    jobProgressBar.classList.add('job-progress-bar');
+                    if (!job.active) jobProgressBar.style.borderColor = "var(--inactive)";
                 }
                 // else { // Can't edit jobs
                 //     jobTitle.style.cursor = 'pointer';
@@ -407,6 +419,7 @@ async function buildCalender(scrollTo) {
                 //     };
                 // }
                 jobsContainer.appendChild(jobTitle);
+                jobsContainer.appendChild(jobProgressBar);
             
             });
 
@@ -484,6 +497,47 @@ async function buildCalender(scrollTo) {
         const todayElement = document.querySelector('#today');
         todayElement.scrollIntoView();
     }
+}
+
+function getJobTimes(job) {
+    // Calculate shop hours
+    let times = {};
+    times.totalHours = 0;
+    times.totalMinutes = 0;
+    times.completedHours = 0;
+    times.completedMinutes = 0;
+    times.allTasksCompleted = true;
+    times.remainingTimePerTaskInMinutes = {};
+    if (job.sequences) {
+        job.sequences.forEach((sequence) => {
+            if (sequence.tasks) {
+                sequence.tasks.forEach((task) => {
+                    times.totalHours += Number(task.hours);
+                    times.totalMinutes += Number(task.minutes);
+                    if (task.completed) {
+                        times.completedHours += Number(task.hours);
+                        times.completedMinutes += Number(task.minutes);
+                        times.remainingTimePerTaskInMinutes[task.id] = 0;
+                    }
+                    else {
+                        times.remainingTimePerTaskInMinutes[task.id] = Number(task.hours * 60) + Number(task.minutes);
+                        times.allTasksCompleted = false;
+                    }
+                });
+            }
+        });
+    }
+    times.totalHours = Number(times.totalHours + Math.floor(times.totalMinutes / 60));
+    times.totalMinutes = Number((((times.totalMinutes / 60) % 1) * 60).toFixed(0));
+    times.totalTimeDec = times.totalHours + (times.totalMinutes / 60);
+    times.totalCompletedTimeDec = times.completedHours + (times.completedMinutes / 60);
+    times.totalTimeRemainingDec = times.totalTimeDec - times.totalCompletedTimeDec;
+    times.percentCompleted = ((times.totalCompletedTimeDec / times.totalTimeDec) * 100).toFixed(0);
+
+    const totalTimeInMinutes = ((times.totalHours * 60) + times.totalMinutes);
+    const totalCompletedTimeInMinutes = ((times.completedHours * 60) + times.completedMinutes);
+    times.totalTimeRemainingInMinutes = totalTimeInMinutes - totalCompletedTimeInMinutes;
+    return times;
 }
 
 function getWhoIsEditing(currentEditingResponse) {
