@@ -44,6 +44,11 @@ import {
 } from "../timer-utilities.js";
 
 import {
+    getDueInDaysFromNowText,
+    getCorrectDate,
+} from "../date-utilities.js";
+
+import {
     getTableDataWithText,
     getTableDataWithProgressBar,
     getTableDataRow,
@@ -404,17 +409,17 @@ async function buildCalender(scrollTo) {
                     jobProgressBar.classList.add('job-progress-bar');
                     if (!job.active) jobProgressBar.style.borderColor = "var(--inactive)";
                 }
-                // else { // Can't edit jobs
-                //     jobTitle.style.cursor = 'pointer';
-                //     jobTitle.onclick = async () => {
-                //         const jobsResponse = await getDBEntrees(BUSINESS_SCHEMA, JOBS_TABLE, "id", "*", settings);
-                //         if ((!jobsResponse) || (jobsResponse.error)) return;
+                else { // Can't edit jobs
+                    jobTitle.style.cursor = 'pointer';
+                    jobTitle.onclick = async () => {
+                        const jobsResponse = await getDBEntrees(BUSINESS_SCHEMA, JOBS_TABLE, "id", "*", settings);
+                        if ((!jobsResponse) || (jobsResponse.error)) return;
                         
-                //         showJobCardDialog(job, async (newJob) => {
-                //             await updateDBEntry(BUSINESS_SCHEMA, JOBS_TABLE, newJob, settings);
-                //         });
-                //     };
-                // }
+                        showJobCardDialog(job, async (newJob) => {
+                            await updateDBEntry(BUSINESS_SCHEMA, JOBS_TABLE, newJob, settings);
+                        });
+                    };
+                }
                 jobsContainer.appendChild(jobTitle);
                 jobsContainer.appendChild(jobProgressBar);
             
@@ -563,13 +568,13 @@ function getDates(jobs, events) {
     const earliestDate = jobs[jobs.length - 1].shipDate || (new Date()).toLocaleDateString('en-CA');
     const latestDate = jobs[0].shipDate || (new Date()).toLocaleDateString('en-CA');
 
-    const firstSunday = new Date(getCorrectDate(earliestDate));
+    const firstSunday = getCorrectDate(earliestDate);
 
     while (firstSunday.toLocaleString('default', {weekday: 'short'}) !== "Sun") {
         firstSunday.setDate(firstSunday.getDate() - 1);
     }
 
-    const lastSaturday = new Date(getCorrectDate(latestDate));
+    const lastSaturday = getCorrectDate(latestDate);
 
     while (lastSaturday.toLocaleString('default', {weekday: 'short'}) !== "Sat") {
         lastSaturday.setDate(lastSaturday.getDate() + 1);
@@ -578,12 +583,6 @@ function getDates(jobs, events) {
     const today = new Date();
 
     return {earliestDate, latestDate, firstSunday, lastSaturday, today}
-}
-
-function getCorrectDate(date) {
-    // Stupid javascript
-    const utcDate = new Date(date);
-    return new Date(utcDate.getTime() + utcDate.getTimezoneOffset() * 60000);
 }
 
 function jumpToDate(date) {
@@ -595,10 +594,6 @@ function jumpToDate(date) {
         todayElement.style.backgroundColor = "var(--background_color)";
     }, 1000);
 };
-
-function offsetMonthBecauseJSIsStupid(date) {
-    return [date.split("-")[0], Number(date.split("-")[1]) - 1, date.split("-")[2]].join("-")
-}
 
 async function canEditJobs() {
     if (superUser) return true;

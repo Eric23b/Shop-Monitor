@@ -22,6 +22,10 @@ import {
 } from "../timer-utilities.js";
 
 import {
+    getDueInDaysFromNowText,
+} from "../date-utilities.js";
+
+import {
     showYesNoDialog,
     showAlertDialog,
     showInputDialog,
@@ -234,19 +238,9 @@ async function loadJobs(event, searchValue) {
         shipDate.classList.add('ship-date');
         
         const dueInDays = document.createElement('p');
-        const dueInDaysFromNow = differenceInDays((new Date()).toLocaleDateString('en-CA'), job.shipDate);
-        if (dueInDaysFromNow > 0) {
-            const dueInDaysPlural = (dueInDaysFromNow > 1) ? "s" : "";
-            dueInDays.textContent = `Due in ${dueInDaysFromNow} day${dueInDaysPlural}`;
-        }
-        else if (dueInDaysFromNow < 0) {
-            const dueInDaysPlural = (Math.abs(dueInDaysFromNow) > 1) ? "s" : "";
-            dueInDays.textContent = `Due ${Math.abs(dueInDaysFromNow)} day${dueInDaysPlural} ago`;
-        }
-        else {
-            dueInDays.textContent = `Due today`;
-        }
+        dueInDays.textContent = getDueInDaysFromNowText(job.shipDate);
         dueInDays.classList.add('notes');
+
         
         const note = document.createElement('p');
         note.textContent = job.note;
@@ -365,13 +359,6 @@ async function loadJobs(event, searchValue) {
                 cardTitle.classList.add('card-title-checked');
             }
 
-            if ((differenceInDays((new Date()).toLocaleDateString(), shipDate) < lateJobsDays) && !allChecked) {
-                // cardTitle.style.color = 'var(--no)';
-
-            }
-            else {
-                cardTitle.style.color = 'var(--color)';
-            }
             if (checkboxes.length == -1) {
                 cardTitle.style.color = 'var(--color)';
             }
@@ -440,22 +427,6 @@ async function loadJobs(event, searchValue) {
     // else {
     //     closeAllCards();
     // }
-}
-
-function differenceInDays(dateOne, dateTwo) {
-    const date1 = getCorrectDate(dateOne);
-    const date2 = getCorrectDate(dateTwo);
-    
-    const differenceInTime = date2.getTime() - date1.getTime();
-    const differenceInDays = differenceInTime / (1000 * 3600 * 24);
-
-    return Math.floor(differenceInDays);
-}
-
-function getCorrectDate(date) {
-    // Stupid javascript
-    const utcDate = new Date(date);
-    return new Date(utcDate.getTime() + utcDate.getTimezoneOffset() * 60000);
 }
 
 function getJobTimes(job) {
