@@ -1,3 +1,7 @@
+import {
+    getDueInDaysFromNowText,
+} from "../date-utilities.js";
+
 const modalBackgroundStyles = `
     position: fixed;
     inset: 0;
@@ -154,6 +158,16 @@ const jobCardShipDateStyles = `
     margin: 0;`;
 const jobCardDueInDaysStyles = `
     margin: 0;`;
+const jobCardCheckboxLabelStyles = `
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    align-items: center;
+    align-content: center;
+    gap: 0.25rem`;
+const jobCardCheckboxStyles = `
+    order: -1;`;
 
 let draggingTask = {taskIndex: 0, sequenceName: ""};
 
@@ -172,17 +186,90 @@ export function showJobCardDialog(job, OKCallback) {
     shipDate.style.cssText = jobCardShipDateStyles;
 
     const dueInDays = document.createElement('p');
-    dueInDays.textContent = job.shipDate;
+    dueInDays.textContent = getDueInDaysFromNowText(job.shipDate);
     dueInDays.style.cssText = jobCardDueInDaysStyles;
 
-    // Ok button
-    const okBtn = getButton("OK", () => {
+    const jobNotes = document.createElement('p');
+    jobNotes.textContent = job.note;
+    jobNotes.style.cssText = jobCardDueInDaysStyles;
+    
+    const checkboxesContainer = document.createElement('div');
+    checkboxesContainer.style.cssText = addJobSequenceContainerStyles;
+    if (job.checklist) {
+        job.checklist.forEach((checkbox) => {
+            const labeledCheckbox = getLabeledCheckbox(checkbox.text, checkbox.checked, true, checkboxesContainer);
+            checkboxesContainer.appendChild(labeledCheckbox);
+        });
+    }
+
+    // Add checkbox
+    const addCheckboxButton = getButton("Add checkbox", () => {
+        showInputDialog("Add checkbox", "", (checkboxTitle) => {
+                    const labeledCheckbox = getLabeledCheckbox(checkboxTitle, false);
+                    checkboxesContainer.appendChild(labeledCheckbox);
+                },
+                () => {},
+                'text',
+                ""
+            );
+        }
+    );
+
+    // OK button
+    const OKBtn = getButton("OK", () => {
+        const checklistArray = [];
+        const checkboxLabels = checkboxesContainer.querySelectorAll('label');
+        checkboxLabels.forEach((checkboxLabel) => {
+            const checkboxText = checkboxLabel.textContent;
+            const checkboxValue = checkboxLabel.lastChild.checked;
+            checklistArray.push({checked: checkboxValue, text: checkboxText});
+        });
+        job.checklist = checklistArray;
+
+        OKCallback(job);
         body.removeChild(modalBackground);
     });
-    
-    modalWindow.append(jobTitle, shipDate, dueInDays, okBtn);
+
+    // Cancel button
+    const cancelBtn = getButton("Cancel", () => {
+        body.removeChild(modalBackground);
+    });
+    // Button container
+    const buttonContainer = getButtonContainer(cancelBtn, OKBtn);
+    modalWindow.append(jobTitle, shipDate, dueInDays, jobNotes, checkboxesContainer, addCheckboxButton, buttonContainer);
+
+    if (!job.active) {
+        modalWindow.querySelectorAll('*').forEach((element) => {element.setAttribute('disabled', 'disabled');});
+        modalWindow.querySelectorAll('*').forEach((element) => {element.style.color = 'var(--inactive)';});
+        modalWindow.querySelectorAll('*').forEach((element) => {element.style.cursor = 'default';});
+        OKBtn.removeAttribute('disabled', 'disabled');
+        OKBtn.style.color = 'var(--color)';
+        OKBtn.style.cursor = 'pointer';
+    }
+
     modalBackground.appendChild(modalWindow);
     body.appendChild(modalBackground);
+}
+
+function getLabeledCheckbox(label, isChecked, deletable, containerElement) {
+    const checkboxElement = document.createElement('input');
+    checkboxElement.setAttribute('type', 'checkbox');
+    if (isChecked) checkboxElement.setAttribute('checked', 'checked');
+    checkboxElement.style.cssText = jobCardCheckboxStyles;
+
+    const checkboxLabel = document.createElement('label');
+    checkboxLabel.textContent = label;
+    checkboxLabel.style.cssText = jobCardCheckboxLabelStyles;
+    if (deletable) {
+        checkboxLabel.oncontextmenu = (event) => {
+            event.preventDefault();
+            showYesNoDialog(`Delete checkbox ${label}?`, () => {
+                containerElement.removeChild(checkboxLabel);
+            });
+        }
+    }
+    checkboxLabel.appendChild(checkboxElement);
+    return checkboxLabel;
 }
 
 export function showJobDialog(job, jobs, allTasks, OKCallback, cancelCallback, whoIsEditingTitle) {
@@ -907,8 +994,8 @@ function getButton(text, callback) {
     btn.textContent = text;
     btn.style.cssText = modalButtonStyles;
     btn.onclick = callback;
-    btn.onmouseover = btnMouseOver;
-    btn.onmouseleave = btnMouseLeave;
+    btn.onmouseover = (event) => {if (!btn.getAttribute('disabled')) btnMouseOver(event)};
+    btn.onmouseleave = (event) => {if (!btn.getAttribute('disabled')) btnMouseLeave(event)};
     return btn;
 }
 
