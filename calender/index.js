@@ -79,6 +79,8 @@ const settings = {
     authorization: ""
 }
 
+let jobDateArray = [];
+
 let draggingJobID = "";
 let draggingCalendarEvent = {id: "", startDate: "", endDate: "", isStartDate: true};
 
@@ -89,6 +91,11 @@ const addNewEventBtn = document.querySelector('#add-event-btn');
 const todayBtn = document.querySelector('#today-button');
 
 const calenderContainer = document.querySelector('#calender');
+
+const searchInput = document.querySelector('#search-input');
+const searchClearButton = document.querySelector('#search-clear-btn');
+const searchButton = document.querySelector('#search-btn');
+
 
 
 settings.url = getLocalStorageValue('serverURL') || "";
@@ -151,6 +158,30 @@ if (canEditJob) {
 }
 
 
+// EVENT LISTENERS
+searchInput.addEventListener('keypress', (event) => {
+    if (event.key === 'Enter') {
+        search(searchInput.value);
+    }
+});
+
+searchClearButton.addEventListener('click', () => {
+    searchInput.value = "";
+});
+
+searchButton.addEventListener('click', () => {
+    search(searchInput.value);
+});
+
+function search(text) {
+    for (const job of jobDateArray) {
+        if (String(job.name).includes(text)) {
+            jumpToDate(job.date);
+            return;
+        }
+    }
+}
+
 // Got to home page
 window.onkeydown = (event) => {
     if (event.key === "8" && event.ctrlKey) window.location = "/";
@@ -198,6 +229,11 @@ async function buildCalender(scrollTo) {
     if ((!jobs) || (jobs.error) || jobs.length === 0) {
         jobs = [];
     };
+
+    jobDateArray = [];
+    jobs.forEach((job) => {
+        jobDateArray.push({name: job.name, date: job.shipDate});
+    });
 
     const calendarResponse = await getDBEntrees(BUSINESS_SCHEMA, CALENDAR_TABLE, "id", "*", settings);
     if ((!calendarResponse) || (calendarResponse.error) || calendarResponse.length === 0) {
