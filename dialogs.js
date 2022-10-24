@@ -256,10 +256,12 @@ function getLabeledCheckbox(label, isChecked, deletable, containerElement) {
     checkboxElement.setAttribute('type', 'checkbox');
     if (isChecked) checkboxElement.setAttribute('checked', 'checked');
     checkboxElement.style.cssText = jobCardCheckboxStyles;
+    checkboxElement.onclick = () => {checkboxLabel.checked = checkboxElement.checked};
 
     const checkboxLabel = document.createElement('label');
     checkboxLabel.textContent = label;
     checkboxLabel.style.cssText = jobCardCheckboxLabelStyles;
+    checkboxLabel.checked = isChecked;
     if (deletable) {
         checkboxLabel.oncontextmenu = (event) => {
             event.preventDefault();
@@ -434,7 +436,8 @@ async function loadSequences(sequences, sequenceContainer, allTasks, updateSeque
             taskElement.setAttribute('sequence-name', sequence.name);
             addHoverColors(taskElement);
             taskElement.style.cssText = addJobModalSequenceTask;
-            taskElement.textContent = `${task.name} ${task.hours}:${String(task.minutes).length < 2 ? "0" : ""}${task.minutes}`;
+            const taskChecked = task.completed ? "✓" : "";
+            taskElement.textContent = `${task.name} ${task.hours}:${String(task.minutes).length < 2 ? "0" : ""}${task.minutes} ${taskChecked}`;
 
             taskElement.addEventListener('click', () => {
                 // addJobSequenceName.value = sequence.name;
@@ -568,6 +571,9 @@ async function showAddTaskDialog(sequenceName, task, allTasks, OKCallback, cance
     shopTimeContainer.append(shopHoursInput, " : ", shopMinutesInput);
     shopTimeLabel.appendChild(shopTimeContainer);
 
+    const completedCheckbox = getLabeledCheckbox("Completed", task.completed, false, null);
+    completedCheckbox.style.fontSize = '1.2rem';
+
     const modalOKButton = getButton("OK", () => {
         const taskName = taskNameSelect[taskNameSelect.value].textContent;
         const sequenceName = sequenceNameInput.value;
@@ -583,6 +589,7 @@ async function showAddTaskDialog(sequenceName, task, allTasks, OKCallback, cance
         task.id = taskNameSelect[taskNameSelect.value].id,
         task.hours = Number(shopHoursInput.value);
         task.minutes = Number(shopMinutesInput.value);
+        task.completed = completedCheckbox.checked;
         if (OKCallback) OKCallback(sequenceName, task);
         body.removeChild(modalBackground);
     });
@@ -594,7 +601,7 @@ async function showAddTaskDialog(sequenceName, task, allTasks, OKCallback, cance
 
     const modalButtonContainer = getButtonContainer(modalCancelButton, modalOKButton);
 
-    modalWindow.append(modalTitle, sequenceNameLabel, taskNameLabel, shopTimeLabel, modalButtonContainer);
+    modalWindow.append(modalTitle, sequenceNameLabel, taskNameLabel, shopTimeLabel, completedCheckbox, modalButtonContainer);
     modalBackground.appendChild(modalWindow);
     body.appendChild(modalBackground);
     
