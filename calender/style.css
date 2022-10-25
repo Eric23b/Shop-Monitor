@@ -209,7 +209,7 @@ body *{
     justify-content: center;
     align-items: center;
     background: transparent;
-    padding: 0 1px;
+    padding: 0 1px 1px 1px;
 }
 .jobs-container p{
     background: transparent;
@@ -329,6 +329,7 @@ body *{
     max-width: 8rem;
     flex-basis: 1;
     outline: none;
+    font-size: large;
 }
 .search-clear-btn{
     /* padding: 0.25rem; */
@@ -347,6 +348,25 @@ body *{
 .search-btn:hover{
     opacity: 1;
 }
+.search-container:hover .search-examples{
+    display: block;
+}
+.search-examples{
+    display: none;
+    position: absolute;
+    padding: 0.5rem;
+    font-size: small;
+    color: var(--active);
+    background-color: var(--background_transparent_color);
+    bottom: 2rem;
+    border: 1px solid var(--border_color);
+    border-radius: 0.25rem;
+}
+.search-examples span{
+    color: var(--yes);
+}
+
+
 
 .add-job-btn{
     /* position: absolute; */

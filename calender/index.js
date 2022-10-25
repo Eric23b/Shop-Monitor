@@ -159,25 +159,45 @@ if (canEditJob) {
 
 
 // EVENT LISTENERS
+
+// Search
+// Enter key
 searchInput.addEventListener('keypress', (event) => {
     if (event.key === 'Enter') {
         search(searchInput.value);
     }
 });
-
-searchClearButton.addEventListener('click', () => {
-    searchInput.value = "";
+// Escape key
+searchInput.addEventListener('keyup', (event) => {
+    if (event.key === 'Escape') {
+        searchInput.value = "";
+    }
 });
+// Clear search button 
+searchClearButton.addEventListener('click', () => {searchInput.value = "";});
+// Search button
+searchButton.addEventListener('click', () => {search(searchInput.value);});
 
-searchButton.addEventListener('click', () => {
-    search(searchInput.value);
-});
+function search(searchText) {
+    if (searchText === "") return;
+    const inputText = String(searchText).toLowerCase();
+    // nameDateSearchArray is updated every time buildCalender is run.
+    for (const element of nameDateSearchArray) {
+        const name = String(element.name).toLowerCase();
+        const date = String(element.date).toLowerCase();
 
-function search(text) {
-    for (const element of nameDateSearchArray) {  // jobDateArray is updated every time buildCalender is run.
-        if (String(element.name).toLowerCase().includes(String(text).toLowerCase())) {
-            jumpToDate(element.date);
-            return;
+        if (inputText.includes(" ")) {
+            const inputTextA = inputText.split(" ")[0];
+            const inputTextB = inputText.split(" ")[1];
+            if ((name.includes(inputTextA)) && (name.split(" ")[1] === inputTextB)) {
+                jumpToDate(date);
+            }
+        }
+        else {
+            if (name.includes(inputText)) {
+                jumpToDate(date);
+                return;
+            }
         }
     }
 }
@@ -380,10 +400,10 @@ async function buildCalender(scrollTo) {
             dayHeader.classList.add('day-header-container');
     
             const dayNameElement = document.createElement('p');
+            const options = { month: "long" };
+            const monthText = (new Intl.DateTimeFormat("en-CA", options).format(dateIndex));
             dayNameElement.classList.add('day-week-name');
             if (dateIndex.getDate() == 1) {
-                const options = { month: "long" };
-                const monthText = (new Intl.DateTimeFormat("en-CA", options).format(dateIndex));
                 dayNameElement.textContent = monthText
                 dayNameElement.classList.add('day-title-first-of-the-month');
 
@@ -395,11 +415,15 @@ async function buildCalender(scrollTo) {
             }
     
             const dayNumberElement = document.createElement('p');
+            const dayNumber = dateIndex.toLocaleString('default', {day: 'numeric'});
             dayNumberElement.classList.add('day-number');
             if (dates.today.toDateString('en-CA') === dateIndex.toDateString('en-CA')) {
                 dayNumberElement.classList.add('today');
             }
-            dayNumberElement.textContent = dateIndex.toLocaleString('default', {day: 'numeric'});
+            dayNumberElement.textContent = dayNumber;
+
+                // Add months to search array
+            nameDateSearchArray.push({name: monthText + " " + dayNumber, date: calendarDate});
 
             // Add Jobs
             const jobsContainer = document.createElement('div');
