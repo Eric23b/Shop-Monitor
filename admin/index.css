@@ -467,6 +467,13 @@ input{
     white-space: pre-line;
     overflow-y: scroll;
 }
+.alert-message span{
+    color: var(--yes);
+    font-size: large;
+    overflow-wrap: break-word;
+    white-space: pre-line;
+    overflow-y: scroll;
+}
 .modal-button-group{
     display: flex;
     flex-wrap: wrap;

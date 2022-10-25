@@ -509,7 +509,7 @@ runDBSetupBtn.addEventListener('click', async () => {
     message += await createSchema(SYSTEM_SCHEMA, settings, dbActive) + "\n";
     message += await createTable(MESSAGES_TABLE, SYSTEM_SCHEMA, settings, dbActive) + "\n";
 
-    showAlert("Database message", message);
+    showAlert("Database message", message, null, ["successfully"]);
 });
 
 removePasswordBtn.addEventListener('click', () => {
@@ -1727,13 +1727,20 @@ function addAlertClickToElement(element, title, message) {
     element.style.cursor = "pointer";
 }
 
-function showAlert(labelText, messageText, OKCallback) {
+function showAlert(labelText, messageText, OKCallback, highlightArray) {
     alertBackground.style.display = "flex";
     // alertBackground.onclick = okClick;
 
     alertLabel.textContent = labelText;
 
-    alertMessage.textContent = messageText;
+    let message = messageText;
+    if (highlightArray) {
+        highlightArray.forEach((highText) => {
+            // const regex = (new RegExp(`{"${highText}"}`, "g"));
+            message = message.replaceAll(highText, `<span>${highText}</span>`);
+        });
+    }
+    alertMessage.innerHTML = message;
 
     alertOKBtn.onclick = okClick;
 
