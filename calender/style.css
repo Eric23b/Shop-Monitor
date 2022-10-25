@@ -41,7 +41,6 @@ html{
     scrollbar-width: thin;
     scrollbar-color: var(--border_color) transparent;
     scroll-behavior: smooth;
-    /* position: relative; */
 }
 *::-webkit-scrollbar-thumb:hover {
     background-color: var(--color);
@@ -78,7 +77,6 @@ body{
     color: var(--color);
     background-color: var(--background_color);
     inset: 0;
-    /* position: relative; */
     width: 100vw;
     height: 100vh;
 }
@@ -100,7 +98,6 @@ body *{
     flex-direction: column;
     flex-wrap: nowrap;
     justify-content: flex-start;
-    /* align-items: center; */
     align-content: center;
     inset: 0;
 }
@@ -112,7 +109,6 @@ body *{
     justify-content: flex-end;
     align-items: center;
     align-content: center;
-    /* gap: 2rem; */
     width: 100%;
     border-bottom: 1px solid var(--border_color);
     background: transparent;
@@ -129,6 +125,7 @@ body *{
 }
 .header-spacer{
     flex-grow: 1;
+    pointer-events: none;
 }
 
 .timer-page-link::after{
@@ -160,17 +157,14 @@ body *{
     scroll-behavior: smooth;
 }
 .week{
-    /* position: relative; */
     display: flex;
     flex-direction: row;
     flex-wrap: nowrap;
     justify-content: space-between;
-    /* align-items: center; */
     align-content: center;
     width: 100%;
     height: max-content;
     align-items: stretch;
-    /* align-items: flex-start; */
 }
 .day{
     display: flex;
@@ -240,8 +234,6 @@ body *{
     padding: 0 0.25em;
     margin: 0;
     text-align: center;
-    /* z-index: 1; */
-    /* font-size: clamp(0.25em, 1.5vw, 1.125em); */
 }
 .events-container p:hover{
     color: var(--yes);
@@ -263,7 +255,6 @@ body *{
     display: flex;
     flex-direction: row;
     flex-wrap: nowrap;
-    /* justify-content: space-evenly; */
     align-items: center;
     align-content: center;
     gap: 0.25rem;
@@ -274,13 +265,13 @@ body *{
     z-index: 10;
     border: none;
     background: transparent;
-    /* background-color: var(--background_transparent_color); */
+    pointer-events: none;
+}
+.footer-container :not(.header-spacer){
+    pointer-events: initial;
 }
 
 .today-button{
-    /* position: absolute; */
-    /* bottom: 0.75rem; */
-    /* left: 1rem; */
     z-index: 10;
     font-size: 1.5em;
     text-decoration: none;
@@ -301,22 +292,15 @@ body *{
     align-items: center;
     align-content: center;
     gap: 0.5rem;
-
-    /* position: absolute; */
     width: 100%;
     max-width: max-content;
-
-    /* bottom: 0.75rem; */
-    /* left: 10rem; */
     z-index: 10;
     padding: 0.125rem;
     font-size: 1.5em;
     text-decoration: none;
     border: 1px solid var(--yes);
     border-radius: 0.25rem;
-    /* opacity: 0.7; */
     cursor: pointer;
-    /* background: transparent; */
     background-color: var(--background_transparent_color);
 }
 .search-container *{
@@ -332,16 +316,13 @@ body *{
     font-size: large;
 }
 .search-clear-btn{
-    /* padding: 0.25rem; */
     opacity: 0.7;
     cursor: pointer;
-    /* font-size: larger; */
 }
 .search-clear-btn:hover{
     opacity: 1;
 }
 .search-btn{
-    /* padding: 0.25rem; */
     opacity: 0.7;
     cursor: pointer;
 }
@@ -369,9 +350,6 @@ body *{
 
 
 .add-job-btn{
-    /* position: absolute; */
-    /* bottom: 0.75rem; */
-    /* right: 1rem; */
     z-index: 10;
     border: none;
     opacity: 0.7;
@@ -389,9 +367,6 @@ body *{
 }
 
 .add-event-btn{
-    /* position: absolute; */
-    /* bottom: 0.75rem; */
-    /* right: 4rem; */
     z-index: 10;
     border: none;
     opacity: 0.7;
@@ -413,7 +388,6 @@ body *{
 .add-job-modal-background{
     display: flex;
     justify-content: center;
-    /* align-items: center; */
     position: absolute;
     inset: 0;
     z-index: 100;
@@ -428,16 +402,11 @@ body *{
     align-items: center;
     align-content: center;
     gap: 0.5em;
-    /* width: max-content;
-    max-width: 100%; */
     height: max-content;
     padding: 1rem;
     padding-top: 0;
     border: 1px solid var(--border_color);
 }
-/* .add-job-modal-title{
-    
-} */
 .add-job-name-label{
     font-size: 1.2em;
 }
@@ -475,7 +444,6 @@ body *{
     display: flex;
     flex-direction: row;
     flex-wrap: nowrap;
-    /* justify-content: center; */
     align-items: flex-start;
     gap: 1rem;
     width: max-content;
