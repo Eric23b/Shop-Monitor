@@ -79,7 +79,7 @@ const settings = {
     authorization: ""
 }
 
-let jobDateArray = [];
+let nameDateSearchArray = [];
 
 let draggingJobID = "";
 let draggingCalendarEvent = {id: "", startDate: "", endDate: "", isStartDate: true};
@@ -174,9 +174,9 @@ searchButton.addEventListener('click', () => {
 });
 
 function search(text) {
-    for (const job of jobDateArray) {
-        if (String(job.name).includes(text)) {
-            jumpToDate(job.date);
+    for (const element of nameDateSearchArray) {  // jobDateArray is updated every time buildCalender is run.
+        if (String(element.name).toLowerCase().includes(String(text).toLowerCase())) {
+            jumpToDate(element.date);
             return;
         }
     }
@@ -230,10 +230,12 @@ async function buildCalender(scrollTo) {
         jobs = [];
     };
 
-    jobDateArray = [];
+    nameDateSearchArray = [];
+    // Add jobs to search array
     jobs.forEach((job) => {
-        jobDateArray.push({name: job.name, date: job.shipDate});
+        nameDateSearchArray.push({name: job.name, date: job.shipDate});
     });
+
 
     const calendarResponse = await getDBEntrees(BUSINESS_SCHEMA, CALENDAR_TABLE, "id", "*", settings);
     if ((!calendarResponse) || (calendarResponse.error) || calendarResponse.length === 0) {
@@ -247,6 +249,11 @@ async function buildCalender(scrollTo) {
         if (nameA < nameB) return -1;
         if (nameA > nameB) return 1;
         return 0;
+    });
+
+    // Add calendar event to search array
+    calendarResponse.forEach((calendarEvent) => {
+        nameDateSearchArray.push({name: calendarEvent.name, date: calendarEvent.date});
     });
 
     // Sort calendar events by number of days
@@ -376,8 +383,12 @@ async function buildCalender(scrollTo) {
             dayNameElement.classList.add('day-week-name');
             if (dateIndex.getDate() == 1) {
                 const options = { month: "long" };
-                dayNameElement.textContent = (new Intl.DateTimeFormat("en-CA", options).format(dateIndex));
+                const monthText = (new Intl.DateTimeFormat("en-CA", options).format(dateIndex));
+                dayNameElement.textContent = monthText
                 dayNameElement.classList.add('day-title-first-of-the-month');
+
+                // Add months to search array
+                nameDateSearchArray.push({name: monthText, date: calendarDate});
             }
             else {
                 dayNameElement.textContent = dateIndex.toLocaleString('default', {weekday: 'short'});
@@ -519,6 +530,9 @@ async function buildCalender(scrollTo) {
             // dayContainer.appendChild(inActiveJobsContainer);
     
             weekContainer.appendChild(dayContainer);
+
+            // Add dates to search array
+            nameDateSearchArray.push({name: calendarDate, date: calendarDate});
 
             // Increment day
             dateIndex.setDate(dateIndex.getDate() + 1);
