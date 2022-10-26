@@ -386,7 +386,8 @@ export function showJobDialog(job, jobs, allTasks, OKCallback, cancelCallback, w
         }
 
         job.name = jobName;
-        job.shipDate = jobShipDateInput.value;
+        job.shipDate = jobShipDateInput.value || jobs[0].shipDate || (new Date()).toLocaleDateString('en-CA');
+        job.estimatedDate = job.shipDate;
         job.active = jobActiveInput.checked;
         job.note = jobNotesTextArea.value;
 
