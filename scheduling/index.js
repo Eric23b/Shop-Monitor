@@ -240,8 +240,29 @@ async function loadJobs(jobs) {
             return 0;
         });
     }
+    const btn = document.createElement('button');
+    btn.textContent = "⇨";
+    btn.style.cssText = `
+        color: var(--yes);
+        border: none;
+        font-size: 2.5em;
+        cursor: pointer;`;
+    btn.setAttribute('title', 'Update All Ship Dates');
+    btn.onclick = async () => {
+        showYesNoDialog("Update All Ship Dates?",
+            async () => {
+                jobs.forEach(async (job) => {
+                    if (job.active) {
+                        job.shipDate = job.estimatedDate;
+                        await updateDBEntry(BUSINESS_SCHEMA, JOBS_TABLE, {id: job.id, shipDate: job.shipDate}, settings);
+                    }
+                });
+                await loadJobs(jobs);
+            }
+        );
+    };
     jobsTable.innerHTML = "";
-    jobsTable.appendChild(getTableHeaderRow(["Name", "Estimated\nDate", "", "Ship\nDate", "Progress", "Note", "Active", "Shop\nHours", "Edit", "Delete", ""]));
+    jobsTable.appendChild(getTableHeaderRow(["Name", "Estimated\nDate", btn, "Ship\nDate", "Progress", "Note", "Active", "Shop\nHours", "Edit", "Delete", ""]));
 
     jobs.forEach((job, jobIndex) => {
         const jobTimes = getJobTimes(job);
