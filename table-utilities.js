@@ -3,7 +3,12 @@ export function getTableHeaderRow(headers) {
     const row = document.createElement('tr');
     headers.forEach((header) => {
         const tableHeader = document.createElement('th');
-        tableHeader.textContent = header;
+        if (typeof header === 'string') {
+            tableHeader.textContent = header;
+        }
+        else {
+            tableHeader.appendChild(header);
+        }
         row.appendChild(tableHeader);
     });
     return row;
