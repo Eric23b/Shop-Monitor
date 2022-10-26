@@ -667,7 +667,8 @@ async function loadPartIssues() {
     
     response.sort((a, b) => {return b.__createdtime__ - a.__createdtime__});
 
-    partIssuesTable.innerHTML = getTableHeaderRow(["Job", "Cabinet", "Part", "Note", "Date", "Time", "Sent*", "Show", "Delete"]);
+    partIssuesTable.innerHTML = "";
+    partIssuesTable.appendChild(getTableHeaderRow(["Job", "Cabinet", "Part", "Note", "Date", "Time", "Sent*", "Show", "Delete"]));
 
     for (const entry of response) {
         const row = document.createElement('tr');
@@ -723,8 +724,9 @@ async function loadSuppliesIssues() {
 
     response.sort((a, b) => {return b.__createdtime__ - a.__createdtime__});
 
-    supplyIssuesTable.innerHTML = 
-        getTableHeaderRow(["Category", "Item", "Currently", "Note", "Date", "Time", "Ordered*", "Show", "Delete"]);
+    supplyIssuesTable.innerHTML = "";
+    supplyIssuesTable.appendChild(getTableHeaderRow(["Category", "Item", "Currently", "Note", "Date", "Time", "Ordered*", "Show", "Delete"]))
+        // getTableHeaderRow(["Category", "Item", "Currently", "Note", "Date", "Time", "Ordered*", "Show", "Delete"]);
 
     for (const entry of response) {
         const row = document.createElement('tr');
@@ -781,8 +783,8 @@ async function loadTimeClockIssues() {
 
     response.sort((a, b) => {return b.__createdtime__ - a.__createdtime__});
 
-    timeClockTabTable.innerHTML = 
-        getTableHeaderRow(["Name", "Missed Time", "Note", "Date", "Time", "Acknowledged*", "Delete"]);
+    timeClockTabTable.innerHTML = "";
+    timeClockTabTable.appendChild(getTableHeaderRow(["Name", "Missed Time", "Note", "Date", "Time", "Acknowledged*", "Delete"]));
 
     for (const entry of response) {
         const row = document.createElement('tr');
@@ -828,8 +830,8 @@ async function loadOtherIssues() {
 
     response.sort((a, b) => {return b.__createdtime__ - a.__createdtime__});
 
-    otherIssuesTable.innerHTML = 
-        getTableHeaderRow(["Note", "Date", "Time", "Acknowledged*", "Delete"]);
+    otherIssuesTable.innerHTML = "";
+    otherIssuesTable.appendChild(getTableHeaderRow(["Note", "Date", "Time", "Acknowledged*", "Delete"]));
 
     for (const entry of response) {
         const row = document.createElement('tr');
@@ -870,12 +872,12 @@ async function loadTimersTable() {
     if ((!completedTasks) || (completedTasks.error)) return;
     completedTasks.sort((a, b) => {return a.__createdtime__ - b.__createdtime__});
     
-    console.log(`${completedTasks.length} completed tasks.`);
+    // console.log(`${completedTasks.length} completed tasks.`);
 
     // Get all jobs
-    const activeJobs = await getDBEntrees(BUSINESS_SCHEMA, JOBS_TABLE, "__createdtime__", "*", settings, dbActive);
-    if ((!activeJobs) || (activeJobs.error)) return;
-    activeJobs.sort((a, b) => {
+    const jobs = await getDBEntrees(BUSINESS_SCHEMA, JOBS_TABLE, "__createdtime__", "*", settings, dbActive);
+    if ((!jobs) || (jobs.error)) return;
+    jobs.sort((a, b) => {
         const nameA = String(a.name).toUpperCase();
         const nameB = String(b.name).toUpperCase();
         if (nameA < nameB) return 1;
@@ -895,7 +897,7 @@ async function loadTimersTable() {
     const tableData = [["Job", ...taskArray, "Total"]];
 
     // Add jobs to tableData
-    activeJobs.forEach((job) => {
+    jobs.forEach((job) => {
         tableData.push([String(job.id)]);
     });
 
@@ -919,7 +921,7 @@ async function loadTimersTable() {
 
     // Replace jobIDs with their names
     tableData.forEach((row) => {
-        activeJobs.forEach((job) => {
+        jobs.forEach((job) => {
             if (job.id === row[0]) {
                 row[0] = String(job.name);
             }
@@ -951,16 +953,19 @@ async function loadTimersTable() {
             if (row[colIndex]) {
                 row[colIndex] = msToTime(row[colIndex]);
             }
+            else {
+                row[colIndex] = "";
+            }
         }
     }
 
-    let rowsOfData = "";
+    timersTable.innerHTML = "";
+    timersTable.appendChild(getTableHeaderRow(tableData[0]));
+    
     for (let rowIndex = 1; rowIndex < tableData.length; rowIndex++) {
         const row = tableData[rowIndex];
-        rowsOfData += getTableDataRow(row);
+        timersTable.appendChild(getTableDataRow(row));
     }
-
-    timersTable.innerHTML = getTableHeaderRow(tableData[0]) + rowsOfData;
 
     timerLogCSV = "";
     tableData.forEach((row) => {
@@ -1023,7 +1028,8 @@ async function loadJobsTable() {
     //     return 0;
     // });
 
-    employeeTable.innerHTML = getTableHeaderRow(["Name", "Ship Date", "Additional Supplies", "Note", "Active", "Delete"]);
+    employeeTable.innerHTML = "";
+    employeeTable.appendChild(getTableHeaderRow(["Name", "Ship Date", "Additional Supplies", "Note", "Active", "Delete"]));
 
     for (const entry of response) {
         // Job name
@@ -1057,7 +1063,8 @@ async function loadJobsTable() {
                 additionalSuppliesText += suppliesText.supplies + " : " + suppliesText.note + "\n";
             }
             additionalSupplies.onclick = () => {
-                tableModalTable.innerHTML = getTableHeaderRow(["Supplies", "Note", "Delete"]);
+                tableModalTable.innerHTML = "";
+                tableModalTable.appendChild(getTableHeaderRow(["Supplies", "Note", "Delete"]));
                 
                 for (let supplyIndex = 0; supplyIndex < entry.additionalSupplies.length; supplyIndex++) {
                     const additionalSuppliesLine = entry.additionalSupplies[supplyIndex];
@@ -1170,7 +1177,8 @@ async function loadEmployeeTable() {
         return 0;
     });
 
-    employeesTable.innerHTML = getTableHeaderRow(["Name", "Stations", "Shift Start", "Shift End", "Active", "Delete"]);
+    employeesTable.innerHTML = "";
+    employeesTable.appendChild(getTableHeaderRow(["Name", "Stations", "Shift Start", "Shift End", "Active", "Delete"]));
 
     for (const entry of response) {
         const row = document.createElement('tr');
@@ -1365,7 +1373,8 @@ async function loadWorkStationTable() {
         appendChildren(row, [name, tasksTD, active, deleteTD]);
             rowElementArray.push(row);
     };
-    workStationsTable.innerHTML = getTableHeaderRow(["Station", "Tasks", "Active", "Delete"]);
+    workStationsTable.innerHTML = "";
+    workStationsTable.appendChild(getTableHeaderRow(["Station", "Tasks", "Active", "Delete"]));
     rowElementArray.forEach((row) => {
         workStationsTable.appendChild(row);
     });
@@ -1427,7 +1436,8 @@ async function loadTasksTable() {
         return 0;
     });
 
-    tasksTable.innerHTML = getTableHeaderRow(["Name", "Hours", "Minutes", "Active", "Delete"]);
+    tasksTable.innerHTML = "";
+    tasksTable.appendChild(getTableHeaderRow(["Name", "Hours", "Minutes", "Active", "Delete"]));
 
     for (const entry of response) {
         const row = document.createElement('tr');
@@ -1503,7 +1513,8 @@ async function loadSupplyListTable() {
         return 0;
     });
 
-    supplyListTable.innerHTML = getTableHeaderRow(["Category", "Item", "Delete"]);
+    supplyListTable.innerHTML = "";
+    supplyListTable.appendChild(getTableHeaderRow(["Category", "Item", "Delete"]));
 
     for (const entry of response) {
         const row = document.createElement('tr');

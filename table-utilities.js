@@ -1,19 +1,21 @@
 
 export function getTableHeaderRow(headers) {
-    let htmlText = "<tr>";
+    const row = document.createElement('tr');
     headers.forEach((header) => {
-        htmlText += `<th>${header}</th>`;
+        const tableHeader = document.createElement('th');
+        tableHeader.textContent = header;
+        row.appendChild(tableHeader);
     });
-    htmlText += "</tr>";
-    return htmlText;
+    return row;
 }
 export function getTableDataRow(dataArray) {
-    let htmlText = "<tr>";
-    for (const data of dataArray) {
-        htmlText += `<td>${data || ""}</td>`;
-    }
-    htmlText += "</tr>";
-    return htmlText;
+    const row = document.createElement('tr');
+    dataArray.forEach((data) => {
+        const tableData = document.createElement('td');
+        tableData.textContent = data;
+        row.appendChild(tableData);
+    });
+    return row;
 }
 
 export function getTableDataWithText(text, AddAlertText) {

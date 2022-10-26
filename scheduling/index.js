@@ -240,8 +240,8 @@ async function loadJobs(jobs) {
             return 0;
         });
     }
-
-    jobsTable.innerHTML = getTableHeaderRow(["Name", "Estimated\nDate", "", "Ship\nDate", "Progress", "Note", "Active", "Shop\nHours", "Edit", "Delete", ""]);
+    jobsTable.innerHTML = "";
+    jobsTable.appendChild(getTableHeaderRow(["Name", "Estimated\nDate", "", "Ship\nDate", "Progress", "Note", "Active", "Shop\nHours", "Edit", "Delete", ""]));
 
     jobs.forEach((job, jobIndex) => {
         const jobTimes = getJobTimes(job);
@@ -370,6 +370,7 @@ async function loadJobs(jobs) {
             grabber.setAttribute('job-index', jobIndex);
         }
 
+        // jobsTable.appendChild(secondHeader);
         appendChildren(row, [name, estimatedDate, updateShipDate, shipDate, progressBar, note, active, hours, edit, deleteTD, grabber]);
         jobsTable.appendChild(row);
     });
