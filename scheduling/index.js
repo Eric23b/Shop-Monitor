@@ -114,7 +114,7 @@ addNewJobBtn.addEventListener('click', async () => {
     );
 });
 
-await loadJobs();
+await loadJobs(null, true);
 
 
 
@@ -123,7 +123,7 @@ await loadJobs();
 
 
 
-async function loadJobs(jobs) {
+async function loadJobs(jobs, sortByIndex) {
     if (jobs == null) {
         jobs = await getDBEntrees(BUSINESS_SCHEMA, JOBS_TABLE, "__createdtime__", "*", settings);
         if ((!jobs) || (jobs.error)) return;
@@ -149,106 +149,15 @@ async function loadJobs(jobs) {
 
     await updateEstimateDates(jobs);
 
-    async function updateEstimateDates(jobs) {
-
-        class ChronologicalTaskPointer {
-            constructor(tasksResponse) {
-                this.tasks = JSON.parse(JSON.stringify(tasksResponse));
-                this.tasks.forEach((task) => {
-                    task.dailyAvailableMinutes = (task.hours * 60) + task.minutes;
-                    task.minutePointer = 0;
-                });
-                this.lastMinutePointer = 0;
-            }
-
-            incTaskPointer(taskID, minutes, newSequence) {
-                const finishDate = this.#getToday();
-                let daysRemaining = 0;
-                let taskFound = false;
-                this.tasks.forEach((task) => {
-                    if (task.id === taskID) {
-                        taskFound = true;
-
-                        daysRemaining = Math.floor(((newSequence ? this.lastMinutePointer : 0) + task.minutePointer + minutes) / task.dailyAvailableMinutes);
-                        task.minutePointer += minutes;
-                        this.lastMinutePointer = task.minutePointer;
-                        incWorkDay(finishDate, daysRemaining);
-                    }
-                });
-                if (!taskFound) console.log("Task not found.");
-                return finishDate;
-            }
-
-            #getToday() {
-                const utcDate = new Date();
-                return new Date(utcDate.getTime() + utcDate.getTimezoneOffset() * 60000);
-            }
-        }
-
-        // Sort by index
-        jobs.sort((a, b) => {
-            const nameA = a.index;
-            const nameB = b.index;
-            if (nameA > nameB) return -1;
-            if (nameA < nameB) return 1;
-            return 0;
-        });
-
-        const tasksResponse = await getDBEntrees(BUSINESS_SCHEMA, TASKS_TABLE, "id", "*", settings);
-        if ((!tasksResponse) || (tasksResponse.error)) return;
-        if (tasksResponse.length == 0) return;
-
-        const taskPointerObj = new ChronologicalTaskPointer(tasksResponse);
-
-        jobs.forEach((job) => {
-            if (!job.active) return;
-            if (!job.sequences) return;
-
-            let dateOfCompletion = (new Date()).toLocaleDateString('en-CA');
-            job.sequences.forEach((sequence) => {
-                if (!sequence.tasks) return;
-
-                let newSequence = true;
-                sequence.tasks.forEach((task) => {
-                    if (!task.completed) {
-                        const remainingTimePerTaskInMinutes = Number(task.hours * 60) + Number(task.minutes);
-                        dateOfCompletion = taskPointerObj.incTaskPointer(task.id, remainingTimePerTaskInMinutes, newSequence).toLocaleDateString('en-CA');
-                    }
-                    newSequence = false;
-                });
-            });
-            job.estimatedDate = dateOfCompletion;
-        });
-
-
-
-        // Sort by index
-        jobs.sort((a, b) => {
-            const nameA = a.index;
-            const nameB = b.index;
-            if (nameA > nameB) return 1;
-            if (nameA < nameB) return -1;
-            return 0;
-        });
-
-        // Sort by active
-        jobs.sort((a, b) => {
-            const nameA = a.active;
-            const nameB = b.active;
-            if (nameA < nameB) return 1;
-            if (nameA > nameB) return -1;
-            return 0;
-        });
-    }
-    const btn = document.createElement('button');
-    btn.textContent = "⇨";
-    btn.style.cssText = `
+    const updateAllEstimatedDatesBtn = document.createElement('button');
+    updateAllEstimatedDatesBtn.textContent = "⇨";
+    updateAllEstimatedDatesBtn.style.cssText = `
         color: var(--yes);
         border: none;
         font-size: 2.5em;
         cursor: pointer;`;
-    btn.setAttribute('title', 'Update All Ship Dates');
-    btn.onclick = async () => {
+    updateAllEstimatedDatesBtn.setAttribute('title', 'Update All Ship Dates');
+    updateAllEstimatedDatesBtn.onclick = async () => {
         showYesNoDialog("Update All Ship Dates?",
             async () => {
                 jobs.forEach(async (job) => {
@@ -261,8 +170,9 @@ async function loadJobs(jobs) {
             }
         );
     };
+
     jobsTable.innerHTML = "";
-    jobsTable.appendChild(getTableHeaderRow(["Name", "Estimated\nDate", btn, "Ship\nDate", "Progress", "Note", "Active", "Shop\nHours", "Edit", "Delete", ""]));
+    jobsTable.appendChild(getTableHeaderRow(["Name", "Estimated\nDate", updateAllEstimatedDatesBtn, "Ship\nDate", "Progress", "Note", "Active", "Remaining\nTime", "Shop\nTime", "Edit", "Delete", ""]));
 
     jobs.forEach((job, jobIndex) => {
         const jobTimes = getJobTimes(job);
@@ -293,6 +203,7 @@ async function loadJobs(jobs) {
         }
         name.style.cursor = "pointer";
 
+        // Estimated date
         const estimatedDateString = job.estimatedDate ? job.estimatedDate : "";
         const estimatedDate = getTableDataWithText(job.active ? estimatedDateString : "");
         estimatedDate.setAttribute('title', getDateText(job.estimatedDate));
@@ -311,6 +222,7 @@ async function loadJobs(jobs) {
             });
         }
 
+        // Ship date
         const shipDate = getTableDataWithEditText(job.shipDate);
         shipDate.setAttribute('title', getDateText(job.shipDate));
         // const month = new Date(job.shipDate).toLocaleString("en-CA", { month: "long" }).toLowerCase();
@@ -333,8 +245,8 @@ async function loadJobs(jobs) {
         });
 
         // Note
-        // const note = getTableDataWithEditText(job.index || "");
-        const note = getTableDataWithEditText(job.note);
+        const note = getTableDataWithEditText(job.index || "");
+        // const note = getTableDataWithEditText(job.note);
         note.onclick = async () => {
             showInputDialog("Note", job.note, async (note) => {
                 job.note = note;
@@ -344,6 +256,7 @@ async function loadJobs(jobs) {
         }
         note.style.cursor = "pointer";
 
+        // Active
         const active = getTableDataWithCheckbox(
             job.active,
             async (event) => {
@@ -353,7 +266,11 @@ async function loadJobs(jobs) {
             }
         );
 
-        const hours = getTableDataWithText(`${jobTimes.totalHours}:${jobTimes.totalMinutes}`);
+        // Shop Hours
+        const shopHours = getTableDataWithText(`${jobTimes.totalHours}:${jobTimes.totalMinutes}`);
+
+        // Remaining Time
+        const remainingHours = getTableDataWithText(`${jobTimes.remainingTimeString}`);
 
         // Edit job
         const edit = getTableDataWithText("✏");
@@ -372,11 +289,12 @@ async function loadJobs(jobs) {
                     await loadJobs();
                 },
                 async (oldJob) => {
-                    await loadJobs();
+                    await loadJobs(jobs);
                 }
             );
         });
 
+        // Delete
         const deleteTD = getTableDataWithDeleteButton(async () => {
             if (showYesNoDialog(`Delete Job ${(job.name || "")}?`, async () => {
                 await deleteDBEntry(BUSINESS_SCHEMA, JOBS_TABLE, job.id, settings);
@@ -385,15 +303,110 @@ async function loadJobs(jobs) {
         });
         deleteTD.classList.add('table-delete-btn');
 
+        // Grabber
         let grabber = document.createElement('td');
         if (job.active) {
             grabber = getTableDataWithGrabber();
             grabber.setAttribute('job-index', jobIndex);
         }
 
-        // jobsTable.appendChild(secondHeader);
-        appendChildren(row, [name, estimatedDate, updateShipDate, shipDate, progressBar, note, active, hours, edit, deleteTD, grabber]);
+        appendChildren(row, [name, estimatedDate, updateShipDate, shipDate, progressBar, note, active, remainingHours, shopHours, edit, deleteTD, grabber]);
         jobsTable.appendChild(row);
+    });
+}
+
+async function updateEstimateDates(jobs) {
+
+    class ChronologicalTaskPointer {
+        constructor(tasksResponse) {
+            this.tasks = JSON.parse(JSON.stringify(tasksResponse));
+            this.tasks.forEach((task) => {
+                task.dailyAvailableMinutes = (task.hours * 60) + task.minutes;
+                task.minutePointer = 0;
+            });
+            this.lastMinutePointer = 0;
+        }
+
+        incTaskPointer(taskID, minutes, newSequence) {
+            const finishDate = this.#getToday();
+            let daysRemaining = 0;
+            let taskFound = false;
+            this.tasks.forEach((task) => {
+                if (task.id === taskID) {
+                    taskFound = true;
+
+                    daysRemaining = Math.floor(((newSequence ? this.lastMinutePointer : 0) + task.minutePointer + minutes) / task.dailyAvailableMinutes);
+                    task.minutePointer += minutes;
+                    this.lastMinutePointer = task.minutePointer;
+                    incWorkDay(finishDate, daysRemaining);
+                }
+            });
+            if (!taskFound) console.log("Task not found.");
+            return finishDate;
+        }
+
+        #getToday() {
+            const utcDate = new Date();
+            return new Date(utcDate.getTime() + utcDate.getTimezoneOffset() * 60000);
+        }
+    }
+
+    // Sort by index
+    jobs.sort((a, b) => {
+        const nameA = a.index;
+        const nameB = b.index;
+        if (nameA > nameB) return -1;
+        if (nameA < nameB) return 1;
+        return 0;
+    });
+
+    const tasksResponse = await getDBEntrees(BUSINESS_SCHEMA, TASKS_TABLE, "id", "*", settings);
+    if ((!tasksResponse) || (tasksResponse.error)) return;
+    if (tasksResponse.length == 0) return;
+
+    const taskPointerObj = new ChronologicalTaskPointer(tasksResponse);
+
+    let dateOfCompletion = (new Date()).toLocaleDateString('en-CA');
+    jobs.forEach((job) => {
+        if (!job.active) return;
+        if (!job.sequences) return;
+
+        let maxDateOfCompletion = dateOfCompletion;
+
+        job.sequences.forEach((sequence) => {
+            if (!sequence.tasks) return;
+
+            let newSequence = true;
+            sequence.tasks.forEach((task) => {
+                if (!task.completed) {
+                    const remainingTimePerTaskInMinutes = Number(task.hours * 60) + Number(task.minutes);
+                    dateOfCompletion = taskPointerObj.incTaskPointer(task.id, remainingTimePerTaskInMinutes, newSequence).toLocaleDateString('en-CA');
+                    if (Number(dateOfCompletion.replaceAll("-", "")) > Number(maxDateOfCompletion.replaceAll("-", ""))) {
+                        maxDateOfCompletion = dateOfCompletion;
+                    }
+                }
+                newSequence = false;
+            });
+        });
+        job.estimatedDate = maxDateOfCompletion;
+    });
+
+    // Sort by index
+    jobs.sort((a, b) => {
+        const nameA = a.index;
+        const nameB = b.index;
+        if (nameA > nameB) return 1;
+        if (nameA < nameB) return -1;
+        return 0;
+    });
+
+    // Sort by active
+    jobs.sort((a, b) => {
+        const nameA = a.active;
+        const nameB = b.active;
+        if (nameA < nameB) return 1;
+        if (nameA > nameB) return -1;
+        return 0;
     });
 }
 
@@ -496,6 +509,10 @@ function getJobTimes(job) {
     const totalTimeInMinutes = ((times.totalHours * 60) + times.totalMinutes);
     const totalCompletedTimeInMinutes = ((times.completedHours * 60) + times.completedMinutes);
     times.totalTimeRemainingInMinutes = totalTimeInMinutes - totalCompletedTimeInMinutes;
+
+    const remainingHours = Math.floor(times.totalTimeRemainingInMinutes / 60);
+    const remainingMinutes = (Math.floor(times.totalTimeRemainingInMinutes) - (Math.floor(times.totalTimeRemainingInMinutes / 60) * 60));
+    times.remainingTimeString = `${remainingHours}:${remainingMinutes}`;
     return times;
 }
 
