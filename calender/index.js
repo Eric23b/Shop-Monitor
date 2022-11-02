@@ -179,25 +179,42 @@ searchClearButton.addEventListener('click', () => {searchInput.value = "";});
 searchButton.addEventListener('click', () => {search(searchInput.value);});
 
 function search(searchText) {
-    if (searchText === "") return;
-    const inputText = String(searchText).toLowerCase();
+    const inputText = String(searchText).toLowerCase().trim();
+
+    if (inputText === "") return;
+    
+    let searchFound = false;
+
     // nameDateSearchArray is updated every time buildCalender is run.
     for (const element of nameDateSearchArray) {
-        const name = String(element.name).toLowerCase();
-        const date = String(element.date).toLowerCase();
+        const name = String(element.name).toLowerCase().trim();
+        const date = String(element.date).toLowerCase().trim();
 
         if (inputText.includes(" ")) {
             const inputTextA = inputText.split(" ")[0];
             const inputTextB = inputText.split(" ")[1];
             if ((name.includes(inputTextA)) && (name.split(" ")[1] === inputTextB)) {
                 jumpToDate(date);
+                searchFound = true;
+                break;
             }
         }
         else {
             if (name.includes(inputText)) {
                 jumpToDate(date);
-                return;
+                searchFound = true;
+                break;
             }
+        }
+    }
+
+    if (!searchFound) {
+        searchNotFound();
+        function searchNotFound() {
+            searchInput.style.color = "var(--no)";
+            setTimeout(() => {
+                searchInput.style.color = "var(--yes)";
+            }, 500);
         }
     }
 }
