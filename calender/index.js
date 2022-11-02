@@ -140,17 +140,22 @@ document.querySelector('#calender').addEventListener('contextmenu', (event) => {
     event.preventDefault();
 });
 
-buildCalender("today");
+await buildCalender();
+search("today");
 
 startOverTimeTimer(stationName, settings, stopRunningTimer);
 
 addNumberOfRunningTimersToTimerPageLink(timerPageLink, stationName, settings);
 
 
-const autoUpdateTimer = new Timer(() => {
-    if (dialogIsOpen()) return;
-    buildCalender();
-}, 1000 * 60 * 1, true);
+const autoUpdateTimer = new Timer(
+    () => {
+        if (dialogIsOpen()) return;
+        buildCalender();
+    },
+    1000 * 60 * 1,
+    true
+);
 
 // Clear editing
 if (canEditJob) {
@@ -267,7 +272,8 @@ async function buildCalender(scrollTo) {
         jobs = [];
     };
 
-    nameDateSearchArray = [];
+    // Reset nameDateSearchArray and add today
+    nameDateSearchArray = [{name: "today", date: (new Date()).toLocaleDateString('en-CA')}];
     // Add jobs to search array
     jobs.forEach((job) => {
         nameDateSearchArray.push({name: job.name, date: job.shipDate});
@@ -439,7 +445,7 @@ async function buildCalender(scrollTo) {
             }
             dayNumberElement.textContent = dayNumber;
 
-                // Add months to search array
+            // Add month/ and day to search array
             nameDateSearchArray.push({name: monthText + " " + dayNumber, date: calendarDate});
 
             // Add Jobs
@@ -585,11 +591,6 @@ async function buildCalender(scrollTo) {
 
     calenderContainer.innerHTML = "";
     calenderContainer.append(...weeks);
-
-    if (scrollTo === "today") {
-        const todayElement = document.querySelector('#today');
-        todayElement.scrollIntoView();
-    }
 }
 
 function getJobTimes(job) {
@@ -677,12 +678,18 @@ function getDates(jobs, events) {
 }
 
 function jumpToDate(date) {
-    const todayElement = document.querySelector(`.date-${date}`);
-    if (todayElement === null) return;
-    todayElement.scrollIntoView();
-    todayElement.style.backgroundColor = "var(--yes)";
+    let dateElement = document.querySelector(`.date-${date}`);
+
+    if (date === "today") {
+        dateElement = document.querySelector('#today');
+    }
+
+    if (dateElement === null) return;
+    
+    dateElement.scrollIntoView();
+    dateElement.style.backgroundColor = "var(--yes)";
     setTimeout(() => {
-        todayElement.style.backgroundColor = "var(--background_color)";
+        dateElement.style.backgroundColor = "var(--background_color)";
     }, 1000);
 };
 
