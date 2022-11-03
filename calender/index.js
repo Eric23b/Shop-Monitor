@@ -349,13 +349,13 @@ async function buildCalender(scrollTo) {
             dateIndex.setDate(dateIndex.getDate() - 1);
         }
     }
-    dateIndex.setDate(dateIndex.getDate() - 98);
+    dateIndex.setDate(dateIndex.getDate() - (15 * 7));  // weeks
     
-    const lastDatePlusOneMonth = getCorrectDate(dates.lastSaturday);
+    const lastDatePlusNDays = getCorrectDate(dates.lastSaturday);
     
-    lastDatePlusOneMonth.setDate(lastDatePlusOneMonth.getDate() + 105);
+    lastDatePlusNDays.setDate(lastDatePlusNDays.getDate() + (22 * 7));
 
-    const allDatesInArray = getAllDatesInArray(dateIndex, lastDatePlusOneMonth);
+    const allDatesInArray = getAllDatesInArray(dateIndex, lastDatePlusNDays);
     calendarResponse.forEach((calendarEvent) => {
         calendarEvent.dates = [];
         allDatesInArray.forEach((date) => {
@@ -599,7 +599,7 @@ async function buildCalender(scrollTo) {
             // Increment day
             dateIndex.setDate(dateIndex.getDate() + 1);
 
-            if (dateIndex.toDateString('en-CA') === lastDatePlusOneMonth.toDateString('en-CA')) endCalender = true;
+            if (dateIndex.toDateString('en-CA') === lastDatePlusNDays.toDateString('en-CA')) endCalender = true;
         };
         weeks.push(weekContainer);
     }
