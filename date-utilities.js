@@ -15,11 +15,9 @@ export function getDueInDaysFromNowText(shipDate) {
 
 export function getCorrectDateOrder(startDate, endDate) {
     if (startDate.replaceAll("-", "") > endDate.replaceAll("-", "")) {
-        console.log('Greater');
         return {start: endDate, end: startDate};
     }
     else {
-        console.log('Less');
         return {start: startDate, end: endDate};
     }
 }
