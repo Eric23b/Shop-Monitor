@@ -46,6 +46,7 @@ import {
 import {
     getDueInDaysFromNowText,
     getCorrectDate,
+    getCorrectDateOrder,
 } from "../date-utilities.js";
 
 import {
@@ -301,6 +302,7 @@ async function buildCalender(scrollTo) {
 
     // Sort calendar events by number of days
     calendarResponse.sort((a, b) => {
+        // TODO: Check if dates are not null
         const aEventsLength = Number((a.endDate || a.date ).replaceAll("-", "")) - Number(a.date.replaceAll("-", ""));
         const bEventsLength = Number((b.endDate || b.date ).replaceAll("-", "")) - Number(b.date.replaceAll("-", ""));
         if (aEventsLength < bEventsLength) {
@@ -321,6 +323,14 @@ async function buildCalender(scrollTo) {
         if (nameA < nameB) return 1;
         if (nameA > nameB) return -1;
         return 0;
+    });
+
+    // Correct any miss ordered dates
+    calendarResponse.forEach((calendarEvent) => {
+        if (calendarEvent.date === calendarEvent.endDate) return;
+        const correctedDate = getCorrectDateOrder(calendarEvent.date, calendarEvent.endDate);
+        calendarEvent.date = correctedDate.start;
+        calendarEvent.endDate = correctedDate.end;
     });
 
     const canEditJob = await canEditJobs();
@@ -377,9 +387,12 @@ async function buildCalender(scrollTo) {
             dayContainer.addEventListener('drop', async () => {
                 dayContainer.classList.remove('drag-over');
 
+                // Job drag drop
                 if (draggingJobID && canEditJob) {
                     await updateDBEntry(BUSINESS_SCHEMA, JOBS_TABLE, {id: draggingJobID, shipDate: calendarDate}, settings);
                 }
+
+                // Calender drag drop
                 if (draggingCalendarEvent.id && canEditCalendar) {
                     if (draggingCalendarEvent.startDate === draggingCalendarEvent.endDate) {
                         await updateDBEntry(BUSINESS_SCHEMA, CALENDAR_TABLE, {id: draggingCalendarEvent.id, date: calendarDate}, settings);
@@ -387,6 +400,7 @@ async function buildCalender(scrollTo) {
                     else {
                         let startDate = draggingCalendarEvent.startDate;
                         let endDate = draggingCalendarEvent.endDate;
+
                         if (draggingCalendarEvent.isStartDate) {
                             if (calendarDate.replaceAll("-", "") > endDate.replaceAll("-", "")) {
                                 startDate = endDate;
@@ -408,6 +422,7 @@ async function buildCalender(scrollTo) {
                                 endDate = calendarDate;
                             }
                         }
+
                         await updateDBEntry(BUSINESS_SCHEMA, CALENDAR_TABLE, {
                             id: draggingCalendarEvent.id,
                             date: startDate,
@@ -685,7 +700,7 @@ function jumpToDate(date) {
     }
 
     if (dateElement === null) return;
-    
+
     dateElement.scrollIntoView();
     dateElement.style.backgroundColor = "var(--yes)";
     setTimeout(() => {

@@ -1,6 +1,12 @@
 import {
     getDueInDaysFromNowText,
+    getCorrectDateOrder,
 } from "../date-utilities.js";
+
+import {
+    isDev,
+    isProd,
+} from "../build.js";
 
 const modalBackgroundStyles = `
     position: fixed;
@@ -516,7 +522,6 @@ async function showAddTaskDialog(sequenceName, task, allTasks, OKCallback, cance
     const sequenceNameInput = document.createElement('input');
     sequenceNameInput.setAttribute('list', 'sequence-name-data-list');
     sequenceNameInput.style.cssText = modalInputStyles;
-    sequenceNameInput.value = sequenceName;
     sequenceNameInput.disabled = sequenceName ? true : false;
     const sequenceNameDataList = document.createElement('datalist');
     sequenceNameDataList.setAttribute('id','sequence-name-data-list')
@@ -526,6 +531,7 @@ async function showAddTaskDialog(sequenceName, task, allTasks, OKCallback, cance
         sequenceName.value = sequenceNameOption;
         sequenceNameDataList.appendChild(sequenceName);
     });
+    sequenceNameInput.value = sequenceName ? sequenceName : optionsText[0];
     const sequenceNameLabel = document.createElement('label');
     sequenceNameLabel.textContent = "Sequence Name";
     sequenceNameLabel.style.cssText = blockInputLabelStyles;
@@ -628,6 +634,7 @@ function showAddTaskFromTextDialog(sequences, allTasks, OKCallback, cancelCallba
         sequenceName.value = sequenceNameOption;
         sequenceNameDataList.appendChild(sequenceName);
     });
+    sequenceNameInput.value = optionsText[0];
     const sequenceNameLabel = document.createElement('label');
     sequenceNameLabel.textContent = "Sequence Name";
     sequenceNameLabel.style.cssText = blockInputLabelStyles;
@@ -635,24 +642,29 @@ function showAddTaskFromTextDialog(sequences, allTasks, OKCallback, cancelCallba
     sequenceNameLabel.appendChild(sequenceNameDataList);
 
     // Text
-    const TextArea = document.createElement('textarea');
-    TextArea.style.cssText = modalInputTextAreaStyles;
-    TextArea.style.height = '15rem';
+    const textArea = document.createElement('textarea');
+    textArea.style.cssText = modalInputTextAreaStyles;
+    textArea.style.height = '15rem';
     const sequenceTextLabel = document.createElement('label');
     sequenceTextLabel.textContent = "Text";
     sequenceTextLabel.style.cssText = blockInputLabelStyles;
-    sequenceTextLabel.appendChild(TextArea);
+    sequenceTextLabel.appendChild(textArea);
 
-    TextArea.value = `Job Labor   53 hours 47 minutes
-    Cutting   10 hours 0 minutes
-    Banding 10 hours 0 minutes
-    Assembly 10 hours 0 minutes
-    Finishing 10 hours 0 minutes
-    Packaging    10 hours 0 minutes`;
+    if (isDev) {
+        textArea.value = `Job Labor   53 hours 47 minutes
+                        Cutting   10 hours 0 minutes
+                        Banding 10 hours 0 minutes
+                        Assembly 10 hours 0 minutes
+                        Finishing 10 hours 0 minutes
+                        Packaging    10 hours 0 minutes`;
+    }
+    else {
+        textArea.value = "";
+    }
 
     const modalOKButton = getButton("OK", () => {
         const sequenceName = sequenceNameInput.value;
-        const text = TextArea.value;
+        const text = textArea.value;
         const errors = calculate(sequenceName, sequences, text, allTasks).errors;
         if (errors.length > 0) {
             showAlertDialog(errors.join("\n"));
@@ -788,6 +800,7 @@ function showAddTaskFromTextDialog(sequences, allTasks, OKCallback, cancelCallba
 
 export function showCalendarEventDialog(calendarEvent, OKCallback, cancelCallback) {
     if (!calendarEvent) calendarEvent = {};
+
     const body = document.querySelector('body');
     const modalBackground = getModalBackground();
     const modalWindow = getModalWindow();
@@ -802,7 +815,7 @@ export function showCalendarEventDialog(calendarEvent, OKCallback, cancelCallbac
     eventNameLabel.style.cssText = blockInputLabelStyles;
     eventNameLabel.appendChild(eventNameInput);
 
-    // Event Date
+    // Start Date
     const dateInput = document.createElement('input');
     dateInput.setAttribute('type', 'date');
     dateInput.style.cssText = jobNameInputStyles;
@@ -850,6 +863,7 @@ export function showCalendarEventDialog(calendarEvent, OKCallback, cancelCallbac
         colorContainer.appendChild(color);
     }
 
+    // OK callback
     const modalOKButton = getButton("OK", () => {
         if ((!eventNameInput.value) || (!dateInput.value)) {
             showAlertDialog(
@@ -858,19 +872,21 @@ export function showCalendarEventDialog(calendarEvent, OKCallback, cancelCallbac
             return;
         }
 
-        if (getCorrectDate(dateInput.value).valueOf() > getCorrectDate(endDateInput.value).valueOf()) {
-            showAlertDialog("Oops, the end date is before the start date.");
-            return;
-        }
         calendarEvent.name = eventNameInput.value;
         calendarEvent.date = dateInput.value;
         calendarEvent.endDate = endDateInput.value || dateInput.value;
         calendarEvent.note = TextArea.value;
         calendarEvent.color = selectedColor;
+        
+        const correctedDate = getCorrectDateOrder(calendarEvent.date, calendarEvent.endDate);
+        calendarEvent.date = correctedDate.start;
+        calendarEvent.endDate = correctedDate.end;
+
         if (OKCallback) OKCallback(calendarEvent);
         body.removeChild(modalBackground);
     });
 
+    // Cancel callback
     const modalCancelButton = getButton("Cancel", () => {
         if (cancelCallback) cancelCallback();
         body.removeChild(modalBackground);
