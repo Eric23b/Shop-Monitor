@@ -33,6 +33,25 @@ export function getTableDataWithText(text, AddAlertText) {
     return td;
 }
 
+export function getTableDropdown(text, dataList, changeCallback) {
+    const select = document.createElement('select');
+
+    dataList.forEach((text) => {
+        const option = document.createElement('option');
+        option.textContent = text;
+        option.value = text;
+        select.appendChild(option);
+    });
+    select.value = text;
+
+    select.onclick = async () => {
+        if (changeCallback) {
+            changeCallback(select.value);
+        }
+    }
+    return select;
+}
+
 export function getTableDataWithEditText(text, promptText, editCallback) {
     const td = document.createElement('td');
     td.textContent = text == "null" ? "" : text;
