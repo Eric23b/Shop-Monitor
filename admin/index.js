@@ -13,7 +13,16 @@ import {
     dropTable,
     createAttributes,
     describeDatabase,
-    getUniqueColumnValues
+    getUniqueColumnValues,
+    isSuperUser,
+    getUserInfo,
+    getUserList,
+    addUser,
+    changeUserRole,
+    changeUserPassword,
+    changePermission,
+    deleteUser,
+    getRolesList,
 } from "../db-utilities.js";
 
 import {
@@ -22,7 +31,8 @@ import {
     getTableDataWithEditText,
     getTableHeaderRow,
     getTableDataWithCheckbox,
-    getTableDataWithDeleteButton
+    getTableDataWithDeleteButton,
+    getTableDropdown,
 } from "../table-utilities.js";
 
 import {
@@ -82,6 +92,7 @@ const timersTabBtn = document.querySelector("#timers-tab-btn");
 const jobsTabBtn = document.querySelector("#jobs-tab-btn");
 const employeesTabBtn = document.querySelector("#employees-tab-btn");
 const workStationsTabBtn = document.querySelector("#work-stations-tab-btn");
+const usersTabBtn = document.querySelector("#users-tab-btn");
 const tasksTabBtn = document.querySelector("#tasks-tab-btn");
 const supplyListTabBtn = document.querySelector("#supply-list-tab-btn");
 const settingsTabBtn = document.querySelector("#settings-tab-btn");
@@ -128,6 +139,12 @@ const workStationTasksContainer = document.querySelector("#work-station-tasks-ch
 // const workStationTasksInput = document.querySelector("#work-station-tasks-input");
 const addWorkStationButton = document.querySelector("#add-work-stations-btn");
 const workStationsTable = document.querySelector("#work-stations-table");
+
+const usersTabContainer = document.querySelector("#users-container");
+const addUserBtn = document.querySelector("#add-user-btn");
+const usersTable = document.querySelector("#users-table");
+const addRoleBtn = document.querySelector("#add-role-btn");
+const rolesContainer = document.querySelector("#roles-container");
 
 const taskTabContainer = document.querySelector("#tasks-container");
 const taskNameInput = document.querySelector("#task-name-input");
@@ -221,7 +238,7 @@ if (password !== "pw558") {
 settings.url = serverURL.value = getLocalStorageValue('serverURL') || "";
 settings.authorization = serverAuthorization.value = getLocalStorageValue('serverAuthorization') || "";
 stationName.value = getLocalStorageValue('stationName') || "";
-// lateJobsDays.value = getLocalStorageValue('lateJobsDays') || "7";
+const superUser = await isSuperUser(settings);
 
 
 // showSettings();
@@ -378,6 +395,29 @@ addWorkStationButton.addEventListener('click', async () => {
 
     workStationNameInput.value = "";
     loadTasksCheckboxList();
+});
+
+// Add User 
+addUserBtn.addEventListener('click', async () => {
+    const rolesResponse = await getRolesList(settings);
+    if ((!rolesResponse) || (rolesResponse.error)) return;
+    const rolesList = [];
+    rolesResponse.forEach((role) => {
+        if (role.role == 'cluster_user') return;
+        rolesList.push(role.role);
+    });
+
+    showInputDialog("User Name", "",
+        async (userName) => {
+            showInputDialog("Role", "",
+                async (role) => {
+                    showInputDialog("Password", "",
+                        async (password) => {
+                            await addUser(userName, role, password, settings);
+                            await loadUsersTable();
+                        }, null, "text", "name");
+                }, null, "select", "name", rolesList);
+        }, null, "text", "name");
 });
 
 // Add tasks button
@@ -593,6 +633,12 @@ async function showTabContent(tab) {
             workStationsTabBtn.classList.add("active-tab");
             await loadTasksCheckboxList();
             await loadWorkStationTable();
+            break;
+        case "users":
+            usersTabContainer.style.display = "flex";
+            usersTabBtn.classList.add("active-tab");
+            await loadUsersTable();
+            await loadRolesList();
             break;
         case "tasks":
             taskTabContainer.style.display = "flex";
@@ -871,8 +917,6 @@ async function loadTimersTable() {
     const completedTasks = await getDBEntrees(LOGS_SCHEMA, COMPLETED_TIMER_TABLE, "__createdtime__", "*", settings);
     if ((!completedTasks) || (completedTasks.error)) return;
     completedTasks.sort((a, b) => {return a.__createdtime__ - b.__createdtime__});
-    
-    // console.log(`${completedTasks.length} completed tasks.`);
 
     // Get all jobs
     const jobs = await getDBEntrees(BUSINESS_SCHEMA, JOBS_TABLE, "__createdtime__", "*", settings, dbActive);
@@ -902,7 +946,6 @@ async function loadTimersTable() {
     });
 
     for (const task of completedTasks) {
-        // console.log(task);
         for (const row of tableData) {
             // Find jobID in tableData
             if (task.jobID == row[0]) {
@@ -1334,20 +1377,16 @@ async function loadWorkStationTable() {
                 }
             }
 
-            // console.log(allTasks);
             let ownTaskName = "";
             for (const task of allTasks) {
                 for (const ownTask of entry.tasks) {
                     if (ownTask === task.id) ownTaskName += task.name + ',';
                 }
             }
-            // console.log(entry.tasks);
 
             tasksTD = getTableDataWithText(ownTaskName);
             tasksTD.onclick = async () => {
                 showChecklistPrompt("Tasks", allTasks, async (newTasks) => {
-                    // console.log(newTasks);
-                    // return
                     await updateDBEntry(BUSINESS_SCHEMA, STATIONS_TABLE, {id: entry.id, tasks: newTasks}, settings, dbActive);
                     await loadWorkStationTable();
                 });
@@ -1420,6 +1459,205 @@ async function loadTasksCheckboxList() {
         checkLabel.appendChild(checkbox);
         workStationTasksContainer.appendChild(checkLabel);
     });
+}
+
+// Users Table
+async function loadUsersTable() {
+    const usersResponse = await getUserList(settings);
+    if ((!usersResponse) || (usersResponse.error)) return;
+
+    const rolesResponse = await getRolesList(settings);
+    if ((!rolesResponse) || (rolesResponse.error)) return;
+    const rolesList = [];
+    rolesResponse.forEach((role) => {
+        if (role.role == 'cluster_user') return;
+        rolesList.push(role.role);
+    });
+
+    const dataBaseResponse = await describeDatabase(settings);
+    const schemas = [];
+    for (const schemaName in dataBaseResponse) {
+        const tablesObj = dataBaseResponse[schemaName];
+        if (Object.hasOwnProperty.call(dataBaseResponse, schemaName)) {
+            const tables = [];
+            for (const table in tablesObj) {
+                if (Object.hasOwnProperty.call(tablesObj, table)) {
+                    const element = tablesObj[table];
+                    tables.push({name: table, id: element.id, value: element});
+                }
+            }
+            schemas.push({name: schemaName, tables: tables})
+        }
+    }
+
+    // Users table
+    usersTable.innerHTML = "";
+    usersTable.appendChild(getTableHeaderRow(["Name", "Role", "Password", "Delete"]));
+    for (const user of usersResponse) {
+        const row = document.createElement('tr');
+
+        // User name
+        const userName = getTableDataWithText(user.username);
+        userName.onclick = () => {
+            showAlertDialog("The user name can not be changed.");
+        }
+        userName.style.cursor = "pointer";
+
+        // Role
+        let role;
+        if (superUser && (user.role.role === 'super_user')) {
+            role = getTableDataWithText(user.role.role);
+        }
+        else {
+            const roleListWithoutSuperUser = rolesList.filter((value, index, arr) => { 
+                return !(value === 'super_user');
+            });
+            role = getTableDropdown(user.role.role, roleListWithoutSuperUser, async (newRole) => {
+               const message = await changeUserRole(user.username, newRole, settings);
+               showAlertDialog(message.message);
+            });
+           role.style.cursor = "pointer";
+        }
+
+        // Password
+        const password = getTableDataWithText("****");
+        password.onclick = async () => {
+            showInputDialog("New Password", "",
+                async (newPassword) => {
+                    const message = await changeUserPassword(user.username, newPassword, settings);
+                    showAlertDialog(message.message);
+                }, null, "text", ""
+            );
+        }
+        password.style.cursor = "pointer";
+
+        // Delete user
+        let deleteTD; 
+        if (superUser && (user.role.role === 'super_user')) {
+            deleteTD = getTableDataWithText("-");
+        }
+        else {
+            deleteTD = getTableDataWithDeleteButton(
+                async () => {
+                    showYesNoDialog(`Are you sure you want to delete user ${user.username}?`, 
+                        async () => {
+                            const deleteResponse = await deleteUser(user.username, settings);
+                            showAlertDialog(`User ${deleteResponse.message}`);
+                            await loadUsersTable();
+                        }
+                    );
+                }
+            );
+        }
+        appendChildren(row, [userName, role, password, deleteTD]);
+        usersTable.appendChild(row);
+    };
+}
+
+// Users Table
+async function loadRolesList() {
+    const rolesResponse = await getRolesList(settings);
+    if ((!rolesResponse) || (rolesResponse.error)) return;
+    
+    // Remove super user and cluster user
+    const roles = [];
+    rolesResponse.forEach((role) => {
+        if (role.role === "cluster_user") return;
+        if (role.role === "super_user") return;
+        roles.push(role);
+    });
+
+    // Roles table
+    rolesContainer.innerHTML = "";
+    for (const role of roles) {
+        role.permission.super_user = false
+        
+        const roleDetails = document.createElement('details');
+        roleDetails.classList.add('border-with-padding');
+        roleDetails.classList.add('bottom-margin');
+        const roleSummary = document.createElement('summary');
+        roleSummary.textContent = role.role;
+        roleDetails.appendChild(roleSummary);
+
+        for (const schemaName in role.permission) {
+            if (!Object.hasOwnProperty.call(role.permission, schemaName)) continue;
+            if (schemaName === "super_user") continue;
+
+            const schemaObj = role.permission[schemaName];
+
+            const schemaDetails = document.createElement('details');
+            schemaDetails.style.marginLeft = '1.5rem';
+            const schemaSummary = document.createElement('summary');
+            schemaSummary.textContent = schemaName;
+            schemaDetails.appendChild(schemaSummary);
+            roleDetails.appendChild(schemaDetails);
+            rolesContainer.appendChild(roleDetails);
+            
+            for (const tableName in schemaObj.tables) {
+                if (!Object.hasOwnProperty.call(schemaObj.tables, tableName)) continue;
+                const tableObj = schemaObj.tables[tableName];
+                
+                const tableDetails = document.createElement('details');
+                tableDetails.style.marginLeft = '1.5rem';
+                const tableSummary = document.createElement('summary');
+                tableSummary.textContent = tableName;
+                tableDetails.appendChild(tableSummary);
+                schemaDetails.appendChild(tableDetails);
+                const readCheckbox = createCheckbox("Read", tableObj.read);
+                tableDetails.appendChild(readCheckbox);
+                const insertCheckbox = createCheckbox("Insert", tableObj.insert);
+                tableDetails.appendChild(insertCheckbox);
+                const updateCheckbox = createCheckbox("Update", tableObj.update);
+                tableDetails.appendChild(updateCheckbox);
+                const deleteCheckbox = createCheckbox("Delete", tableObj.delete);
+                tableDetails.appendChild(deleteCheckbox);
+
+                tableDetails.onchange = async () => {
+                    const permissions = {read: readCheckbox.checked,
+                                        insert: insertCheckbox.checked,
+                                        update: updateCheckbox.checked,
+                                        delete: deleteCheckbox.checked,
+                                        attribute_permissions: []};
+                    role.permission[schemaName].tables[tableName] = permissions;
+                    await updatePermission(role, settings);
+                }
+
+                rolesContainer.appendChild(roleDetails);
+            }
+        }
+    }
+    // Open all details
+    const allDetails = rolesContainer.querySelectorAll('details');
+    allDetails.forEach((detail) => {detail.setAttribute("open", "")});
+
+    async function updatePermission(role, settings) {
+        const body =  {
+            operation: "alter_role",
+            id: role.id,
+            role: role.role,
+            permission: role.permission
+        }
+        return await changePermission(body, settings);
+    }
+
+    function createCheckbox(name, checked) {
+        const checkbox = document.createElement('input');
+        checkbox.setAttribute('type', 'checkbox');
+        checkbox.style.float = 'left';
+        checkbox.style.height = '1em';
+        checkbox.style.marginRight = '0.5rem';
+        if (checked) checkbox.setAttribute('checked', 'checked');
+        checkbox.onchange = () => {
+            checkboxLabel.checked = checkbox.checked;
+        }
+        const checkboxLabel = document.createElement('label');
+        checkboxLabel.textContent = name;
+        checkboxLabel.appendChild(checkbox);
+        checkboxLabel.style.display = "block";
+        checkboxLabel.style.marginLeft = '1.5rem';
+        checkboxLabel.checked = checkbox.checked;
+        return checkboxLabel;
+    }
 }
 
 // Tasks Table

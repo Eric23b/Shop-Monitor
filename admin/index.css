@@ -526,6 +526,16 @@ input{
 .no-top-margin{
     margin-top: 0;
 }
+.no-bottom-margin{
+    margin-bottom: 0;
+}
+.bottom-margin{
+    margin-bottom: 1rem;
+}
+.border-with-padding{
+    border: 1px solid var(--border_color);
+    padding: 0.5rem;
+}
 
 
 .sort-container{
