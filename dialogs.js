@@ -902,7 +902,7 @@ export function showCalendarEventDialog(calendarEvent, OKCallback, cancelCallbac
 }
 
 // Input Dialog
-export function showInputDialog(message, defaultText, OKCallback, cancelCallback, inputType, placeholder) {
+export function showInputDialog(message, defaultText, OKCallback, cancelCallback, inputType, placeholder, options) {
     const body = document.querySelector('body');
     const modalBackground = getModalBackground();
     const modalWindow = getModalWindow();
@@ -913,10 +913,21 @@ export function showInputDialog(message, defaultText, OKCallback, cancelCallback
         modalInput = document.createElement('textarea');
         modalInput.style.cssText = modalInputTextAreaStyles;
     }
-    else {
+    else if (inputType === 'text') {
         modalInput = document.createElement('input');
         modalInput.style.cssText = modalInputStyles;
         if (inputType) modalInput.setAttribute('type', inputType);
+    }
+    else if (inputType === 'select') {
+        modalInput = document.createElement('select');
+        modalInput.style.cssText = modalInputStyles;
+        options.forEach((text) => {
+            const option = document.createElement('option');
+            option.textContent = text;
+            option.value = text;
+            modalInput.appendChild(option);
+        });
+        // if (inputType) modalInput.setAttribute('type', inputType);
     }
     modalInput.value = defaultText;
     if (placeholder) modalInput.setAttribute('placeholder', placeholder);
