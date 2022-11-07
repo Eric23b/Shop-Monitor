@@ -1,32 +1,9 @@
 
-
-
-
-
-
-
-// export async function listAll(serverSettings) {    
-//     const headers = getBasicHeaders(serverSettings.authorization);
-//     const raw = JSON.stringify({
-//         operation: "list_roles",
-//     });
-//     const requestOptions = buildRequestOptions(headers, raw);
-//     const response = await sendDBRequest(serverSettings.url, requestOptions);
-
-//     return response[0];
-// }
-
-
-
-
-
-
-
-
-export async function getUserInfo(serverSettings) {    
+export async function getUserInfo(serverSettings) {
     const headers = getBasicHeaders(serverSettings.authorization);
     const raw = JSON.stringify({
         operation: "user_info",
+        userName: "IssuesAdmin",
     });
     const requestOptions = buildRequestOptions(headers, raw);
     const response = await sendDBRequest(serverSettings.url, requestOptions);
@@ -34,8 +11,45 @@ export async function getUserInfo(serverSettings) {
     return response || false;
 }
 
+export async function getUserList(serverSettings) {
+    return await getBasic({operation: "list_users"}, serverSettings) || false;
+}
 
-export async function isSuperUser(serverSettings) {    
+export async function addUser(userName, newRole, password, serverSettings) {
+    return await getBasic({
+        operation: "add_user",
+        role: newRole,
+        username: userName,
+        password: password,
+        active: true}, serverSettings) || false;
+}
+
+export async function changeUserRole(userName, newRole, serverSettings) {
+    return await getBasic({operation: "alter_user", role: newRole, username: userName}, serverSettings) || false;
+}
+
+export async function changeUserPassword(userName, newPassword, serverSettings) {
+    return await getBasic({operation: "alter_user", username: userName, password: newPassword}, serverSettings) || false;
+}
+
+export async function deleteUser(user, serverSettings) {
+    return await getBasic({operation: "drop_user", username: user}, serverSettings) || false;
+}
+
+export async function getRolesList(serverSettings) {
+    return await getBasic({operation: "list_roles"}, serverSettings) || false;
+}
+
+async function getBasic(body, serverSettings) {
+    const headers = getBasicHeaders(serverSettings.authorization);
+    const raw = JSON.stringify(body);
+    const requestOptions = buildRequestOptions(headers, raw);
+    const response = await sendDBRequest(serverSettings.url, requestOptions);
+
+    return response || false;
+}
+
+export async function isSuperUser(serverSettings) {
     const headers = getBasicHeaders(serverSettings.authorization);
     const raw = JSON.stringify({
         operation: "user_info",
@@ -46,7 +60,15 @@ export async function isSuperUser(serverSettings) {
     return response.role.permission.super_user || false;
 }
 
-export async function getDBEntrees(schema, table, searchColumn, searchValue, serverSettings, dbActiveCallback) {    
+export async function changePermission(body, serverSettings) {
+    const headers = getBasicHeaders(serverSettings.authorization);    
+    const requestOptions = buildRequestOptions(headers, JSON.stringify(body));
+    const response = await sendDBRequest(serverSettings.url, requestOptions);
+
+    return response || false;
+}
+
+export async function getDBEntrees(schema, table, searchColumn, searchValue, serverSettings, dbActiveCallback) {
     const headers = getBasicHeaders(serverSettings.authorization);
     const raw = JSON.stringify({
         operation: "search_by_value",
