@@ -18,6 +18,7 @@ import {
     getUserInfo,
     getUserList,
     addUser,
+    addRole,
     changeUserRole,
     changeUserPassword,
     changePermission,
@@ -84,6 +85,7 @@ const showMessagesButton = document.querySelector("#show-messages");
 
 const tabHeader = document.querySelector("#tab-header");
 
+// Tab Buttons
 const partTabBtn = document.querySelector("#parts-tab-btn");
 const supplyLowTabBtn = document.querySelector("#supply-low-tab-btn");
 const timeClockTabBtn = document.querySelector("#time-clock-tab-btn");
@@ -97,25 +99,31 @@ const tasksTabBtn = document.querySelector("#tasks-tab-btn");
 const supplyListTabBtn = document.querySelector("#supply-list-tab-btn");
 const settingsTabBtn = document.querySelector("#settings-tab-btn");
 
+// Parts Issues
 const partsTabContainer = document.querySelector("#part-issue-container");
 const partIssuesTable = document.querySelector("#part-issues-table");
 
+// Supplies Issues
 const supplyLowTabContainer = document.querySelector("#supply-issues-container");
 const supplyIssuesTable = document.querySelector("#supply-issues-table");
 const supplyCategoryDataList = document.querySelector("#category-datalist");
 
+// Time Clock Issues
 const timeClockTabContainer = document.querySelector("#time-clock-container");
 const timeClockTabTable = document.querySelector("#time-clock-issues-table");
 
+// Other Issues
 const otherIssuesTabContainer = document.querySelector("#other-issues-container");
 const otherIssuesTable = document.querySelector("#other-issues-table");
 
+// Timers
 const timersTabContainer = document.querySelector("#timers-container");
 // const timersJobFilter = document.querySelector("#timers-job-filter-input");
 const saveTimerLogsBtn = document.querySelector("#save-timer-log-btn");
 const timersTable = document.querySelector("#timers-table");
 const deleteTimerLogsBtn = document.querySelector("#delete-timer-logs-btn");
 
+// Jobs
 const jobsTabContainer = document.querySelector("#jobs-container");
 // const newJobNameInput = document.querySelector("#job-input");
 // const newJobShipDateInput = document.querySelector("#job-ship-date-input");
@@ -124,6 +132,7 @@ const addJobButton = document.querySelector("#add-job-btn");
 const sort = document.querySelector("#sort");
 const employeeTable = document.querySelector("#jobs-table");
 
+// Employees
 const employeesTabContainer = document.querySelector("#employee-container");
 const employeeNameInput = document.querySelector("#employee-input");
 const employeeWorkStationsContainer = document.querySelector("#employee-work-station-checkbox-container");
@@ -133,6 +142,7 @@ const employeeShiftEnd = document.querySelector("#employee-shift-end-input");
 const addEmployeeButton = document.querySelector("#add-employee-btn");
 const employeesTable = document.querySelector("#employee-table");
 
+// Work Stations
 const workStationsTabContainer = document.querySelector("#work-stations-container");
 const workStationNameInput = document.querySelector("#work-station-input");
 const workStationTasksContainer = document.querySelector("#work-station-tasks-checkbox-container");
@@ -140,12 +150,14 @@ const workStationTasksContainer = document.querySelector("#work-station-tasks-ch
 const addWorkStationButton = document.querySelector("#add-work-stations-btn");
 const workStationsTable = document.querySelector("#work-stations-table");
 
+// Users and Roles
 const usersTabContainer = document.querySelector("#users-container");
 const addUserBtn = document.querySelector("#add-user-btn");
 const usersTable = document.querySelector("#users-table");
 const addRoleBtn = document.querySelector("#add-role-btn");
 const rolesContainer = document.querySelector("#roles-container");
 
+// Tasks
 const taskTabContainer = document.querySelector("#tasks-container");
 const taskNameInput = document.querySelector("#task-name-input");
 const tasksHoursInput = document.querySelector("#tasks-hours-input");
@@ -153,6 +165,7 @@ const tasksMinutesInput = document.querySelector("#tasks-minutes-input");
 const addTaskButton = document.querySelector("#add-task-btn");
 const tasksTable = document.querySelector("#tasks-table");
 
+// Supplies
 const supplyListTabContainer = document.querySelector("#supply-list-container");
 const supplyListCategoryInput = document.querySelector("#supply-list-category-input");
 const addSupplyBtn = document.querySelector("#add-supply-btn");
@@ -161,6 +174,7 @@ const categoryFilterInput = document.querySelector("#category-filter-input");
 const supplyListItemInput = document.querySelector("#supply-list-item-input");
 const supplyListTable = document.querySelector("#supply-list-table");
 
+// Settings
 const settingsContainer = document.querySelector("#settings-container");
 const darkThemeCheckbox = document.querySelector("#dark-theme-checkbox");
 const serverURL = document.querySelector("#server-url");
@@ -172,6 +186,7 @@ const saveDataBaseButton = document.querySelector("#save-db-backup-btn");
 const runDBSetupBtn = document.querySelector("#run-db-setup-btn");
 const removePasswordBtn = document.querySelector("#remove-password-btn");
 
+// Messages
 const messageBackground = document.querySelector("#send-message-background");
 const messageLabel = document.querySelector("#send-message-label");
 const messageStationsSelect = document.querySelector("#send-message-stations");
@@ -179,23 +194,27 @@ const messageInput = document.querySelector("#send-message-textarea");
 const messageCancelBtn = document.querySelector("#send-message-cancel-btn");
 const messageOKBtn = document.querySelector("#send-message-ok-btn");
 
+// Prompt
 const promptBackground = document.querySelector("#prompt");
 const promptLabel = document.querySelector("#prompt-label");
 const promptInput = document.querySelector("#prompt-input");
 const promptCancelBtn = document.querySelector("#prompt-cancel-btn");
 const promptOKBtn = document.querySelector("#prompt-ok-btn");
 
+// Checklist Prompt
 const checklistPromptBackground = document.querySelector("#checklist-prompt");
 const checklistPromptLabel = document.querySelector("#checklist-prompt-label");
 const checklistPromptCheckContainer = document.querySelector("#checklist-prompt-checkbox-container");
 const checklistPromptCancelBtn = document.querySelector("#checklist-prompt-cancel-btn");
 const checklistPromptOKBtn = document.querySelector("#checklist-prompt-ok-btn");
 
+// Alert
 const alertBackground = document.querySelector("#alert");
 const alertLabel = document.querySelector("#alert-label");
 const alertMessage = document.querySelector("#alert-message");
 const alertOKBtn = document.querySelector("#alert-ok-btn");
 
+// Table modal
 const tableModalBackground = document.querySelector("#tableModal");
 const tableModalLabel = document.querySelector("#table-modal-label");
 const tableModalTable = document.querySelector("#table-modal-table");
@@ -399,6 +418,7 @@ addWorkStationButton.addEventListener('click', async () => {
 
 // Add User 
 addUserBtn.addEventListener('click', async () => {
+    // TODO: check if user already exists
     const rolesResponse = await getRolesList(settings);
     if ((!rolesResponse) || (rolesResponse.error)) return;
     const rolesList = [];
@@ -407,7 +427,7 @@ addUserBtn.addEventListener('click', async () => {
         rolesList.push(role.role);
     });
 
-    showInputDialog("User Name", "",
+    showInputDialog("New User Name", "",
         async (userName) => {
             showInputDialog("Role", "",
                 async (role) => {
@@ -418,6 +438,50 @@ addUserBtn.addEventListener('click', async () => {
                         }, null, "text", "name");
                 }, null, "select", "name", rolesList);
         }, null, "text", "name");
+});
+
+addRoleBtn.addEventListener("click", async () => {
+    showInputDialog("New Role Name", "",
+        async (roleName) => {
+            showInputDialog("Set default permissions level?", "true",
+                async (permissionsLevel) => {
+                    console.log(permissionsLevel);
+                    const permissions = await getUniversalPermissions(permissionsLevel);
+                    await addRole(roleName, permissions, settings);
+                    await loadRolesList();
+                }, null, "select", "name", ["true", "false"]);
+        }, null, "text", "name");
+
+        async function getUniversalPermissions(permissionsLevel) {
+            permissionsLevel = (permissionsLevel === "true") ? true : false;
+            let permissions = {super_user: false};
+            const database = await describeDatabase(settings);
+            for (const schemaName in database) {
+                if (Object.hasOwnProperty.call(database, schemaName)) {
+                    const schemaObj = database[schemaName];
+                    permissions[schemaName] = {};
+                    
+                    for (const tableName in schemaObj) {
+                        if (Object.hasOwnProperty.call(schemaObj, tableName)) {
+                            // let tableObj = schemaObj[tableName];
+                            if (!permissions[schemaName]['tables']) {
+                                permissions[schemaName]['tables'] = {}
+                            };
+
+                            permissions[schemaName]['tables'][tableName] = 
+                                {
+                                    "read": permissionsLevel,
+                                    "insert": permissionsLevel,
+                                    "update": permissionsLevel,
+                                    "delete": permissionsLevel,
+                                    "attribute_permissions": [],
+                                }
+                        }
+                    }
+                }
+            }
+            return permissions;
+        }
 });
 
 // Add tasks button
