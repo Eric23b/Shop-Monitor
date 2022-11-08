@@ -24,6 +24,13 @@ export async function addUser(userName, newRole, password, serverSettings) {
         active: true}, serverSettings) || false;
 }
 
+export async function addRole(roleName, fullPermission, serverSettings) {
+    return await getBasic({
+        operation: "add_role",
+        role: roleName,
+        permission: fullPermission}, serverSettings);
+}
+
 export async function changeUserRole(userName, newRole, serverSettings) {
     return await getBasic({operation: "alter_user", role: newRole, username: userName}, serverSettings) || false;
 }
