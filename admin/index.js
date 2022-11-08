@@ -433,9 +433,15 @@ addUserBtn.addEventListener('click', async () => {
                 async (role) => {
                     showInputDialog("Password", "",
                         async (password) => {
-                            await addUser(userName, role, password, settings);
+                            const returnMessage = await addUser(userName, role, password, settings);
+                            if (returnMessage.error) {
+                                showAlertDialog(returnMessage.error);
+                            } 
+                            else {
+                                showAlertDialog(`${returnMessage.message}.`);
+                            }
                             await loadUsersTable();
-                        }, null, "text", "name");
+                        }, null, "text", "password");
                 }, null, "select", "name", rolesList);
         }, null, "text", "name");
 });
@@ -445,11 +451,16 @@ addRoleBtn.addEventListener("click", async () => {
         async (roleName) => {
             showInputDialog("Set default permissions level?", "true",
                 async (permissionsLevel) => {
-                    console.log(permissionsLevel);
                     const permissions = await getUniversalPermissions(permissionsLevel);
-                    await addRole(roleName, permissions, settings);
+                    const returnMessage = await addRole(roleName, permissions, settings);
+                    if (returnMessage.error) {
+                        showAlertDialog(returnMessage.error);
+                    } 
+                    else {
+                        showAlertDialog(`"${returnMessage.role}" role added successfully.`);
+                    }
                     await loadRolesList();
-                }, null, "select", "name", ["true", "false"]);
+                }, null, "select", "true", ["true", "false"]);
         }, null, "text", "name");
 
         async function getUniversalPermissions(permissionsLevel) {
