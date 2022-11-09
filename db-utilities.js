@@ -24,6 +24,15 @@ export async function addUser(userName, newRole, password, serverSettings) {
         active: true}, serverSettings) || false;
 }
 
+export async function deleteRole(id, serverSettings) {
+    const response = await getBasic({
+        operation: "drop_role",
+        id: id}, serverSettings);
+
+    if (response.message) return response.message;
+    return "Unable to delete role.";
+}
+
 export async function addRole(roleName, fullPermission, serverSettings) {
     return await getBasic({
         operation: "add_role",
