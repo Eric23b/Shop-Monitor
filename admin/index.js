@@ -19,6 +19,7 @@ import {
     getUserList,
     addUser,
     addRole,
+    deleteRole,
     changeUserRole,
     changeUserPassword,
     changePermission,
@@ -65,6 +66,10 @@ import {
     showInputDialog,
     showJobDialog,
 } from "../dialogs.js";
+
+import {
+    getDeleteButton,
+} from "../element-utilities.js";
 
 const pageTitle = "Admin";
 
@@ -1629,7 +1634,7 @@ async function loadUsersTable() {
     };
 }
 
-// Users Table
+// Roles List
 async function loadRolesList() {
     const rolesResponse = await getRolesList(settings);
     if ((!rolesResponse) || (rolesResponse.error)) return;
@@ -1645,13 +1650,24 @@ async function loadRolesList() {
     // Roles table
     rolesContainer.innerHTML = "";
     for (const role of roles) {
-        role.permission.super_user = false
+        role.permission.super_user = false;
         
         const roleDetails = document.createElement('details');
         roleDetails.classList.add('border-with-padding');
         roleDetails.classList.add('bottom-margin');
         const roleSummary = document.createElement('summary');
         roleSummary.textContent = role.role;
+        const deleteBtn = getDeleteButton(async () => {
+            showYesNoDialog(`Are you sure you want to delete user ${role.role}?`,
+                async () => {
+                    const deleteMessage = (await deleteRole(role.id, settings));
+                    showAlertDialog(deleteMessage);
+                    loadRolesList();
+                });
+            });
+        deleteBtn.style.float = 'right';
+        deleteBtn.style.marginLeft = '1rem'
+        roleSummary.appendChild(deleteBtn);
         roleDetails.appendChild(roleSummary);
 
         for (const schemaName in role.permission) {
@@ -1702,8 +1718,8 @@ async function loadRolesList() {
         }
     }
     // Open all details
-    const allDetails = rolesContainer.querySelectorAll('details');
-    allDetails.forEach((detail) => {detail.setAttribute("open", "")});
+    // const allDetails = rolesContainer.querySelectorAll('details');
+    // allDetails.forEach((detail) => {detail.setAttribute("open", "")});
 
     async function updatePermission(role, settings) {
         const body =  {
