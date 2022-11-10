@@ -1619,7 +1619,7 @@ async function loadUsersTable() {
         else {
             deleteTD = getTableDataWithDeleteButton(
                 async () => {
-                    showYesNoDialog(`Are you sure you want to delete user ${user.username}?`, 
+                    showYesNoDialog(`Are you sure you want to delete user "${user.username}"?`, 
                         async () => {
                             const deleteResponse = await deleteUser(user.username, settings);
                             showAlertDialog(`User ${deleteResponse.message}`);
@@ -1649,27 +1649,38 @@ async function loadRolesList() {
 
     // Roles table
     rolesContainer.innerHTML = "";
+    rolesContainer.width = "100%";
+    rolesContainer.maxWidth = "max-content";
+    // rolesContainer.onclick = (event) => {
+    //     rolesContainer.lastElementChild.scrollIntoView();
+    //     rolesContainer.firstElementChild.scrollIntoView();
+    //     console.log(rolesContainer.lastElementChild);
+    // }
+    
+
+    // Roles
     for (const role of roles) {
         role.permission.super_user = false;
         
         const roleDetails = document.createElement('details');
         roleDetails.classList.add('border-with-padding');
         roleDetails.classList.add('bottom-margin');
+        roleDetails.classList.add('roles-details');
         const roleSummary = document.createElement('summary');
         roleSummary.textContent = role.role;
         const deleteBtn = getDeleteButton(async () => {
-            showYesNoDialog(`Are you sure you want to delete user ${role.role}?`,
+            showYesNoDialog(`Are you sure you want to delete role "${role.role}"?`,
                 async () => {
                     const deleteMessage = (await deleteRole(role.id, settings));
                     showAlertDialog(deleteMessage);
                     loadRolesList();
                 });
             });
-        deleteBtn.style.float = 'right';
-        deleteBtn.style.marginLeft = '1rem'
         roleSummary.appendChild(deleteBtn);
         roleDetails.appendChild(roleSummary);
+        rolesContainer.appendChild(roleDetails);
 
+        // Schemas
         for (const schemaName in role.permission) {
             if (!Object.hasOwnProperty.call(role.permission, schemaName)) continue;
             if (schemaName === "super_user") continue;
@@ -1677,49 +1688,40 @@ async function loadRolesList() {
             const schemaObj = role.permission[schemaName];
 
             const schemaDetails = document.createElement('details');
-            schemaDetails.style.marginLeft = '1.5rem';
+            schemaDetails.classList.add('schemas-details');
             const schemaSummary = document.createElement('summary');
             schemaSummary.textContent = schemaName;
             schemaDetails.appendChild(schemaSummary);
             roleDetails.appendChild(schemaDetails);
-            rolesContainer.appendChild(roleDetails);
             
             for (const tableName in schemaObj.tables) {
                 if (!Object.hasOwnProperty.call(schemaObj.tables, tableName)) continue;
                 const tableObj = schemaObj.tables[tableName];
                 
-                const tableDetails = document.createElement('details');
-                tableDetails.style.marginLeft = '1.5rem';
+            const tableDetails = document.createElement('details');
+            tableDetails.classList.add('tables-details');
                 const tableSummary = document.createElement('summary');
                 tableSummary.textContent = tableName;
                 tableDetails.appendChild(tableSummary);
-                schemaDetails.appendChild(tableDetails);
-                const readCheckbox = createCheckbox("Read", tableObj.read);
+                const readCheckbox = createCheckbox("Read", tableObj, 'read');
                 tableDetails.appendChild(readCheckbox);
-                const insertCheckbox = createCheckbox("Insert", tableObj.insert);
+                const insertCheckbox = createCheckbox("Insert", tableObj, 'insert');
                 tableDetails.appendChild(insertCheckbox);
-                const updateCheckbox = createCheckbox("Update", tableObj.update);
+                const updateCheckbox = createCheckbox("Update", tableObj, 'update');
                 tableDetails.appendChild(updateCheckbox);
-                const deleteCheckbox = createCheckbox("Delete", tableObj.delete);
+                const deleteCheckbox = createCheckbox("Delete", tableObj, 'delete');
                 tableDetails.appendChild(deleteCheckbox);
 
                 tableDetails.onchange = async () => {
-                    const permissions = {read: readCheckbox.checked,
-                                        insert: insertCheckbox.checked,
-                                        update: updateCheckbox.checked,
-                                        delete: deleteCheckbox.checked,
-                                        attribute_permissions: []};
-                    role.permission[schemaName].tables[tableName] = permissions;
+                    role.permission[schemaName].tables[tableName] = tableObj;
                     await updatePermission(role, settings);
                 }
-
-                rolesContainer.appendChild(roleDetails);
+                schemaDetails.appendChild(tableDetails);
             }
         }
     }
     // Open all details
     // const allDetails = rolesContainer.querySelectorAll('details');
-    // allDetails.forEach((detail) => {detail.setAttribute("open", "")});
 
     async function updatePermission(role, settings) {
         const body =  {
@@ -1731,22 +1733,21 @@ async function loadRolesList() {
         return await changePermission(body, settings);
     }
 
-    function createCheckbox(name, checked) {
+    function createCheckbox(name, checkObj, key) {
         const checkbox = document.createElement('input');
         checkbox.setAttribute('type', 'checkbox');
-        checkbox.style.float = 'left';
         checkbox.style.height = '1em';
-        checkbox.style.marginRight = '0.5rem';
-        if (checked) checkbox.setAttribute('checked', 'checked');
-        checkbox.onchange = () => {
-            checkboxLabel.checked = checkbox.checked;
+        if (checkObj[key]) checkbox.setAttribute('checked', 'checked');
+        checkbox.onchange = (event) => {
+            checkObj[key] = event.target.checked;
+            checkboxLabel.setAttribute('checked', event.target.checked);
         }
         const checkboxLabel = document.createElement('label');
         checkboxLabel.textContent = name;
+        checkboxLabel.style.display = 'block';
+        checkboxLabel.checked = checkObj[key];
+        if (checkObj[key]) checkboxLabel.setAttribute('checked', true);
         checkboxLabel.appendChild(checkbox);
-        checkboxLabel.style.display = "block";
-        checkboxLabel.style.marginLeft = '1.5rem';
-        checkboxLabel.checked = checkbox.checked;
         return checkboxLabel;
     }
 }

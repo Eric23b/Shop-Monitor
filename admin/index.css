@@ -307,6 +307,26 @@ td{
 }
 
 
+/* Database roles */
+.roles-details>summary>button{
+    font-size: .9em;
+    float: right;
+    margin-left: 1.5rem;
+}
+.schemas-details{
+    margin-left: 1.5rem;
+}
+.tables-details{
+    margin-left: 1.5rem;
+}
+.tables-details>label{
+    margin-left: 1.5rem;
+}
+.tables-details>label>input{
+    float: left;
+}
+
+
 .delete-btn{
     font-size: larger;
     border: none;
