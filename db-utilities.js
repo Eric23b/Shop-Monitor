@@ -1,4 +1,8 @@
 
+export async function restartService(serverSettings) {
+    return await getBasic({operation: "restart"}, serverSettings) || false;
+}
+
 export async function getUserInfo(serverSettings) {
     return await getBasic({operation: "user_info"}, serverSettings) || false;
 }
