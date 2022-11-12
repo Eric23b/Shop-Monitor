@@ -44,7 +44,7 @@ export function getTableDropdown(text, dataList, changeCallback) {
     });
     select.value = text;
 
-    select.onclick = async () => {
+    select.onchange = async () => {
         if (changeCallback) {
             changeCallback(select.value);
         }
