@@ -308,6 +308,28 @@ td{
 
 
 /* Database roles */
+.roles-container{
+    display: flex;
+    flex-direction: row;
+    flex-wrap: wrap;
+    justify-content: space-evenly;
+    gap: 1rem;
+    width: 100%;
+    max-width: max-content;
+    padding: 0.5rem;
+    margin-bottom: 2rem;
+    /* border: 1px solid var(--border_color); */
+}
+.roles-container summary{
+    cursor: pointer;
+}
+.roles-details{
+    width: 100%;
+    max-width: max-content;
+    padding: 0.5rem;
+    min-width: max-content;
+    border: 1px solid var(--border_color);
+}
 .roles-details>summary>button{
     font-size: .9em;
     float: right;
@@ -315,15 +337,21 @@ td{
 }
 .schemas-details{
     margin-left: 1.5rem;
+
 }
 .tables-details{
     margin-left: 1.5rem;
 }
 .tables-details>label{
-    margin-left: 1.5rem;
+    display: flex;
+    max-width: max-content;
+    margin-left: 2rem;
+    cursor: pointer;
 }
 .tables-details>label>input{
-    float: left;
+    margin-right: 0.5rem;
+    cursor: pointer;
+    order: -1;
 }
 
 
@@ -333,6 +361,7 @@ td{
     color: red;
     opacity: 0.5;
     background: transparent;
+    cursor: pointer;
 }
 .delete-btn:active{
     border: none;

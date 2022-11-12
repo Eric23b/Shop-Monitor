@@ -1649,8 +1649,6 @@ async function loadRolesList() {
 
     // Roles table
     rolesContainer.innerHTML = "";
-    rolesContainer.width = "100%";
-    rolesContainer.maxWidth = "max-content";
     // rolesContainer.onclick = (event) => {
     //     rolesContainer.lastElementChild.scrollIntoView();
     //     rolesContainer.firstElementChild.scrollIntoView();
@@ -1663,11 +1661,10 @@ async function loadRolesList() {
         role.permission.super_user = false;
         
         const roleDetails = document.createElement('details');
-        roleDetails.classList.add('border-with-padding');
-        roleDetails.classList.add('bottom-margin');
         roleDetails.classList.add('roles-details');
         const roleSummary = document.createElement('summary');
         roleSummary.textContent = role.role;
+        roleSummary.setAttribute('title', "Role");
         const deleteBtn = getDeleteButton(async () => {
             showYesNoDialog(`Are you sure you want to delete role "${role.role}"?`,
                 async () => {
@@ -1704,12 +1701,16 @@ async function loadRolesList() {
                 tableSummary.textContent = tableName;
                 tableDetails.appendChild(tableSummary);
                 const readCheckbox = createCheckbox("Read", tableObj, 'read');
+                readCheckbox.style.display = 'flex';
                 tableDetails.appendChild(readCheckbox);
                 const insertCheckbox = createCheckbox("Insert", tableObj, 'insert');
+                insertCheckbox.style.display = 'flex';
                 tableDetails.appendChild(insertCheckbox);
                 const updateCheckbox = createCheckbox("Update", tableObj, 'update');
+                updateCheckbox.style.display = 'flex';
                 tableDetails.appendChild(updateCheckbox);
                 const deleteCheckbox = createCheckbox("Delete", tableObj, 'delete');
+                deleteCheckbox.style.display = 'flex';
                 tableDetails.appendChild(deleteCheckbox);
 
                 tableDetails.onchange = async () => {
