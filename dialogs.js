@@ -19,6 +19,7 @@ const modalBackgroundStyles = `
     overflow: scroll;`;
 
 const modalWindowStyles = `
+position: relative;
     display: flex;
     flex-direction: column;
     gap: 1rem;
@@ -50,6 +51,17 @@ const modalButtonContainerStyles = `
     color: var(--color);
     background: var(--background_color);`;
 
+const modalCloseButtonStyles = `
+    position: absolute;
+    top: 0.25rem;
+    right: 0.25rem;
+    cursor: pointer;
+    padding: 0 0.5rem 0.25rem 0.5rem;
+    font-size: inherit;
+    border: none;
+    color: var(--color);
+    background: transparent`;
+
 const modalInputStyles = `
     width: 100%;
     padding: 0.25rem;
@@ -76,8 +88,11 @@ const blockInputLabelStyles = `
     display: flex;
     flex-direction: column;
     font-size: 1.2rem;`;
+const calendarContainerStyles = `
+    width: 100%;
+    border: 1px solid var(--border_color);`;
+
 const jobNameInputStyles = `
-    
     padding: 0.25rem;
     font-size: 1.2rem;
     border: 1px solid var(--border_color);`;
@@ -798,6 +813,326 @@ function showAddTaskFromTextDialog(sequences, allTasks, OKCallback, cancelCallba
     }
 }
 
+export function showCalendarPreviewDialog(title, calendarEvents) {
+    const body = document.querySelector('body');
+    const modalBackground = getModalBackground();
+    const modalWindow = getModalWindow();
+    modalWindow.style.position = 'relative';
+    modalWindow.style.width = '50rem';
+    const modalTitle = getModalTitle(title);
+
+    const calendarContainer = document.createElement('div');
+    calendarContainer.cssText = calendarContainerStyles;
+
+    calendarEvents.sort((a, b) => {
+        const dateA = a.startDate;
+        const dateB = b.startDate;
+        if (dateA < dateB) return -1;
+        if (dateA > dateB) return 1;
+        return 0;
+    });
+
+    // const dates = getDates(calendarEvents);
+
+    console.log(calendarEvents);
+
+    // Close button
+    const modalCloseButton = getCloseButton(() => {
+        body.removeChild(modalBackground);
+    });
+
+    loadCalendarContainer(calendarContainer, calendarEvents)
+
+    modalTitle.appendChild(modalCloseButton);
+    modalWindow.append(modalTitle, calendarContainer);
+    modalBackground.appendChild(modalWindow);
+    body.appendChild(modalBackground);
+
+    function loadCalendarContainer(container, calendarEvents) {
+        const dates = getDates(calendarEvents);
+        const dateIndex = dates.firstSunday
+        const weeks = [];
+
+        let endCalender = false;
+        while (!endCalender) {
+            const weekContainer = document.createElement('div');
+            weekContainer.classList.add('week');
+        
+            // Loop through days of the week
+            for (let dayOfTheWeekIndex = 0; dayOfTheWeekIndex < 7; dayOfTheWeekIndex++) {
+                const calendarDate = dateIndex.toLocaleDateString('en-CA');
+                const dayContainer = document.createElement('div');
+                if (dates.today.toDateString('en-CA') === dateIndex.toDateString('en-CA')) {
+                    dayContainer.id = "today";
+                }
+                dayContainer.classList.add(`date-${calendarDate}`);
+                dayContainer.classList.add('day');
+                // dayContainer.addEventListener('dragenter', () => {dayContainer.classList.add('drag-over')});
+                // dayContainer.addEventListener('dragleave', () => {dayContainer.classList.remove('drag-over')});
+                // dayContainer.addEventListener('dragover', (event) => {event.preventDefault()});
+                // dayContainer.addEventListener('drop', async () => {
+                //     dayContainer.classList.remove('drag-over');
+    
+                //     // Job drag drop
+                //     if (draggingJobID && canEditJob) {
+                //         await updateDBEntry(BUSINESS_SCHEMA, JOBS_TABLE, {id: draggingJobID, shipDate: calendarDate}, settings);
+                //     }
+    
+                //     // Calender drag drop
+                //     if (draggingCalendarEvent.id && canEditCalendar) {
+                //         if (draggingCalendarEvent.startDate === draggingCalendarEvent.endDate) {
+                //             await updateDBEntry(BUSINESS_SCHEMA, CALENDAR_TABLE, {id: draggingCalendarEvent.id, date: calendarDate}, settings);
+                //         }
+                //         else {
+                //             let startDate = draggingCalendarEvent.startDate;
+                //             let endDate = draggingCalendarEvent.endDate;
+    
+                //             if (draggingCalendarEvent.isStartDate) {
+                //                 if (calendarDate.replaceAll("-", "") > endDate.replaceAll("-", "")) {
+                //                     startDate = endDate;
+                //                     endDate = calendarDate;
+                //                 }
+                //                 else {
+                //                     startDate = calendarDate;
+                //                 }
+                //             }
+                //             else {
+                //                 if (calendarDate.replaceAll("-", "") > endDate.replaceAll("-", "")) {
+                //                     endDate = calendarDate;
+                //                 }
+                //                 if (calendarDate.replaceAll("-", "") < startDate.replaceAll("-", "")) {
+                //                     endDate = startDate;
+                //                     startDate = calendarDate;
+                //                 }
+                //                 else {
+                //                     endDate = calendarDate;
+                //                 }
+                //             }
+    
+                //             await updateDBEntry(BUSINESS_SCHEMA, CALENDAR_TABLE, {
+                //                 id: draggingCalendarEvent.id,
+                //                 date: startDate,
+                //                 endDate: endDate}, settings);
+                //         }
+                //     }
+                //     draggingJobID = "";
+                //     draggingCalendarEvent = {id: "", startDate: "", endDate: "", isStartDate: true};
+                //     await buildCalender();
+                // });
+    
+                const dayHeader = document.createElement('div');
+                dayHeader.classList.add('day-header-container');
+        
+                const dayNameElement = document.createElement('p');
+                const options = {month: "long"};
+                const monthText = (new Intl.DateTimeFormat("en-CA", options).format(dateIndex));
+                dayNameElement.classList.add('day-week-name');
+                if (dateIndex.getDate() == 1) {
+                    dayNameElement.textContent = monthText
+                    dayNameElement.classList.add('day-title-first-of-the-month');
+    
+                    // Add months to search array
+                    // nameDateSearchArray.push({name: monthText, date: calendarDate});
+                }
+                else {
+                    dayNameElement.textContent = dateIndex.toLocaleString('default', {weekday: 'short'});
+                }
+        
+                const dayNumberElement = document.createElement('p');
+                const dayNumber = dateIndex.toLocaleString('default', {day: 'numeric'});
+                dayNumberElement.classList.add('day-number');
+                if (dates.today.toDateString('en-CA') === dateIndex.toDateString('en-CA')) {
+                    dayNumberElement.classList.add('today');
+                }
+                dayNumberElement.textContent = dayNumber;
+    
+                // Add month/ and day to search array
+                // nameDateSearchArray.push({name: monthText + " " + dayNumber, date: calendarDate});
+    
+                // Add Jobs
+                // const jobsContainer = document.createElement('div');
+                // jobsContainer.classList.add('jobs-container');
+                // jobs.forEach((job) => {
+                //     if (job.shipDate !== dateIndex.toLocaleDateString('en-CA')) return;
+    
+                //     const percentCompleted = getJobTimes(job).percentCompleted;
+                    
+                //     const jobTitle = document.createElement('p');
+                //     jobTitle.setAttribute('draggable', 'true');
+                //     jobTitle.setAttribute('title', job.note || "");
+                //     jobTitle.addEventListener('dragstart', () => {draggingJobID = job.id});
+                //     if (!job.active) jobTitle.style.color = "var(--inactive)";
+                //     jobTitle.textContent = job.name;
+    
+                //     const jobProgressBar = document.createElement('div');
+                //     if (canEditJob) {
+                //         jobTitle.style.cursor = 'pointer';
+                //         jobTitle.onclick = async () => {
+                //             const jobsResponse = await getDBEntrees(BUSINESS_SCHEMA, JOBS_TABLE, "id", "*", settings);
+                //             if ((!jobsResponse) || (jobsResponse.error)) return;
+                
+                //             const tasksResponse = await getDBEntrees(BUSINESS_SCHEMA, TASKS_TABLE, "id", "*", settings);
+                //             if ((!tasksResponse) || (tasksResponse.error)) return;
+                
+                //             const currentEditingResponse = await getDBEntrees(BUSINESS_SCHEMA, STATIONS_TABLE, "editing", job.id, settings);
+                //             const whoIsEditingJob = getWhoIsEditing(currentEditingResponse);
+                //             if (whoIsEditingJob === "") {
+                //                 await updateDBEntry(BUSINESS_SCHEMA, STATIONS_TABLE, {id: stationID, editing: job.id}, settings);
+                //             }
+    
+                //             showJobDialog(job, jobsResponse, tasksResponse, 
+                //                 async (newJob) => {
+                //                     await updateDBEntry(BUSINESS_SCHEMA, JOBS_TABLE, newJob, settings);
+                //                     await updateDBEntry(BUSINESS_SCHEMA, STATIONS_TABLE, {id: stationID, editing: ""}, settings);
+                //                     await buildCalender();
+                //                 },
+                //                 async (originalJob) => {
+                //                     await updateDBEntry(BUSINESS_SCHEMA, STATIONS_TABLE, {id: stationID, editing: ""}, settings);
+                //                 },
+                //                 whoIsEditingJob
+                //             );
+                //         };
+                //         jobTitle.addEventListener('contextmenu', async (event) => {
+                //             event.preventDefault();
+                //             showYesNoDialog(`Delete "${job.name}"?`, async () => {
+                //                 await deleteDBEntry(BUSINESS_SCHEMA, JOBS_TABLE, job.id, settings);
+                //                 await buildCalender();
+                //             });
+                //         });
+    
+                //         jobProgressBar.style.width = `${percentCompleted}%`;
+                //         jobProgressBar.classList.add('job-progress-bar');
+                //         if (!job.active) jobProgressBar.style.borderColor = "var(--inactive)";
+                //     }
+                //     else { // Can't edit jobs
+                //         jobTitle.style.cursor = 'pointer';
+                //         jobTitle.onclick = async () => {
+                //             const jobsResponse = await getDBEntrees(BUSINESS_SCHEMA, JOBS_TABLE, "id", "*", settings);
+                //             if ((!jobsResponse) || (jobsResponse.error)) return;
+                            
+                //             showJobCardDialog(job, async (newJob) => {
+                //                 await updateDBEntry(BUSINESS_SCHEMA, JOBS_TABLE, newJob, settings);
+                //             });
+                //         };
+                //     }
+                //     jobsContainer.appendChild(jobTitle);
+                //     jobsContainer.appendChild(jobProgressBar);
+                
+                // });
+    
+                // // Add Calender Events
+                const eventContainer = document.createElement('div');
+                eventContainer.classList.add('events-container');
+    
+                calendarEvents.forEach((calenderEvent) => {
+                    // const endDate = calenderEvent.endDate || calenderEvent.date;
+    
+                    if (calenderEvent.dates.indexOf(calendarDate) !== -1) {
+    
+                        const eventTitle = document.createElement('p');
+                        eventTitle.setAttribute('draggable', 'true');
+                        eventTitle.setAttribute('title', calenderEvent.note || "");
+                        eventTitle.addEventListener('dragstart', () => {
+                            draggingCalendarEvent.id = calenderEvent.id;
+                            draggingCalendarEvent.startDate = calenderEvent.date;
+                            draggingCalendarEvent.endDate = endDate;
+                            draggingCalendarEvent.isStartDate = calenderEvent.dates[0] === calendarDate;
+                        });
+                        eventTitle.textContent = calenderEvent.name;
+                        eventTitle.style.color = "black";
+                        eventTitle.style.width = "100%";
+                        eventTitle.style.backgroundColor = `var(--color-${calenderEvent.color || 1})`;
+    
+                            if (canEditCalendar) {
+                                eventTitle.style.cursor = 'pointer';
+                                eventTitle.onclick = async () => {
+                                    showCalendarEventDialog(calenderEvent, 
+                                        async (newEvent) => {
+                                            await updateDBEntry(BUSINESS_SCHEMA, CALENDAR_TABLE, newEvent, settings);
+                                            await buildCalender();
+                                        },
+                                        async (oldJob) => {
+                                            // await buildCalender();
+                                        }
+                                    );
+                                };
+                                eventTitle.addEventListener('contextmenu', async (e) => {
+                                    e.preventDefault();
+                                    showYesNoDialog(`Delete "${calenderEvent.name}"?`, async () => {
+                                        await deleteDBEntry(BUSINESS_SCHEMA, CALENDAR_TABLE, calenderEvent.id, settings);
+                                        await buildCalender();
+                                    });
+                                });
+                            }
+                            eventContainer.appendChild(eventTitle);
+                        }
+                });
+    
+                dayHeader.appendChild(dayNameElement);
+                dayHeader.appendChild(dayNumberElement);
+        
+                dayContainer.appendChild(dayHeader);
+                dayContainer.appendChild(jobsContainer);
+                dayContainer.appendChild(eventContainer);
+                // dayContainer.appendChild(inActiveJobsContainer);
+        
+                weekContainer.appendChild(dayContainer);
+    
+                // Add dates to search array
+                nameDateSearchArray.push({name: calendarDate, date: calendarDate});
+    
+                // Increment day
+                dateIndex.setDate(dateIndex.getDate() + 1);
+    
+                if (dateIndex.toDateString('en-CA') === lastDatePlusNDays.toDateString('en-CA')) endCalender = true;
+            };
+            weeks.push(weekContainer);
+        }
+    
+        container.innerHTML = "";
+        container.append(...weeks);
+    }
+
+    function getDates(calendarEvents) {
+        const events = JSON.parse(JSON.stringify(calendarEvents));
+        
+        // Sort by end date to find last date
+        events.sort((a, b) => {
+            const dateA = a.endDate;
+            const dateB = b.endDate;
+            if (dateA < dateB) return 1;
+            if (dateA > dateB) return -1;
+            return 0;
+        });
+        const latestDate = events[0].endDate || getCorrectDate().toLocaleDateString('en-CA');
+
+        // Sort by start date
+        events.sort((a, b) => {
+            const dateA = a.startDate;
+            const dateB = b.startDate;
+            if (dateA < dateB) return -1;
+            if (dateA > dateB) return 1;
+            return 0;
+        });
+        const earliestDate = events[0].startDate || getCorrectDate().toLocaleDateString('en-CA');
+
+        const today = getCorrectDate((new Date().toLocaleDateString('en-CA')));
+        const todayText = today.toLocaleDateString('en-CA');
+    
+        const firstSunday = getCorrectDate(earliestDate);
+        while (firstSunday.toLocaleString('default', {weekday: 'short'}) !== "Sun") {
+            firstSunday.setDate(firstSunday.getDate() - 1);
+        }
+    
+        const lastSaturday = getCorrectDate(latestDate);
+        while (lastSaturday.toLocaleString('default', {weekday: 'short'}) !== "Sat") {
+            lastSaturday.setDate(lastSaturday.getDate() + 1);
+        }
+    
+        return {earliestDate, latestDate, todayText, today, firstSunday, lastSaturday}
+    }
+}
+
 export function showCalendarEventDialog(calendarEvent, OKCallback, cancelCallback) {
     if (!calendarEvent) calendarEvent = {};
 
@@ -845,6 +1180,7 @@ export function showCalendarEventDialog(calendarEvent, OKCallback, cancelCallbac
     eventNoteLabel.style.cssText = blockInputLabelStyles;
     eventNoteLabel.appendChild(TextArea);
 
+    // Color select
     const colorContainer = document.createElement('div');
     colorContainer.style.cssText = colorContainerStyles;
     let selectedColor = calendarEvent.color || 1;
@@ -909,25 +1245,33 @@ export function showInputDialog(message, defaultText, OKCallback, cancelCallback
     const modalTitle = getModalTitle(message);
 
     let modalInput;
-    if (inputType === 'textarea') {
-        modalInput = document.createElement('textarea');
-        modalInput.style.cssText = modalInputTextAreaStyles;
-    }
-    else if (inputType === 'text') {
-        modalInput = document.createElement('input');
-        modalInput.style.cssText = modalInputStyles;
-        if (inputType) modalInput.setAttribute('type', inputType);
-    }
-    else if (inputType === 'select') {
-        modalInput = document.createElement('select');
-        modalInput.style.cssText = modalInputStyles;
-        options.forEach((text) => {
-            const option = document.createElement('option');
-            option.textContent = text;
-            option.value = text;
-            modalInput.appendChild(option);
-        });
-        // if (inputType) modalInput.setAttribute('type', inputType);
+    switch (inputType) {
+        case 'textarea':
+            modalInput = document.createElement('textarea');
+            modalInput.style.cssText = modalInputTextAreaStyles;
+        break;
+        case 'select':
+            modalInput = document.createElement('select');
+            modalInput.style.cssText = modalInputStyles;
+            options.forEach((text) => {
+                const option = document.createElement('option');
+                option.textContent = text;
+                option.value = text;
+                modalInput.appendChild(option);
+            });
+        break;
+        case 'date':
+            modalInput = document.createElement('input');
+            modalInput.style.cssText = modalInputStyles;
+            if (inputType) modalInput.setAttribute('type', inputType);
+        break;
+    
+        // Text is default
+        default:
+            modalInput = document.createElement('input');
+            modalInput.style.cssText = modalInputStyles;
+            modalInput.setAttribute('type', 'text');
+        break;
     }
     modalInput.value = defaultText;
     if (placeholder) modalInput.setAttribute('placeholder', placeholder);
@@ -1039,6 +1383,16 @@ function getButtonContainer() {
     buttonContainer.style.cssText = modalButtonContainerStyles;
     buttonContainer.append(...arguments);
     return buttonContainer;
+}
+
+function getCloseButton(callback) {
+    const btn = document.createElement('button');
+    btn.textContent = "×";
+    btn.style.cssText = modalCloseButtonStyles;
+    btn.onclick = callback;
+    btn.onmouseover = (event) => {if (!btn.getAttribute('disabled')) btnMouseOver(event)};
+    btn.onmouseleave = (event) => {if (!btn.getAttribute('disabled')) btnMouseLeave(event)};
+    return btn;
 }
 
 function addHoverColors(element) {

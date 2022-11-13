@@ -49,6 +49,7 @@ import {
     showAlertDialog,
     showInputDialog,
     showJobDialog,
+    showCalendarPreviewDialog,
 } from "../dialogs.js";
 
 const settings = {
@@ -117,6 +118,14 @@ addNewJobBtn.addEventListener('click', async () => {
 await loadJobs(null, true);
 
 
+showCalendarPreviewDialog("Preview", [
+    {startDate: "2022-11-01", endDate: "2022-11-10"},
+    {startDate: "2022-11-05", endDate: "2022-11-7"},
+    {startDate: "2023-02-03", endDate: "2023-03-15"},
+    {startDate: "2022-11-03", endDate: "2022-11-15"},
+    {startDate: "2022-11-16", endDate: "2022-11-22"},
+]
+);
 
 
 // FUNCTIONS
