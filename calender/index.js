@@ -325,7 +325,7 @@ async function buildCalender(scrollTo) {
         return 0;
     });
 
-    // Correct any miss ordered dates
+    // Correct any miss ordered dates (end date before start date)
     calendarResponse.forEach((calendarEvent) => {
         if (calendarEvent.date === calendarEvent.endDate) return;
         const correctedDate = getCorrectDateOrder(calendarEvent.date, calendarEvent.endDate);
