@@ -118,14 +118,14 @@ addNewJobBtn.addEventListener('click', async () => {
 await loadJobs(null, true);
 
 
-showCalendarPreviewDialog("Preview", [
-    {startDate: "2022-11-01", endDate: "2022-11-10"},
-    {startDate: "2022-11-05", endDate: "2022-11-7"},
-    {startDate: "2023-02-03", endDate: "2023-03-15"},
-    {startDate: "2022-11-03", endDate: "2022-11-15"},
-    {startDate: "2022-11-16", endDate: "2022-11-22"},
-]
-);
+// showCalendarPreviewDialog("Preview", [
+//     {name: "13000dfsgsdfzhgszdf", startDate: "2022-11-01", endDate: "2022-11-10"},
+//     {name: "13001", startDate: "2022-11-05", endDate: "2022-11-7"},
+//     {name: "13002", startDate: "2023-02-03", endDate: "2023-03-15"},
+//     {name: "13003", startDate: "2022-11-03", endDate: "2022-11-15"},
+//     {name: "13004", startDate: "2022-11-16", endDate: "2022-11-22"},
+// ]
+// );
 
 
 // FUNCTIONS
@@ -156,8 +156,31 @@ async function loadJobs(jobs, sortByIndex) {
     }
     jobs.forEach((job, index) => {job.index = index});
 
-    await updateEstimateDates(jobs);
+    await updateEstimateDateAndStartDate(jobs);
 
+    // Calendar preview 
+    const previewEstimatedDatesBtn = document.createElement('button');
+    previewEstimatedDatesBtn.textContent = "Estimated\nDate Preview";
+    previewEstimatedDatesBtn.style.cssText = `
+        border: none;
+        font-size: 1.2em;
+        cursor: pointer;
+        color: var(--yes);`;
+    previewEstimatedDatesBtn.setAttribute('title', 'Update All Ship Dates');
+    previewEstimatedDatesBtn.onclick = async () => {
+        const jobsForCalendarPreview = [];
+        jobs.forEach((job) => {
+            if (!job.active) return;
+            jobsForCalendarPreview.push({name: job.name,
+                                         startDate: job.startDate || job.estimatedDate,
+                                         endDate: job.estimatedDate
+                                        });
+        });
+
+        showCalendarPreviewDialog("Preview of Estimated Dates", jobsForCalendarPreview, true);
+    };
+
+    // Update all button
     const updateAllEstimatedDatesBtn = document.createElement('button');
     updateAllEstimatedDatesBtn.textContent = "⇨";
     updateAllEstimatedDatesBtn.style.cssText = `
@@ -180,8 +203,9 @@ async function loadJobs(jobs, sortByIndex) {
         );
     };
 
+    // Table header
     jobsTable.innerHTML = "";
-    jobsTable.appendChild(getTableHeaderRow(["Name", "Estimated\nDate", updateAllEstimatedDatesBtn, "Ship\nDate", "Progress", "Note", "Active", "Remaining\nTime", "Shop\nTime", "Edit", "Delete", ""]));
+    jobsTable.appendChild(getTableHeaderRow(["Name", previewEstimatedDatesBtn, updateAllEstimatedDatesBtn, "Ship\nDate", "Progress", "Note", "Active", "Remaining\nTime", "Shop\nTime", "Edit", "Delete", ""]));
 
     jobs.forEach((job, jobIndex) => {
         const jobTimes = getJobTimes(job);
@@ -324,7 +348,7 @@ async function loadJobs(jobs, sortByIndex) {
     });
 }
 
-async function updateEstimateDates(jobs) {
+async function updateEstimateDateAndStartDate(jobs) {
 
     class ChronologicalTaskPointer {
         constructor(tasksResponse) {
@@ -381,6 +405,8 @@ async function updateEstimateDates(jobs) {
         if (!job.sequences) return;
 
         let maxDateOfCompletion = dateOfCompletion;
+
+        job.startDate = dateOfCompletion;
 
         job.sequences.forEach((sequence) => {
             if (!sequence.tasks) return;
