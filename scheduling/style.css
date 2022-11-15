@@ -10,12 +10,13 @@
     --yes: forestgreen;
     --no: tomato;
     --accent_color: #0ba27a;
-    --color-1: #ff990060;
-    --color-2: #f1ee3260;
-    --color-3: #97f23d60;
-    --color-4: #53eec260;
-    --color-5: #51c4f560;
-    --color-6: #f1a4ec60;
+    --color-1: #f5b673;
+    --color-2: #fefe79;
+    --color-3: #75fb7a;
+    --color-4: #7bfceb;
+    --color-5: #85bafc;
+    --color-6: #fb82f3;
+    --color-7: #fd8282;
 }
 /* @media (prefers-color-scheme: dark) { */
 [data-color-theme='dark']{
