@@ -522,7 +522,7 @@ body *{
         font-size: large;
         height: max-content;
     }
-  }
+}
 
   .super-user{
       display: none;
