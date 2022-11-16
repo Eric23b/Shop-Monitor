@@ -1213,9 +1213,18 @@ export function showInputDialog(message, defaultText, OKCallback, cancelCallback
         case 'date':
             modalInput = document.createElement('input');
             modalInput.style.cssText = modalInputStyles;
-            if (inputType) modalInput.setAttribute('type', inputType);
+            if (inputType) modalInput.setAttribute('type', 'date');
         break;
-    
+        case 'time':
+            modalInput = document.createElement('input');
+            modalInput.style.cssText = modalInputStyles;
+            if (inputType) modalInput.setAttribute('type', 'time');
+        break;
+        case 'number':
+            modalInput = document.createElement('input');
+            modalInput.style.cssText = modalInputStyles;
+            if (inputType) modalInput.setAttribute('type', 'number');
+        break;
         // Text is default
         default:
             modalInput = document.createElement('input');
