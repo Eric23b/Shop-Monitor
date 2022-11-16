@@ -199,13 +199,6 @@ const messageInput = document.querySelector("#send-message-textarea");
 const messageCancelBtn = document.querySelector("#send-message-cancel-btn");
 const messageOKBtn = document.querySelector("#send-message-ok-btn");
 
-// Prompt
-const promptBackground = document.querySelector("#prompt");
-const promptLabel = document.querySelector("#prompt-label");
-const promptInput = document.querySelector("#prompt-input");
-const promptCancelBtn = document.querySelector("#prompt-cancel-btn");
-const promptOKBtn = document.querySelector("#prompt-ok-btn");
-
 // Checklist Prompt
 const checklistPromptBackground = document.querySelector("#checklist-prompt");
 const checklistPromptLabel = document.querySelector("#checklist-prompt-label");
@@ -237,30 +230,26 @@ hideTabContainers();
 
 const password = getLocalStorageValue('password');
 if (password !== "pw558") {
-    showPrompt("Enter password",
-        "",
-        (enteredPassword) => {
-            if (enteredPassword !== "pw558") {
-                const a = document.createElement('a');
-                a.href = "/";
-                a.click();
-            }
-            else {
-                setLocalStorageValue('password', enteredPassword);
-            }
-        },
-        () => {
+    showInputDialog("Enter password", "", (enteredPassword) => {
+        if (enteredPassword !== "pw558") {
             const a = document.createElement('a');
             a.href = "/";
             a.click();
-        },
-        true
-    );
+        }
+        else {
+            setLocalStorageValue('password', enteredPassword);
+        }
+    }, () => {
+        const a = document.createElement('a');
+        a.href = "/";
+        a.click();
+    }, 'text', "", null);
 }
 
 // Retrieve settings values
 settings.url = serverURL.value = getLocalStorageValue('serverURL') || "";
-settings.authorization = serverAuthorization.value = getLocalStorageValue('serverAuthorization') || "";
+// settings.authorization = serverAuthorization.value = getLocalStorageValue('serverAuthorization') || "";
+settings.authorization = "RXJpYzp0ZXN0";
 stationName.value = getLocalStorageValue('stationName') || "";
 const superUser = await isSuperUser(settings);
 
@@ -1158,24 +1147,20 @@ async function loadJobsTable() {
         // Job name
         const name = getTableDataWithText(entry.name);
         name.onclick = () => {
-            showPrompt("Job name", entry.name, async (newName) => {
+            showInputDialog("Job name", entry.name, async (newName) => {
                 await updateDBEntry(BUSINESS_SCHEMA, JOBS_TABLE, {id: entry.id, name: newName}, settings, dbActive);
                 await loadJobsTable();
-            });
+            }, null, 'text', "");
         }
         name.style.cursor = "pointer";
 
         // Ship date
         const shipDate = getTableDataWithText(entry.shipDate);
         shipDate.onclick = () => {
-            showPrompt("Ship Date", entry.shipDate, async (newShipDate) => {
-                    await updateDBEntry(BUSINESS_SCHEMA, JOBS_TABLE, {id: entry.id, shipDate: newShipDate}, settings, dbActive);
-                    await loadJobsTable();
-                },
-                async () => {},
-                false,
-                "date");
-        }
+            showInputDialog("Ship Date", entry.shipDate, async (newShipDate) => {
+                await updateDBEntry(BUSINESS_SCHEMA, JOBS_TABLE, {id: entry.id, shipDate: newShipDate}, settings, dbActive);
+                await loadJobsTable();
+            }, null, 'date')};
         shipDate.style.cursor = "pointer";
 
         // Additional Supplies
@@ -1194,43 +1179,35 @@ async function loadJobsTable() {
                     additionalSuppliesText += additionalSuppliesLine.supplies + ":" + additionalSuppliesLine.note + "\n";
                     
                     const supplyName = getTableDataWithText(additionalSuppliesLine.supplies);
+                    supplyName.style.cursor = "pointer";
                     supplyName.onclick = () => {
                         tableModalBackground.style.display = "none";
-                        showPrompt("Additional Supplies Name",
-                            // OK click
-                            additionalSuppliesLine.supplies, async (newSupplyName) => {
-                                entry.additionalSupplies[supplyIndex].supplies = newSupplyName;
-                                supplyName.innerText = newSupplyName;
-                                await updateDBEntry(BUSINESS_SCHEMA, JOBS_TABLE, entry, settings, dbActive);
-                                await loadJobsTable();
-
-                                tableModalBackground.style.display = "flex";
-                            },
-                            // cancel Click
-                            async (newSupplyName) => {
-                                tableModalBackground.style.display = "flex";
-                            }
-                        );
+                        showInputDialog("Additional Supplies Name",
+                                        additionalSuppliesLine.supplies,
+                                        async (newSupplyName) => {
+                                            entry.additionalSupplies[supplyIndex].supplies = newSupplyName;
+                                            supplyName.innerText = newSupplyName;
+                                            await updateDBEntry(BUSINESS_SCHEMA, JOBS_TABLE, entry, settings, dbActive);
+                                            await loadJobsTable();
+                                            tableModalBackground.style.display = "flex";
+                                        }, null, 'text', "");
                     }
 
                     const supplyNote = getTableDataWithText(additionalSuppliesLine.note);
+                    supplyNote.style.cursor = "pointer";
                     supplyNote.onclick = () => {
                         tableModalBackground.style.display = "none";
-                        showPrompt("Additional Supplies Note",
-                            // OK click
-                            additionalSuppliesLine.note, async (newSupplyNote) => {
-                                entry.additionalSupplies[supplyIndex].note = newSupplyNote;
-                                supplyNote.innerText = newSupplyNote;
-                                await updateDBEntry(BUSINESS_SCHEMA, JOBS_TABLE, entry, settings, dbActive);
-                                await loadJobsTable();
-
-                                tableModalBackground.style.display = "flex";
-                            },
-                            // cancel Click
-                            async (newSupplyName) => {
-                                tableModalBackground.style.display = "flex";
-                            }
-                        );
+                        showInputDialog("Additional Supplies Name",
+                                        additionalSuppliesLine.note, async (newSupplyNote) => {
+                                            entry.additionalSupplies[supplyIndex].note = newSupplyNote;
+                                            supplyNote.innerText = newSupplyNote;
+                                            await updateDBEntry(BUSINESS_SCHEMA, JOBS_TABLE, entry, settings, dbActive);
+                                            await loadJobsTable();
+            
+                                            tableModalBackground.style.display = "flex";
+                                        }, async () => {
+                                            tableModalBackground.style.display = "flex";
+                                        }, 'text', "");
                     }
 
                     // Delete supply button
@@ -1256,10 +1233,11 @@ async function loadJobsTable() {
         // Notes
         const note = getTableDataWithText(entry.note);
         note.onclick = () => {
-            showPrompt("Note", entry.note, async (newNote) => {
-                    await updateDBEntry(BUSINESS_SCHEMA, JOBS_TABLE, {id: entry.id, note: newNote}, settings, dbActive);
-                    await loadJobsTable();
-                });
+            showInputDialog("Additional Supplies Name",
+                            entry.note, async (newNote) => {
+                                await updateDBEntry(BUSINESS_SCHEMA, JOBS_TABLE, {id: entry.id, note: newNote}, settings, dbActive);
+                                await loadJobsTable();
+                            }, null, 'text');
         }
         note.style.cursor = "pointer";
 
@@ -1273,11 +1251,11 @@ async function loadJobsTable() {
         );
 
         // Delete button
-        const deleteTD = getTableDataWithDeleteButton(
-            async () => {
+        const deleteTD = getTableDataWithDeleteButton(() => {
+             showYesNoDialog(`Delete job ${entry.name}?`, async () => {
                 await deleteDBEntry(BUSINESS_SCHEMA, JOBS_TABLE, entry.id, settings, dbActive);
                 await loadJobsTable();
-            }
+            })}
         );
 
         const row = document.createElement('tr');
@@ -1308,10 +1286,12 @@ async function loadEmployeeTable() {
 
         const name = getTableDataWithText(entry.name);
         name.onclick = () => {
-            showPrompt("Employee name", entry.name, async (newName) => {
-                await updateDBEntry(BUSINESS_SCHEMA, EMPLOYEES_TABLE, {id: entry.id, name: newName}, settings, dbActive);
-                await loadEmployeeTable();
-            });
+            showInputDialog("Employee name",
+                            entry.name,
+                            async (newName) => {
+                                await updateDBEntry(BUSINESS_SCHEMA, EMPLOYEES_TABLE, {id: entry.id, name: newName}, settings, dbActive);
+                                await loadEmployeeTable();
+                            }, null, 'text');
         }
         name.style.cursor = "pointer";
 
@@ -1321,10 +1301,14 @@ async function loadEmployeeTable() {
         if (typeof entry.stations === "string") {
             stations = getTableDataWithText(entry.stations);
             stations.onclick = () => {
-                showPrompt("Stations", entry.stations, async (newStations) => {
-                    await updateDBEntry(BUSINESS_SCHEMA, EMPLOYEES_TABLE, {id: entry.id, stations: newStations}, settings, dbActive);
-                    await loadEmployeeTable();
-                });
+                showInputDialog("Stations name",
+                                entry.stations,
+                                async (newStations) => {
+                                    console.log('p');
+                                    await updateDBEntry(BUSINESS_SCHEMA, EMPLOYEES_TABLE, {id: entry.id, stations: newStations}, settings, dbActive);
+                                    await loadEmployeeTable();
+                                }
+                                , null, 'text');
             }
             stations.style.cursor = "pointer";
         } // New system
@@ -1361,26 +1345,26 @@ async function loadEmployeeTable() {
         const shiftStartTime = hours24To12(entry.shiftStart);
         const shiftStart = getTableDataWithText(shiftStartTime);
         shiftStart.onclick = () => {
-            showPrompt("Shift Start", entry.shiftStart, async (newShiftStart) => {
-                await updateDBEntry(BUSINESS_SCHEMA, EMPLOYEES_TABLE, {id: entry.id, shiftStart: newShiftStart}, settings, dbActive);
-                await loadEmployeeTable();
-            },
-            async () => {},
-            false,
-            "time");
-        }
+            console.log(entry.shiftStart);
+            showInputDialog("Shift Start",
+                            entry.shiftStart, 
+                            async (newsShiftStart) => {
+                                await updateDBEntry(BUSINESS_SCHEMA, EMPLOYEES_TABLE, {id: entry.id, shiftStart: newsShiftStart}, settings, dbActive);
+                                await loadEmployeeTable();
+                            },
+                            null, 'time')};
         shiftStart.style.cursor = "pointer";
 
         const shiftEndTime = hours24To12(entry.shiftEnd);
         const shiftEnd = getTableDataWithText(shiftEndTime);
         shiftEnd.onclick = () => {
-            showPrompt("Shift End", entry.shiftEnd, async (newsShiftEnd) => {
-                await updateDBEntry(BUSINESS_SCHEMA, EMPLOYEES_TABLE, {id: entry.id, shiftEnd: newsShiftEnd}, settings, dbActive);
-                await loadEmployeeTable();
-            },
-            async () => {},
-            false,
-            "time");
+            showInputDialog("Shift End",
+                            entry.shiftEnd, 
+                            async (newsShiftEnd) => {
+                                await updateDBEntry(BUSINESS_SCHEMA, EMPLOYEES_TABLE, {id: entry.id, shiftEnd: newsShiftEnd}, settings, dbActive);
+                                await loadEmployeeTable();
+                            },
+                            null, 'time');
         }
         shiftEnd.style.cursor = "pointer";
 
@@ -1425,10 +1409,12 @@ async function loadWorkStationTable() {
 
         const name = getTableDataWithText(entry.name);
         name.onclick = () => {
-            showPrompt("Station name", entry.name, async (newName) => {
-                await updateDBEntry(BUSINESS_SCHEMA, STATIONS_TABLE, {id: entry.id, name: newName}, settings, dbActive);
-                await loadWorkStationTable();
-            });
+            showInputDialog("Station name",
+            entry.name,
+                async (newName) => {
+                    await updateDBEntry(BUSINESS_SCHEMA, STATIONS_TABLE, {id: entry.id, name: newName}, settings, dbActive);
+                    await loadWorkStationTable();
+                }, null, 'text');
         }
         name.style.cursor = "pointer";
 
@@ -1437,10 +1423,12 @@ async function loadWorkStationTable() {
         if (typeof entry.tasks === "string") {
             tasksTD = getTableDataWithText(entry.tasks);
             tasksTD.onclick = () => {
-                showPrompt("Tasks", entry.tasks, async (newTask) => {
-                    await updateDBEntry(BUSINESS_SCHEMA, STATIONS_TABLE, {id: entry.id, tasks: newTask}, settings, dbActive);
-                    await loadWorkStationTable();
-                });
+                showInputDialog("Tasks",
+                    entry.tasks,
+                    async (newTask) => {
+                        await updateDBEntry(BUSINESS_SCHEMA, STATIONS_TABLE, {id: entry.id, tasks: newTask}, settings, dbActive);
+                        await loadWorkStationTable();
+                    }, null, 'text');
             }
             tasksTD.style.cursor = "pointer";
         } // New system
@@ -1600,16 +1588,22 @@ async function loadUsersTable() {
         }
 
         // Password
-        const password = getTableDataWithText("****");
-        password.onclick = async () => {
-            showInputDialog("New Password", "",
-                async (newPassword) => {
-                    const message = await changeUserPassword(user.username, newPassword, settings);
-                    showAlertDialog(message.message);
-                }, null, "text", ""
-            );
+        let password;
+        if (superUser && (user.role.role === 'super_user')) {
+            password = getTableDataWithText("****");
         }
-        password.style.cursor = "pointer";
+        else {
+            password = getTableDataWithText("****");
+            password.onclick = async () => {
+                showInputDialog("New Password", "",
+                    async (newPassword) => {
+                        const message = await changeUserPassword(user.username, newPassword, settings);
+                        showAlertDialog(message.message);
+                    }, null, "text", ""
+                );
+            }
+            password.style.cursor = "pointer";
+        }
 
         // Delete user
         let deleteTD; 
@@ -1774,37 +1768,38 @@ async function loadTasksTable() {
         const row = document.createElement('tr');
 
         const name = getTableDataWithText(entry.name);
-        name.onclick = () => {
-            showPrompt("Task name", entry.name, async (newName) => {
-                await updateDBEntry(BUSINESS_SCHEMA, TASKS_TABLE, {id: entry.id, name: newName}, settings, dbActive);
-                await loadTasksTable();
-            });
+        name.onclick = async () => {
+            console.log('pl');
+            showInputDialog("Task name", entry.name, async (newName) => {
+                            await updateDBEntry(BUSINESS_SCHEMA, TASKS_TABLE, {id: entry.id, name: newName}, settings, dbActive);
+                            await loadTasksTable();
+                        }, null, 'text');
         }
         name.style.cursor = "pointer";
 
         const hours = getTableDataWithText(entry.hours);
         hours.onclick = () => {
-            showPrompt("Hours", entry.hours, async (newHours) => {
-                await updateDBEntry(BUSINESS_SCHEMA, TASKS_TABLE, {id: entry.id, hours: newHours}, settings, dbActive);
-                await loadTasksTable();
-            },
-            null,
-            false,
-            "number");
+            showInputDialog("Hours",
+                            entry.hours,
+                            async (newHours) => {
+                                await updateDBEntry(BUSINESS_SCHEMA, TASKS_TABLE, {id: entry.id, hours: newHours}, settings, dbActive);
+                                await loadTasksTable();
+                            },
+                            null, 'number');
         }
         hours.style.cursor = "pointer";
 
         const minutes = getTableDataWithText(entry.minutes);
         minutes.onclick = () => {
-            showPrompt("Minutes", entry.minutes, async (newMinutes) => {
-                await updateDBEntry(BUSINESS_SCHEMA, TASKS_TABLE, {id: entry.id, minutes: newMinutes}, settings, dbActive);
-                await loadTasksTable();
-            },
-            null,
-            false,
-            "number");
+            showInputDialog("Minutes",
+                            entry.minutes,
+                            async (newMinutes) => {
+                                await updateDBEntry(BUSINESS_SCHEMA, TASKS_TABLE, {id: entry.id, minutes: newMinutes}, settings, dbActive);
+                                await loadTasksTable();
+                            },
+                            null, 'number');
         }
-        hours.style.cursor = "pointer";
+        minutes.style.cursor = "pointer";
 
         const active = getTableDataWithCheckbox(
             entry.active,
@@ -1816,10 +1811,11 @@ async function loadTasksTable() {
 
         const deleteTD = getTableDataWithDeleteButton(
             async () => {
-                if (confirm(`Are you sure you want to delete ${entry}?`)) {
-                    await deleteDBEntry(BUSINESS_SCHEMA, TASKS_TABLE, entry.id, settings, dbActive);
-                    await loadTasksTable();
-                }
+                showYesNoDialog(`Are you sure you want to delete "${entry.name}"?`,
+                                async () => {
+                                    await deleteDBEntry(BUSINESS_SCHEMA, TASKS_TABLE, entry.id, settings, dbActive);
+                                    await loadTasksTable();
+                                });
             }
         );
 
@@ -1992,34 +1988,36 @@ async function showSendMessagePrompt(OKCallback, cancelCallback, hideBackground)
     }
 }
 
-function showPrompt(labelText, defaultText, OKCallback, cancelCallback, hideBackground, inputType) {
-    promptBackground.style.display = "flex";
-    promptBackground.style.backgroundColor = hideBackground ? "var(--background_color)" : "var(--background_transparent_color)";
-    // promptBackground.onclick = cancelClick;
+// function showPrompt(labelText, defaultText, OKCallback, cancelCallback, hideBackground, inputType) {
+//     promptBackground.style.display = "flex";
+//     promptBackground.style.backgroundColor = hideBackground ? "var(--background_color)" : "var(--background_transparent_color)";
+//     // promptBackground.onclick = cancelClick;
 
-    promptLabel.textContent = labelText;
+//     promptLabel.textContent = labelText;
 
-    promptInput.value = defaultText || "";
-    promptInput.setAttribute('type', inputType ? inputType : "text");
-    promptInput.select();
-    promptInput.onkeypress = (event) => {
-        if (event.key === "Enter") okClick();
-    }
+//     promptInput.value = defaultText || "";
+//     promptInput.setAttribute('type', inputType ? inputType : "text");
+//     promptInput.select();
+//     promptInput.onkeypress = (event) => {
+//         if (event.key === "Enter") okClick();
+//     }
 
-    promptOKBtn.onclick = okClick;
 
-    promptCancelBtn.onclick = cancelClick;
 
-    function cancelClick() {
-        if (cancelCallback) cancelCallback(promptInput.value);
-        promptBackground.style.display = "none";
-    }
+//     promptOKBtn.onclick = okClick;
 
-    function okClick() {
-        OKCallback(promptInput.value);
-        promptBackground.style.display = "none";
-    }
-}
+//     promptCancelBtn.onclick = cancelClick;
+
+//     function cancelClick() {
+//         if (cancelCallback) cancelCallback(promptInput.value);
+//         promptBackground.style.display = "none";
+//     }
+
+//     function okClick() {
+//         OKCallback(promptInput.value);
+//         promptBackground.style.display = "none";
+//     }
+// }
 
 function showChecklistPrompt(labelText, checkArray, OKCallback, cancelCallback) {
     checklistPromptBackground.style.display = "flex";
