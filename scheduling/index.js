@@ -158,15 +158,15 @@ async function loadJobs(jobs, sortByIndex) {
 
     await updateEstimateDateAndStartDate(jobs);
 
-    // Calendar preview 
+    // Estimated date preview calendar
     const previewEstimatedDatesBtn = document.createElement('button');
     previewEstimatedDatesBtn.textContent = "Estimated\nDate Preview";
     previewEstimatedDatesBtn.style.cssText = `
         border: none;
-        font-size: 1.2em;
+        font-size: 1em;
         cursor: pointer;
         color: var(--yes);`;
-    previewEstimatedDatesBtn.setAttribute('title', 'Update All Ship Dates');
+    previewEstimatedDatesBtn.setAttribute('title', 'Open preview calendar');
     previewEstimatedDatesBtn.onclick = async () => {
         const jobsForCalendarPreview = [];
         jobs.forEach((job) => {
@@ -177,7 +177,7 @@ async function loadJobs(jobs, sortByIndex) {
                                         });
         });
 
-        showCalendarPreviewDialog("Preview of Estimated Dates", jobsForCalendarPreview, true);
+        showCalendarPreviewDialog("Preview of Estimated Dates", jobsForCalendarPreview, true, true);
     };
 
     // Update all button
@@ -203,9 +203,31 @@ async function loadJobs(jobs, sortByIndex) {
         );
     };
 
+    // Ship date preview calendar  
+    const previewShipDatesBtn = document.createElement('button');
+    previewShipDatesBtn.textContent = "Ship Date";
+    previewShipDatesBtn.style.cssText = `
+        border: none;
+        font-size: 1em;
+        cursor: pointer;
+        color: var(--yes);`;
+    previewShipDatesBtn.setAttribute('title', 'Open ship date calendar');
+    previewShipDatesBtn.onclick = async () => {
+        const jobsForCalendarPreview = [];
+        jobs.forEach((job) => {
+            if (!job.active) return;
+            jobsForCalendarPreview.push({name: job.name,
+                                         startDate: job.shipDate,
+                                         endDate: job.shipDate
+                                        });
+        });
+
+        showCalendarPreviewDialog("Current Ship Dates", jobsForCalendarPreview, false, false);
+    };
+
     // Table header
     jobsTable.innerHTML = "";
-    jobsTable.appendChild(getTableHeaderRow(["Name", previewEstimatedDatesBtn, updateAllEstimatedDatesBtn, "Ship\nDate", "Progress", "Note", "Active", "Remaining\nTime", "Shop\nTime", "Edit", "Delete", ""]));
+    jobsTable.appendChild(getTableHeaderRow(["Name", previewEstimatedDatesBtn, updateAllEstimatedDatesBtn, previewShipDatesBtn, "Progress", "Note", "Active", "Remaining\nTime", "Shop\nTime", "Edit", "Delete", ""]));
 
     jobs.forEach((job, jobIndex) => {
         const jobTimes = getJobTimes(job);
