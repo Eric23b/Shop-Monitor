@@ -248,8 +248,7 @@ if (password !== "pw558") {
 
 // Retrieve settings values
 settings.url = serverURL.value = getLocalStorageValue('serverURL') || "";
-// settings.authorization = serverAuthorization.value = getLocalStorageValue('serverAuthorization') || "";
-settings.authorization = "RXJpYzp0ZXN0";
+settings.authorization = serverAuthorization.value = getLocalStorageValue('serverAuthorization') || "";
 stationName.value = getLocalStorageValue('stationName') || "";
 const superUser = await isSuperUser(settings);
 
@@ -1983,41 +1982,10 @@ async function showSendMessagePrompt(OKCallback, cancelCallback, hideBackground)
             messageBackground.style.display = "none";
         }
         else {
-            showAlert("Add a message.");
+            showAlertDialog("Add a message.");
         }
     }
 }
-
-// function showPrompt(labelText, defaultText, OKCallback, cancelCallback, hideBackground, inputType) {
-//     promptBackground.style.display = "flex";
-//     promptBackground.style.backgroundColor = hideBackground ? "var(--background_color)" : "var(--background_transparent_color)";
-//     // promptBackground.onclick = cancelClick;
-
-//     promptLabel.textContent = labelText;
-
-//     promptInput.value = defaultText || "";
-//     promptInput.setAttribute('type', inputType ? inputType : "text");
-//     promptInput.select();
-//     promptInput.onkeypress = (event) => {
-//         if (event.key === "Enter") okClick();
-//     }
-
-
-
-//     promptOKBtn.onclick = okClick;
-
-//     promptCancelBtn.onclick = cancelClick;
-
-//     function cancelClick() {
-//         if (cancelCallback) cancelCallback(promptInput.value);
-//         promptBackground.style.display = "none";
-//     }
-
-//     function okClick() {
-//         OKCallback(promptInput.value);
-//         promptBackground.style.display = "none";
-//     }
-// }
 
 function showChecklistPrompt(labelText, checkArray, OKCallback, cancelCallback) {
     checklistPromptBackground.style.display = "flex";
