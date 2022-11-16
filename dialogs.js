@@ -116,14 +116,17 @@ const calendarWeekStyles = `
     align-content: center;
     width: 100%;
     height: max-content;
-    align-items: stretch;`;
+    align-items: stretch;
+    flex: 1;`;
 const calendarDayContainerStyles = `
     display: flex;
     flex-direction: column;
     justify-content: flex-start;
     align-items: stretch;
     flex-grow: 1;
+    flex: 1;
     width: 12vw;
+    min-width: 12vw;
     min-height: 8vw;
     overflow-wrap: break-word;
     padding-bottom: 0.5em;
@@ -883,7 +886,7 @@ function showAddTaskFromTextDialog(sequences, allTasks, OKCallback, cancelCallba
     }
 }
 
-export function showCalendarPreviewDialog(title, calendarEvents, weekdaysOnly) {
+export function showCalendarPreviewDialog(title, calendarEvents, weekdaysOnly, randomColor) {
     const body = document.querySelector('body');
     const modalBackground = getModalBackground();
     const modalWindow = getModalWindow();
@@ -941,6 +944,22 @@ export function showCalendarPreviewDialog(title, calendarEvents, weekdaysOnly) {
                 const calendarDate = dateIndex.toLocaleDateString('en-CA');
                 const dayContainer = document.createElement('div');
                 dayContainer.style.cssText = calendarDayContainerStyles;
+
+                const resizeObserver = new ResizeObserver(() => {
+                    const screenWidth = window.innerWidth;
+                    if (screenWidth <= 600) {
+                        dayContainer.style.fontSize = 'large';
+                        dayContainer.style.width = '100%';
+                        weekContainer.style.flexDirection = 'column';
+                    }
+                    else {
+                        dayContainer.style.fontSize = 'clamp(0.25em, 1.5vw, 1.125em)';
+                        dayContainer.style.width = '100%';
+                        weekContainer.style.flexDirection = 'row';
+                    }
+                });
+                resizeObserver.observe(document.querySelector('body'));
+                
                 dayContainer.classList.add(`date-${calendarDate}`);
                 dayContainer.classList.add('day');
     
@@ -989,13 +1008,17 @@ export function showCalendarPreviewDialog(title, calendarEvents, weekdaysOnly) {
                     eventColor += 1;
                     if (eventColor >= 8) eventColor = 1;
     
-                    if (calenderEvent.dates.indexOf(calendarDate) !== -1) {
-    
+                    if (calenderEvent.dates.indexOf(calendarDate) !== -1) {    
                         const eventTitle = document.createElement('p');
                         eventTitle.setAttribute('title', calenderEvent.note || "");
                         eventTitle.textContent = calenderEvent.name;
                         eventTitle.style.cssText = eventTitleStyles;
-                        eventTitle.style.backgroundColor = `var(--color-${eventColor || 1})`;
+                        if (randomColor) {
+                            eventTitle.style.backgroundColor = `var(--color-${eventColor || 1})`;
+                        }
+                        else {
+                            eventTitle.style.color = 'var(--color)';
+                        }
                         eventContainer.appendChild(eventTitle);
                         }
                 });
