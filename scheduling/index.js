@@ -222,7 +222,7 @@ async function loadJobs(jobs, sortByIndex) {
                                         });
         });
 
-        showCalendarPreviewDialog("Current Ship Dates", jobsForCalendarPreview, false, false);
+        showCalendarPreviewDialog("Current Shipping Dates", jobsForCalendarPreview, false, false);
     };
 
     // Table header
