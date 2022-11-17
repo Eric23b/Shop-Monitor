@@ -233,7 +233,8 @@ async function loadJobs(jobs, sortByIndex) {
     jobs.forEach((job, jobIndex) => {
         if ((!job.active) && (!todayAdded)) {
             todayAdded = true;
-            jobsTable.appendChild(getTableHeaderRow(["Today", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", ""]));
+            const today = getToday().toLocaleDateString('en-CA');
+            jobsTable.appendChild(getTableHeaderRow(["Today", today, "-", "-", "-", "-", "-", "-", "-", "-", "-", ""]));
         }
 
         const jobTimes = getJobTimes(job);
@@ -431,6 +432,7 @@ async function updateEstimateDateAndStartDate(jobs) {
     jobs.forEach((job) => {
         if (!job.active) return;
         if (!job.sequences) return;
+        let jobIsCompleted = true;
 
         let maxDateOfCompletion = dateOfCompletion;
 
@@ -447,11 +449,19 @@ async function updateEstimateDateAndStartDate(jobs) {
                     if (Number(dateOfCompletion.replaceAll("-", "")) > Number(maxDateOfCompletion.replaceAll("-", ""))) {
                         maxDateOfCompletion = dateOfCompletion;
                     }
+                    jobIsCompleted = false;
                 }
                 newSequence = false;
             });
         });
-        job.estimatedDate = maxDateOfCompletion;
+        if (jobIsCompleted) {
+            job.startDate = getToday().toLocaleDateString('en-CA');
+            job.estimatedDate = getToday().toLocaleDateString('en-CA');
+            job.completed = true;
+        }
+        else {
+            job.estimatedDate = maxDateOfCompletion;
+        }
     });
 
     // Sort by index
@@ -463,6 +473,15 @@ async function updateEstimateDateAndStartDate(jobs) {
         return 0;
     });
 
+    // 
+    jobs.sort((a, b) => {
+        const nameA = a.index;
+        const nameB = b.index;
+        if (a.completed) return 1;
+        if (b.completed) return -1;
+        return 0;
+    });
+
     // Sort by active
     jobs.sort((a, b) => {
         const nameA = a.active;
@@ -471,6 +490,10 @@ async function updateEstimateDateAndStartDate(jobs) {
         if (nameA > nameB) return -1;
         return 0;
     });
+}
+function getToday() {
+    const utcDate = new Date();
+    return new Date(utcDate.getTime() + utcDate.getTimezoneOffset() * 60000);
 }
 
 function getDateText(date) {
