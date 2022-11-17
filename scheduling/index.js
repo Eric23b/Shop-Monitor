@@ -229,7 +229,13 @@ async function loadJobs(jobs, sortByIndex) {
     jobsTable.innerHTML = "";
     jobsTable.appendChild(getTableHeaderRow(["Name", previewEstimatedDatesBtn, updateAllEstimatedDatesBtn, previewShipDatesBtn, "Progress", "Note", "Active", "Remaining\nTime", "Shop\nTime", "Edit", "Delete", ""]));
 
+    let todayAdded = false;
     jobs.forEach((job, jobIndex) => {
+        if ((!job.active) && (!todayAdded)) {
+            todayAdded = true;
+            jobsTable.appendChild(getTableHeaderRow(["Today", "-", "-", "-", "-", "-", "-", "-", "-", "-", "-", ""]));
+        }
+
         const jobTimes = getJobTimes(job);
 
         const row = document.createElement('tr');
@@ -434,10 +440,10 @@ async function updateEstimateDateAndStartDate(jobs) {
             if (!sequence.tasks) return;
 
             let newSequence = true;
-            sequence.tasks.forEach((task) => {
-                if (!task.completed) {
-                    const remainingTimePerTaskInMinutes = Number(task.hours * 60) + Number(task.minutes);
-                    dateOfCompletion = taskPointerObj.incTaskPointer(task.id, remainingTimePerTaskInMinutes, newSequence).toLocaleDateString('en-CA');
+            sequence.tasks.forEach((jobTask) => {
+                if (!jobTask.completed) {
+                    const remainingTimePerTaskInMinutes = Number(jobTask.hours * 60) + Number(jobTask.minutes);
+                    dateOfCompletion = taskPointerObj.incTaskPointer(jobTask.id, remainingTimePerTaskInMinutes, newSequence).toLocaleDateString('en-CA');
                     if (Number(dateOfCompletion.replaceAll("-", "")) > Number(maxDateOfCompletion.replaceAll("-", ""))) {
                         maxDateOfCompletion = dateOfCompletion;
                     }
