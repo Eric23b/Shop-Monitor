@@ -170,10 +170,12 @@ async function loadJobs(jobs, sortByIndex) {
     previewEstimatedDatesBtn.onclick = async () => {
         const jobsForCalendarPreview = [];
         jobs.forEach((job) => {
+            const jobTimes = getJobTimes(job);
             if (!job.active) return;
             jobsForCalendarPreview.push({name: job.name,
                                          startDate: job.startDate || job.estimatedDate,
-                                         endDate: job.estimatedDate
+                                         endDate: job.estimatedDate,
+                                         tooltip: `${jobTimes.remainingTimeString} remaining.`,
                                         });
         });
 
