@@ -1010,7 +1010,7 @@ export function showCalendarPreviewDialog(title, calendarEvents, weekdaysOnly, r
     
                     if (calenderEvent.dates.indexOf(calendarDate) !== -1) {    
                         const eventTitle = document.createElement('p');
-                        eventTitle.setAttribute('title', calenderEvent.note || "");
+                        eventTitle.setAttribute('title', calenderEvent.tooltip || "");
                         eventTitle.textContent = calenderEvent.name;
                         eventTitle.style.cssText = eventTitleStyles;
                         if (randomColor) {
