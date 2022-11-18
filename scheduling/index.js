@@ -328,11 +328,11 @@ async function loadJobs(jobs, sortByIndex) {
             }
         );
 
-        // Shop Hours
-        const shopHours = getTableDataWithText(`${jobTimes.totalHours}:${jobTimes.totalMinutes}`);
-
         // Remaining Time
         const remainingHours = getTableDataWithText(`${jobTimes.remainingTimeString}`);
+
+        // Shop Hours
+        const shopHours = getTableDataWithText(`${jobTimes.totalTimeString}`);
 
         // Edit job
         const edit = getTableDataWithText("✏");
@@ -587,6 +587,7 @@ function getJobTimes(job) {
     }
     times.totalHours = Number(times.totalHours + Math.floor(times.totalMinutes / 60));
     times.totalMinutes = Number((((times.totalMinutes / 60) % 1) * 60).toFixed(0));
+    times.totalTimeString = `${times.totalHours}:${(times.totalMinutes < 10) ? "0" + String(times.totalMinutes) : times.totalMinutes}`
     times.totalTimeDec = times.totalHours + (times.totalMinutes / 60);
     times.totalCompletedTimeDec = times.completedHours + (times.completedMinutes / 60);
     times.totalTimeRemainingDec = times.totalTimeDec - times.totalCompletedTimeDec;
@@ -598,7 +599,7 @@ function getJobTimes(job) {
 
     const remainingHours = Math.floor(times.totalTimeRemainingInMinutes / 60);
     const remainingMinutes = (Math.floor(times.totalTimeRemainingInMinutes) - (Math.floor(times.totalTimeRemainingInMinutes / 60) * 60));
-    times.remainingTimeString = `${remainingHours}:${remainingMinutes}`;
+    times.remainingTimeString = `${remainingHours}:${(remainingMinutes < 10) ? "0" + String(remainingMinutes) : remainingMinutes}`;
     return times;
 }
 
