@@ -1033,19 +1033,21 @@ export function showCalendarPreviewDialog(title, calendarEvents, weekdaysOnly, r
                         else {
                             eventTitle.style.color = 'var(--color)';
                         }
-                        const tooltip = document.createElement('p');
-                        tooltip.textContent = calenderEvent.tooltip || "";
-                        tooltip.style.cssText = calendarTooltipStyles;
-                        const numberOfLines = calenderEvent.tooltip.split(/\r\n|\r|\n/).length;
-                        tooltip.style.marginTop = `-${numberOfLines + 3}em`;
-                        tooltip.style.borderColor = `var(--color-${eventColor || 1})`
-                        eventTitle.onmouseover = () => {
-                            tooltip.style.display = "block";
+                        if (calenderEvent.tooltip) {
+                            const tooltip = document.createElement('p');
+                            tooltip.textContent = calenderEvent.tooltip || "";
+                            tooltip.style.cssText = calendarTooltipStyles;
+                            const numberOfLines = calenderEvent.tooltip.split(/\r\n|\r|\n/).length;
+                            tooltip.style.marginTop = `-${numberOfLines + 3}em`;
+                            tooltip.style.borderColor = randomColor ? `var(--color-${eventColor || 1})` : `var(--border_color)`;
+                            eventTitle.onmouseover = () => {
+                                tooltip.style.display = "block";
+                            }
+                            eventTitle.onmouseleave = () => {
+                                tooltip.style.display = "none";
+                            }
+                            eventTitle.appendChild(tooltip);
                         }
-                        eventTitle.onmouseleave = () => {
-                            tooltip.style.display = "none";
-                        }
-                        if (calenderEvent.tooltip) eventTitle.appendChild(tooltip);
                         eventContainer.appendChild(eventTitle);
                         }
                 });
