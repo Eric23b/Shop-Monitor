@@ -161,11 +161,10 @@ async function loadJobs(jobs, sortByIndex) {
     // Estimated date preview calendar
     const previewEstimatedDatesBtn = document.createElement('button');
     previewEstimatedDatesBtn.textContent = "Estimated\nDate Preview";
-    previewEstimatedDatesBtn.style.cssText = `
-        border: none;
-        font-size: 1em;
-        cursor: pointer;
-        color: var(--yes);`;
+    previewEstimatedDatesBtn.style.cssText = `border: none;
+                                              font-size: 1em;
+                                              cursor: pointer;
+                                              color: var(--yes);`;
     previewEstimatedDatesBtn.setAttribute('title', 'Open preview calendar');
     previewEstimatedDatesBtn.onclick = async () => {
         const jobsForCalendarPreview = [];
@@ -175,7 +174,9 @@ async function loadJobs(jobs, sortByIndex) {
             jobsForCalendarPreview.push({name: job.name,
                                          startDate: job.startDate || job.estimatedDate,
                                          endDate: job.estimatedDate,
-                                         tooltip: `${jobTimes.remainingTimeString} remaining.`,
+                                         tooltip: jobTimes.totalTimeString + " shop time.\n" +
+                                                  jobTimes.remainingTimeString + " remaining.\n" +
+                                                  jobTimes.percentCompleted + "% completed.",
                                         });
         });
 
@@ -195,10 +196,10 @@ async function loadJobs(jobs, sortByIndex) {
         showYesNoDialog("Update All Ship Dates?",
             async () => {
                 jobs.forEach(async (job) => {
-                    if (job.active) {
-                        job.shipDate = job.estimatedDate;
-                        await updateDBEntry(BUSINESS_SCHEMA, JOBS_TABLE, {id: job.id, shipDate: job.shipDate}, settings);
-                    }
+                    if (!job.active) return;
+                    job.shipDate = job.estimatedDate;
+                    await updateDBEntry(BUSINESS_SCHEMA, JOBS_TABLE, {id: job.id, shipDate: job.shipDate}, settings);
+                    
                 });
                 await loadJobs(jobs);
             }
@@ -218,9 +219,13 @@ async function loadJobs(jobs, sortByIndex) {
         const jobsForCalendarPreview = [];
         jobs.forEach((job) => {
             if (!job.active) return;
+            const jobTimes = getJobTimes(job);
             jobsForCalendarPreview.push({name: job.name,
                                          startDate: job.shipDate,
-                                         endDate: job.shipDate
+                                         endDate: job.shipDate,
+                                         tooltip: jobTimes.totalTimeString + " shop time.\n" +
+                                                  jobTimes.remainingTimeString + " remaining.\n" +
+                                                  jobTimes.percentCompleted + "% completed.",
                                         });
         });
 
