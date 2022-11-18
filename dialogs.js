@@ -157,12 +157,27 @@ const eventsContainer = `
     margin-top: auto;
     background: transparent;`
 const eventTitleStyles = `
+    position: static;
     width: 100%;
     overflow: visible;
     padding: 0 0.25em;
     margin: 0;
     text-align: center;
-    color: black`;
+    color: black;`;
+const calendarTooltipStyles = `
+    position: absolute;
+    display: none;
+    width: max-content;
+    white-space: -moz-pre-wrap; /* Mozilla, supported since 1999 */
+    white-space: -pre-wrap; /* Opera 4 - 6 */
+    white-space: -o-pre-wrap; /* Opera 7 */
+    white-space: pre-wrap; /* CSS3 - Text module (Candidate Recommendation) http://www.w3.org/TR/css3-text/#white-space */
+    word-wrap: break-word; /* IE 5.5+ */
+    padding: 0.25em;
+    font-size: smaller;
+    border : 1px solid var(--border_color);
+    border-radius: 0.5em;
+    pointer-events: none;`;
 
 
 const jobNameInputStyles = `
@@ -1010,7 +1025,6 @@ export function showCalendarPreviewDialog(title, calendarEvents, weekdaysOnly, r
     
                     if (calenderEvent.dates.indexOf(calendarDate) !== -1) {    
                         const eventTitle = document.createElement('p');
-                        eventTitle.setAttribute('title', calenderEvent.tooltip || "");
                         eventTitle.textContent = calenderEvent.name;
                         eventTitle.style.cssText = eventTitleStyles;
                         if (randomColor) {
@@ -1019,6 +1033,19 @@ export function showCalendarPreviewDialog(title, calendarEvents, weekdaysOnly, r
                         else {
                             eventTitle.style.color = 'var(--color)';
                         }
+                        const tooltip = document.createElement('p');
+                        tooltip.textContent = calenderEvent.tooltip || "";
+                        tooltip.style.cssText = calendarTooltipStyles;
+                        const numberOfLines = calenderEvent.tooltip.split(/\r\n|\r|\n/).length;
+                        tooltip.style.marginTop = `-${numberOfLines + 3}em`;
+                        tooltip.style.borderColor = `var(--color-${eventColor || 1})`
+                        eventTitle.onmouseover = () => {
+                            tooltip.style.display = "block";
+                        }
+                        eventTitle.onmouseleave = () => {
+                            tooltip.style.display = "none";
+                        }
+                        if (calenderEvent.tooltip) eventTitle.appendChild(tooltip);
                         eventContainer.appendChild(eventTitle);
                         }
                 });

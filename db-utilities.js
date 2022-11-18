@@ -69,7 +69,7 @@ export async function isSuperUser(serverSettings) {
     const requestOptions = buildRequestOptions(headers, raw);
     const response = await sendDBRequest(serverSettings.url, requestOptions);
 
-    return response.role.permission.super_user || false;
+    return response.role?.permission.super_user || false;
 }
 
 export async function changePermission(body, serverSettings) {
