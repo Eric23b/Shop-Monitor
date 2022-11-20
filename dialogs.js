@@ -1040,16 +1040,16 @@ export function showCalendarPreviewDialog(title, calendarEvents, weekdaysOnly, r
                             tooltip.style.borderColor = randomColor ? `var(--color-${eventColor || 1})` : `var(--border_color)`;
                             eventTitle.onmouseover = () => {
                                 tooltip.style.display = "block";
-                                console.log('yup');
+                                if (!randomColor) eventTitle.style.backgroundColor = 'var(--background_hover_color)';
                             }
                             eventTitle.onmousemove = (event) => {
                                 const numberOfLines = calenderEvent.tooltip.split(/\r\n|\r|\n/).length;
-                                // tooltip.style.top = `${event.clientY}px`;
                                 tooltip.style.top = `calc(${event.clientY}px - ${numberOfLines + 2.5}em)`;
                                 tooltip.style.left = `${event.clientX}px`;
                             }
                             eventTitle.onmouseleave = () => {
                                 tooltip.style.display = "none";
+                                if (!randomColor) eventTitle.style.backgroundColor = 'var(--background_color)';
                             }
                             body.appendChild(tooltip);
                         }
