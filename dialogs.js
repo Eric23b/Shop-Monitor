@@ -934,7 +934,8 @@ export function showCalendarPreviewDialog(title, calendarEvents, weekdaysOnly, r
 
     function loadCalendarContainer(container, calendarEvents) {
         const dateProperties = getDates(calendarEvents);
-        const dateIndex = dateProperties.firstSunday
+        const dateIndex = dateProperties.firstSunday;
+        console.log(dateProperties.today);
         const weeks = [];
 
         calendarEvents.forEach(event => {
@@ -1103,7 +1104,10 @@ export function showCalendarPreviewDialog(title, calendarEvents, weekdaysOnly, r
         const today = getCorrectDate((new Date().toLocaleDateString('en-CA')));
         const todayText = today.toLocaleDateString('en-CA');
     
-        const firstSunday = getCorrectDate(earliestDate);
+        let firstSunday = getCorrectDate(earliestDate);
+        if (firstSunday > getToday()) {
+            firstSunday = getToday();
+        }
         while (firstSunday.toLocaleString('default', {weekday: 'short'}) !== "Sun") {
             firstSunday.setDate(firstSunday.getDate() - 1);
         }
@@ -1412,5 +1416,10 @@ function btnMouseLeave(event) {
 function getCorrectDate(date) {
     // Stupid javascript
     const utcDate = new Date(date);
+    return new Date(utcDate.getTime() + utcDate.getTimezoneOffset() * 60000);
+}
+
+function getToday() {
+    const utcDate = new Date();
     return new Date(utcDate.getTime() + utcDate.getTimezoneOffset() * 60000);
 }
