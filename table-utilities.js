@@ -66,10 +66,14 @@ export function getTableDataWithEditText(text, promptText, editCallback) {
 export function getTableDataWithProgressBar(percentage) {
     percentage = isNaN(percentage) ? 0 : percentage;
     const td = document.createElement('td');
-    const bar = document.createElement('div');
+    const bar = document.createElement('p');
+    if (percentage == 100) bar.textContent = "✓"
     bar.style.width = percentage + "%";
     bar.style.height = "1.25em";
+    bar.style.margin = "0";
+    bar.style.color = "var(--background_color)";
     bar.style.backgroundColor = "var(--yes)";
+    bar.style.fontWeight = "bold";
     td.style.backgroundColor = "var(--background_hover_color)";
     td.setAttribute('title', percentage + "% completed")
     td.appendChild(bar);
