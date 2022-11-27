@@ -144,6 +144,7 @@ async function loadJobs(jobs, sortByIndex) {
             if (nameA > nameB) return -1;
             return 0;
         });
+        sortByCompleted(jobs);
         
         // Sort by active
         jobs.sort((a, b) => {
@@ -154,9 +155,23 @@ async function loadJobs(jobs, sortByIndex) {
             return 0;
         });
     }
+
+
+    function sortByCompleted(array) {
+        array.sort((a, b) => {
+            if ((isCompleted(a))) {
+                return 1;
+            }
+            else {
+                return -1;
+            }
+        });
+    }
     jobs.forEach((job, index) => {job.index = index});
 
-    await updateEstimateDateAndStartDate(jobs);
+    const tasksResponse = await getDBEntrees(BUSINESS_SCHEMA, TASKS_TABLE, "active", true, settings);
+    if ((!jobs) || (jobs.error)) return;
+    await updateEstimateDateAndStartDate(jobs, tasksResponse);
 
     // Estimated date preview calendar
     const previewEstimatedDatesBtn = document.createElement('button');
@@ -314,8 +329,8 @@ async function loadJobs(jobs, sortByIndex) {
         });
 
         // Note
-        const note = getTableDataWithEditText(job.index || "");
-        // const note = getTableDataWithEditText(job.note);
+        // const note = getTableDataWithEditText(job.index || "");
+        const note = getTableDataWithEditText(job.note);
         note.onclick = async () => {
             showInputDialog("Note", job.note, async (note) => {
                 job.note = note;
@@ -384,123 +399,199 @@ async function loadJobs(jobs, sortByIndex) {
     });
 }
 
-async function updateEstimateDateAndStartDate(jobs) {
+async function updateEstimateDateAndStartDate(jobs, tasksResponse) {
+    // const jobsCopy = JSON.parse(JSON.stringify(jobs));
+    const shopTasks = JSON.parse(JSON.stringify(tasksResponse));
 
-    class ChronologicalTaskPointer {
-        constructor(tasksResponse) {
-            this.tasks = JSON.parse(JSON.stringify(tasksResponse));
-            this.tasks.forEach((task) => {
-                task.dailyAvailableMinutes = (task.hours * 60) + task.minutes;
-                task.minutePointer = 0;
+    const jobsCopy = cleanupAndCopyJobs(jobs);
+
+    sortArray(jobsCopy, 'index');
+
+    // Add total minutes to shopTasks
+    shopTasks.forEach((task) => {task.totalMinutes = Number(task.hours * 60) + task.minutes});
+
+    // // Added scaledMinutes to job tasks
+    AddedScaledMinutesToJobTasks(jobsCopy, shopTasks);
+
+    // // Add minutePointer property to shopTasks
+    // shopTasks.forEach((shopTask) => {shopTask.minutePointer = 0});
+
+    // Add task pointers incrementally to jobsCopy
+    jobsCopy.forEach((jobCopy) => {
+        jobCopy.sequences.forEach((sequence) => {
+            if (!sequence.tasks) return;
+            sequence.minutePointer = 0;
+            sequence.tasks.forEach((jobTask) => {
+                if (jobTask.completed) return;
+                jobTask.minuteStartPointer = sequence.minutePointer;
+                const totalTaskMinutes = Number(jobTask.scaledMinutes);
+                jobTask.minuteEndPointer = totalTaskMinutes + jobTask.minuteStartPointer;
+                sequence.minutePointer += totalTaskMinutes;
+                // console.log(jobCopy.name, jobTask.name, jobTask.minuteStartPointer, jobTask.minuteEndPointer, jobTask.scaledMinutes);
             });
-            this.lastMinutePointer = 0;
-        }
+        });
+    });
 
-        incTaskPointer(taskID, minutes, newSequence) {
-            const finishDate = this.#getToday();
-            let daysRemaining = 0;
-            let taskFound = false;
-            this.tasks.forEach((task) => {
-                if (task.id === taskID) {
-                    taskFound = true;
+    const jobTasksArray = [];
+    jobsCopy.forEach((jobCopy) => {
+        jobCopy.sequences.forEach((sequence, sequenceIndex) => {
+            if (!sequence.tasks) return;
+            sequence.tasks.forEach((jobTask) => {
+                if (jobTask.completed) return;
+                // console.log(jobTask);
+                jobTasksArray.push({jobName: String(jobCopy.name),
+                                    jobID: jobCopy.id,
+                                    taskID: jobTask.id,
+                                    taskName: jobTask.name,
+                                    start: Number(jobTask.minuteStartPointer),
+                                    end: Number(jobTask.minuteEndPointer),
+                                    sequenceIndex: Number(sequenceIndex),
+                                    timeInMinutes: jobTask.scaledMinutes
+                                    });
+            });
+        });
+    });
+    // console.log(jobTasksArray);
 
-                    daysRemaining = Math.floor(((newSequence ? this.lastMinutePointer : 0) + task.minutePointer + minutes) / task.dailyAvailableMinutes);
-                    task.minutePointer += minutes;
-                    this.lastMinutePointer = task.minutePointer;
-                    incWorkDay(finishDate, daysRemaining);
+    for (let taskIndex = 1; taskIndex < jobTasksArray.length; taskIndex++) {
+        const currentJobTask = jobTasksArray[taskIndex];
+        let lookBackIndex = taskIndex - 1;
+        while (lookBackIndex != -1) {
+            const previousJobTask = jobTasksArray[lookBackIndex];
+            // if (currentJobTask.jobID == previousJobTask.jobID) console.log(currentJobTask.jobName);
+            if (currentJobTask.taskID == previousJobTask.taskID) {
+                console.log(currentJobTask.jobName);
+                if (currentJobTask.start < previousJobTask.end) {
+                    currentJobTask.start = previousJobTask.end;
+                    currentJobTask.end = currentJobTask.start + currentJobTask.timeInMinutes;
                 }
-            });
-            if (!taskFound) console.log("Task not found.");
-            return finishDate;
-        }
-
-        #getToday() {
-            const utcDate = new Date();
-            return new Date(utcDate.getTime() + utcDate.getTimezoneOffset() * 60000);
+            }
+            // console.log(previousJobTask);
+            lookBackIndex--;
         }
     }
 
-    // Sort by index
-    jobs.sort((a, b) => {
-        const nameA = a.index;
-        const nameB = b.index;
-        if (nameA > nameB) return -1;
-        if (nameA < nameB) return 1;
-        return 0;
+    console.log(jobTasksArray);
+
+    let currentJobID = jobTasksArray[0].jobID;
+    let jobIndex = 0;
+    const jobNameDaysFromNowArray = [{}];
+    jobNameDaysFromNowArray[jobIndex].daysFromNowStart = 0;
+    // const jobNameDaysFromNowArray = [{id: currentJobID, daysFromNow: jobTasksArray[0].end / (8 * 60)}];
+    jobTasksArray.forEach((jobTask, index) => {
+        if (currentJobID != jobTask.jobID) {
+            jobNameDaysFromNowArray[jobIndex].daysFromNowStart = Math.floor(Math.max((jobTask.start / (8 * 60)), 0));
+            jobIndex++;
+        }
+        jobNameDaysFromNowArray[jobIndex] = {};
+        jobNameDaysFromNowArray[jobIndex].id = currentJobID;
+        jobNameDaysFromNowArray[jobIndex].daysFromNowEnd = jobTask.end / (8 * 60);
+        jobNameDaysFromNowArray[jobIndex].name = jobTask.jobName;
+        if (index == jobTasksArray.length - 1) {
+            jobNameDaysFromNowArray[jobIndex].daysFromNowStart = Math.ceil(Math.max((jobTask.start / (8 * 60)), 0));
+        }
+        // jobNameDaysFromNowArray[jobIndex].taskLength = jobTask.end;
+        currentJobID = jobTask.jobID;
     });
 
-    const tasksResponse = await getDBEntrees(BUSINESS_SCHEMA, TASKS_TABLE, "id", "*", settings);
-    if ((!tasksResponse) || (tasksResponse.error)) return;
-    if (tasksResponse.length == 0) return;
+    
+    jobNameDaysFromNowArray.forEach((jobTask) => {
+        const startDate = getToday();
+        incWorkDay(startDate, jobTask.daysFromNowStart);
+        jobTask.startDate = startDate.toLocaleDateString('en-CA');
+        const endDate = getToday();
+        incWorkDay(endDate, jobTask.daysFromNowEnd);
+        jobTask.shipDate = endDate.toLocaleDateString('en-CA');
+        // console.log(jobTask.startDate, jobTask.daysFromNowStart, jobTask.daysFromNowEnd, jobTask.name);
+    });
+    
+    // console.log(jobNameDaysFromNowArray);
 
-    const taskPointerObj = new ChronologicalTaskPointer(tasksResponse);
+    jobNameDaysFromNowArray.forEach((jobDates) => {
+        jobs.forEach((job) => {
+            if (jobDates.id == job.id) {
+                job.estimatedDate = jobDates.shipDate;
+                job.startDate = jobDates.startDate;
+            }
+        });
+    });
 
-    let dateOfCompletion = (new Date()).toLocaleDateString('en-CA');
+    // Add tomorrow as the estimated date as well as the start date
     jobs.forEach((job) => {
-        if (!job.active) return;
-        if (!job.sequences) return;
-        let jobIsCompleted = true;
+        if (isCompleted(job)) {
+            job.estimatedDate = getTomorrow().toLocaleDateString('en-CA');
+            job.startDate = getTomorrow().toLocaleDateString('en-CA');
+        }
+    });
 
-        let maxDateOfCompletion = dateOfCompletion;
+    function getShopTaskByID(taskID, tasks) {
+        for (const task of tasks) {
+            if (task.id == taskID) return task;
+        }
+    }
 
-        job.startDate = dateOfCompletion;
+    function cleanupAndCopyJobs(jobs) {
+        const jobsCopy = [];
+        jobs.forEach((job) => {
+            if (!job.active) return;
+            if (!job.sequences) return;
+            if (isCompleted(job)) return;
+            jobsCopy.push(JSON.parse(JSON.stringify(job)));
+        });
+        return jobsCopy;
+    }
+    
+    function sortArray(array, property) {
+        array.sort((a, b) => {
+            const nameA = a[property];
+            const nameB = b[property];
+            if (nameA < nameB) return 1;
+            if (nameA > nameB) return -1;
+            return 0;
+        });
+    }
 
-        job.sequences.forEach((sequence) => {
-            if (!sequence.tasks) return;
-
-            let newSequence = true;
-            sequence.tasks.forEach((jobTask) => {
-                if (!jobTask.completed) {
-                    const remainingTimePerTaskInMinutes = Number(jobTask.hours * 60) + Number(jobTask.minutes);
-                    dateOfCompletion = taskPointerObj.incTaskPointer(jobTask.id, remainingTimePerTaskInMinutes, newSequence).toLocaleDateString('en-CA');
-                    if (Number(dateOfCompletion.replaceAll("-", "")) > Number(maxDateOfCompletion.replaceAll("-", ""))) {
-                        maxDateOfCompletion = dateOfCompletion;
-                    }
-                    jobIsCompleted = false;
-                }
-                newSequence = false;
+    function AddedScaledMinutesToJobTasks(jobs, shopTasks) {
+        jobs.forEach((job) => { 
+            job.sequences.forEach((sequence) => {
+                if (!sequence.tasks) return;
+                sequence.tasks.forEach((jobTask) => {
+                    shopTasks.forEach((shopTask) => {
+                        if (jobTask.id == shopTask.id) {
+                            const totalAvailableDailyMinutes = shopTask.totalMinutes = Number(shopTask.hours * 60) + shopTask.minutes;
+                            const scaledAvailableDailyMinutes = Number(totalAvailableDailyMinutes / (8 * 60));
+                            jobTask.scaledMinutes = (totalAvailableDailyMinutes / scaledAvailableDailyMinutes) || 0;
+                            // console.log(jobTask.scaledMinutes, totalAvailableDailyMinutes, scaledAvailableDailyMinutes);
+                        }
+                    });
+                });
             });
         });
-        if (jobIsCompleted) {
-            job.startDate = getToday().toLocaleDateString('en-CA');
-            job.estimatedDate = getToday().toLocaleDateString('en-CA');
-            job.completed = true;
-        }
-        else {
-            job.estimatedDate = maxDateOfCompletion;
-        }
-    });
-
-    // Sort by index
-    jobs.sort((a, b) => {
-        const nameA = a.index;
-        const nameB = b.index;
-        if (nameA > nameB) return 1;
-        if (nameA < nameB) return -1;
-        return 0;
-    });
-
-    // 
-    jobs.sort((a, b) => {
-        const nameA = a.index;
-        const nameB = b.index;
-        if (a.completed) return 1;
-        if (b.completed) return -1;
-        return 0;
-    });
-
-    // Sort by active
-    jobs.sort((a, b) => {
-        const nameA = a.active;
-        const nameB = b.active;
-        if (nameA < nameB) return 1;
-        if (nameA > nameB) return -1;
-        return 0;
-    });
+    }
 }
+
+function isCompleted(job) {
+    if (!job.sequences) return true;
+    if (!job.sequences[0].tasks) return true;
+    let completed = true;
+    job.sequences.forEach((sequence) => {
+        if (!sequence.tasks) return;
+        sequence.tasks.forEach((jobTask) => {
+            if (!jobTask.completed) completed = false;
+        });
+    });
+    return completed;
+}
+
 function getToday() {
     const utcDate = new Date();
     return new Date(utcDate.getTime() + utcDate.getTimezoneOffset() * 60000);
+}
+
+function getTomorrow() {
+    const today = getToday();
+    incWorkDay(today, 1);
+    return today
 }
 
 function getDateText(date) {
