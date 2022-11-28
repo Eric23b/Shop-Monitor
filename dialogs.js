@@ -51,6 +51,31 @@ const modalButtonContainerStyles = `
     color: var(--color);
     background: var(--background_color);`;
 
+// Contextmenu
+const contextMenuBackgroundStyles = `
+    position: fixed;
+    inset: 0;
+    background-color: var(--background_transparent_color);
+    z-index: 100;
+    overflow: scroll;`;
+
+const contextMenuContainerStyles = `
+    position: absolute;
+    display: none;
+    flex-direction: column;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    width: max-content;
+    font-size: 1.2rem;`;
+
+const contextMenuButton = `
+    cursor: pointer;
+    padding: 0.25rem 0.5rem;
+    font-size: 1.2rem;
+    border: 1px solid var(--border_color);
+    color: var(--color);
+    background: var(--background_color);`;
+
 const modalCloseButtonStyles = `
     position: absolute;
     top: 0.25rem;
@@ -381,6 +406,39 @@ function getLabeledCheckbox(label, isChecked, deletable, containerElement) {
     }
     checkboxLabel.appendChild(checkboxElement);
     return checkboxLabel;
+}
+
+export function showContextMenu(clickEvent, optionsArray, callback) {
+    const body = document.querySelector('body');
+    const modalBackground = getModalBackground();
+    const modalWindow = getModalWindow();
+
+    modalWindow.style.cssText = contextMenuContainerStyles;
+
+    if (clickEvent.button != 2) return; 
+    modalWindow.style.display = 'flex';
+    modalWindow.style.top = `${clickEvent.clientY}px`;
+    modalWindow.style.left = `${clickEvent.clientX}px`;
+
+    modalBackground.onclick = (event) => {
+        event.preventDefault();
+        body.removeChild(modalBackground);
+    }
+    modalBackground.oncontextmenu = (event) => {
+        event.preventDefault();
+        body.removeChild(modalBackground);
+    }
+    
+    optionsArray.forEach((text) => {
+        const optionBtn = getButton(text, () => {
+            callback(text);
+        });
+        optionBtn.style.cssText = contextMenuButton;
+        modalWindow.append(optionBtn);
+    });
+
+    modalBackground.appendChild(modalWindow);
+    body.appendChild(modalBackground);
 }
 
 export function showJobDialog(job, jobs, allTasks, OKCallback, cancelCallback, whoIsEditingTitle) {
