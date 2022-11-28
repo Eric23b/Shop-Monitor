@@ -48,6 +48,7 @@ import {
     showYesNoDialog,
     showAlertDialog,
     showInputDialog,
+    showContextMenu,
     showJobDialog,
     showCalendarPreviewDialog,
 } from "../dialogs.js";
@@ -263,6 +264,7 @@ async function loadJobs(jobs, sortByIndex) {
 
         const row = document.createElement('tr');
         row.classList.add('table-row-blank-border');
+        row.oncontextmenu = (event) => {event.preventDefault()}
         if (job.active) {
             row.addEventListener('dragstart', () => {draggingJobIndex = jobIndex});
             row.addEventListener('dragenter', () => {row.classList.add('drag-over')});
@@ -274,6 +276,13 @@ async function loadJobs(jobs, sortByIndex) {
                 jobs.splice(jobIndex, 0, ...tempJob);
                 await loadJobs(jobs);
             });
+            row.oncontextmenu = async (event) => {
+                event.preventDefault();
+                const menuOptions = ["Edit", "Delete"];
+                showContextMenu(event, menuOptions, (text) => {
+                    console.log(job.name, text);
+                });
+            }
         }
 
         // Name
