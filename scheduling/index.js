@@ -119,19 +119,8 @@ addNewJobBtn.addEventListener('click', async () => {
 await loadJobs(null, true);
 
 
-// showCalendarPreviewDialog("Preview", [
-//     {name: "13000dfsgsdfzhgszdf", startDate: "2022-11-01", endDate: "2022-11-10"},
-//     {name: "13001", startDate: "2022-11-05", endDate: "2022-11-7"},
-//     {name: "13002", startDate: "2023-02-03", endDate: "2023-03-15"},
-//     {name: "13003", startDate: "2022-11-03", endDate: "2022-11-15"},
-//     {name: "13004", startDate: "2022-11-16", endDate: "2022-11-22"},
-// ]
-// );
-
 
 // FUNCTIONS
-
-
 
 async function loadJobs(jobs, sortByIndex) {
     if (jobs == null) {
@@ -202,11 +191,10 @@ async function loadJobs(jobs, sortByIndex) {
     // Update all button
     const updateAllEstimatedDatesBtn = document.createElement('button');
     updateAllEstimatedDatesBtn.textContent = "⇨";
-    updateAllEstimatedDatesBtn.style.cssText = `
-        color: var(--yes);
-        border: none;
-        font-size: 2.5em;
-        cursor: pointer;`;
+    updateAllEstimatedDatesBtn.style.cssText = `color: var(--yes);
+                                                border: none;
+                                                font-size: 2.5em;
+                                                cursor: pointer;`;
     updateAllEstimatedDatesBtn.setAttribute('title', 'Update All Ship Dates');
     updateAllEstimatedDatesBtn.onclick = async () => {
         showYesNoDialog("Update All Ship Dates?",
@@ -225,11 +213,10 @@ async function loadJobs(jobs, sortByIndex) {
     // Ship date preview calendar  
     const previewShipDatesBtn = document.createElement('button');
     previewShipDatesBtn.textContent = "Ship Date";
-    previewShipDatesBtn.style.cssText = `
-        border: none;
-        font-size: 1em;
-        cursor: pointer;
-        color: var(--yes);`;
+    previewShipDatesBtn.style.cssText = `border: none;
+                                         font-size: 1em;
+                                         cursor: pointer;
+                                         color: var(--yes);`;
     previewShipDatesBtn.setAttribute('title', 'Open ship date calendar');
     previewShipDatesBtn.onclick = async () => {
         const jobsForCalendarPreview = [];
@@ -254,10 +241,11 @@ async function loadJobs(jobs, sortByIndex) {
 
     let todayAdded = false;
     jobs.forEach((job, jobIndex) => {
+        // Sneak in today row
         if ((!job.active) && (!todayAdded)) {
-            todayAdded = true;
             const today = getToday().toLocaleDateString('en-CA');
             jobsTable.appendChild(getTableHeaderRow(["Today", today, "-", "-", "-", "-", "-", "-", "-", "-", "-", ""]));
+            todayAdded = true;
         }
 
         const jobTimes = getJobTimes(job);
@@ -276,24 +264,29 @@ async function loadJobs(jobs, sortByIndex) {
                 jobs.splice(jobIndex, 0, ...tempJob);
                 await loadJobs(jobs);
             });
-            row.oncontextmenu = async (event) => {
-                event.preventDefault();
-                const menuOptions = ["Edit", "Delete"];
-                showContextMenu(event, menuOptions, (text) => {
-                    console.log(job.name, text);
-                });
-            }
+        }
+        row.oncontextmenu = async (event) => {
+            event.preventDefault();
+            const jobActiveText = job.active ? "Deactivate" : "Activate";
+            const moveOptions = job.active ? ["Move Up", "Move Down"] : [];
+            const menuOptions = ["Edit", "Delete", "Rename", jobActiveText, ...moveOptions];
+            showContextMenu(event, menuOptions, (text) => {
+                switch (text) {
+                    case "Edit": editJob(job); break;
+                    case "Delete": deleteJob(job); break;
+                    case "Rename": renameJob(job); break;
+                    case "Activate": jobActivity(job, true); break;
+                    case "Deactivate": jobActivity(job, false); break;
+                    case "Move Up": moveJobUp(jobs, jobIndex); break;
+                    case "Move Down": moveJobDown(jobs, jobIndex); break;
+                    default: break;
+                }
+            });
         }
 
         // Name
         const name = getTableDataWithText(job.name);
-        name.onclick = async () => {
-            showInputDialog("Rename job", job.name, async (name) => {
-                job.name = name;
-                await updateDBEntry(BUSINESS_SCHEMA, JOBS_TABLE, {id: job.id, name: job.name}, settings);
-                await loadJobs();
-            });
-        }
+        name.onclick = async () => {renameJob(job)};
         name.style.cursor = "pointer";
 
         // Estimated date
@@ -330,12 +323,12 @@ async function loadJobs(jobs, sortByIndex) {
 
         // Progress bar
         const progressBar = getTableDataWithProgressBar(jobTimes.percentCompleted);
-        progressBar.addEventListener('click', () => {
+        progressBar.onclick = async () => {
             showChecklistPrompt(job.sequences, async (newSequences) => {
                 await updateDBEntry(BUSINESS_SCHEMA, JOBS_TABLE, {id: job.id, sequences: newSequences}, settings);
                 await loadJobs();
             }, (oldSequences) => {job.sequences = oldSequences});
-        });
+        };
 
         // Note
         // const note = getTableDataWithEditText(job.index || "");
@@ -369,31 +362,10 @@ async function loadJobs(jobs, sortByIndex) {
         const edit = getTableDataWithText("✏");
         edit.style.cursor = "pointer";
         edit.classList.add('table-text-btn');
-        edit.addEventListener('click', async () => {
-            const jobsResponse = await getDBEntrees(BUSINESS_SCHEMA, JOBS_TABLE, "id", "*", settings);
-            if ((!jobsResponse) || (jobsResponse.error)) return;
-
-            const tasksResponse = await getDBEntrees(BUSINESS_SCHEMA, TASKS_TABLE, "id", "*", settings);
-            if ((!tasksResponse) || (tasksResponse.error)) return;
-            
-            showJobDialog(job, jobsResponse, tasksResponse, 
-                async (newJob) => {
-                    await updateDBEntry(BUSINESS_SCHEMA, JOBS_TABLE, newJob, settings);
-                    await loadJobs();
-                },
-                async (oldJob) => {
-                    await loadJobs(jobs);
-                }
-            );
-        });
+        edit.onclick = async () => {editJob(job)};
 
         // Delete
-        const deleteTD = getTableDataWithDeleteButton(async () => {
-            if (showYesNoDialog(`Delete Job ${(job.name || "")}?`, async () => {
-                await deleteDBEntry(BUSINESS_SCHEMA, JOBS_TABLE, job.id, settings);
-                loadJobs();
-            }));
-        });
+        const deleteTD = getTableDataWithDeleteButton(async () => {deleteJob(job)});
         deleteTD.classList.add('table-delete-btn');
 
         // Grabber
@@ -406,6 +378,65 @@ async function loadJobs(jobs, sortByIndex) {
         appendChildren(row, [name, estimatedDate, updateShipDate, shipDate, progressBar, note, active, remainingHours, shopHours, edit, deleteTD, grabber]);
         jobsTable.appendChild(row);
     });
+}
+
+async function renameJob(job) {
+    showInputDialog("Rename job", job.name, async (name) => {
+        job.name = name;
+        await updateDBEntry(BUSINESS_SCHEMA, JOBS_TABLE, {id: job.id, name: job.name}, settings);
+        await loadJobs();
+    });
+}
+
+async function jobActivity(job, active) {
+    await updateDBEntry(BUSINESS_SCHEMA, JOBS_TABLE, {id: job.id, active: active}, settings);
+    await loadJobs();
+}
+
+async function editJob(job) {
+    const jobsResponse = await getDBEntrees(BUSINESS_SCHEMA, JOBS_TABLE, "id", "*", settings);
+    if ((!jobsResponse) || (jobsResponse.error)) return;
+
+    const tasksResponse = await getDBEntrees(BUSINESS_SCHEMA, TASKS_TABLE, "id", "*", settings);
+    if ((!tasksResponse) || (tasksResponse.error)) return;
+    
+    showJobDialog(job, jobsResponse, tasksResponse, 
+        async (newJob) => {
+            await updateDBEntry(BUSINESS_SCHEMA, JOBS_TABLE, newJob, settings);
+            await loadJobs();
+        },
+        async (oldJob) => {
+            // await loadJobs(jobs);
+        }
+    );
+}
+
+async function deleteJob(job) {
+    if (showYesNoDialog(`Delete Job ${(job.name || "")}?`, async () => {
+        await deleteDBEntry(BUSINESS_SCHEMA, JOBS_TABLE, job.id, settings);
+        loadJobs();
+    }));
+}
+
+async function moveJobUp(jobs, jobIndex) {
+    if (jobIndex == 0) return;
+    const tempJob = jobs.splice(jobIndex - 1, 1);
+    jobs.splice(jobIndex, 0, ...tempJob);
+    await loadJobs(jobs);
+}
+
+async function moveJobDown(jobs, jobIndex) {
+    let lastActiveJob = 0;
+    for (let index = 0; index < jobs.length; index++) {
+        if (jobs[index].active == false) {
+            lastActiveJob = index - 1;
+            break;
+        }
+    }
+    if (lastActiveJob <= jobIndex) return;
+    const tempJob = jobs.splice(jobIndex + 1, 1);
+    jobs.splice(jobIndex, 0, ...tempJob);
+    await loadJobs(jobs);
 }
 
 async function updateEstimateDateAndStartDate(jobs, tasksResponse) {
@@ -469,7 +500,7 @@ async function updateEstimateDateAndStartDate(jobs, tasksResponse) {
             const previousJobTask = jobTasksArray[lookBackIndex];
             // if (currentJobTask.jobID == previousJobTask.jobID) console.log(currentJobTask.jobName);
             if (currentJobTask.taskID == previousJobTask.taskID) {
-                console.log(currentJobTask.jobName);
+                // console.log(currentJobTask.jobName);
                 if (currentJobTask.start < previousJobTask.end) {
                     currentJobTask.start = previousJobTask.end;
                     currentJobTask.end = currentJobTask.start + currentJobTask.timeInMinutes;
@@ -480,7 +511,7 @@ async function updateEstimateDateAndStartDate(jobs, tasksResponse) {
         }
     }
 
-    console.log(jobTasksArray);
+    // console.log(jobTasksArray);
 
     let currentJobID = jobTasksArray[0].jobID;
     let jobIndex = 0;
