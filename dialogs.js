@@ -996,10 +996,20 @@ export function showCalendarPreviewDialog(title, calendarEvents, weekdaysOnly, r
         console.log(dateProperties.today);
         const weeks = [];
 
+        // Swap start and end dates if end date is before start date
+        calendarEvents.forEach(event => {
+            if (event.startDate > event.endDate) {
+                const temp = event.startDate;
+                event.startDate = event.endDate;
+                event.endDate = temp;
+            }
+        });
+
         calendarEvents.forEach(event => {
             const startDate = getCorrectDate(event.startDate);
             const endDate = getCorrectDate(event.endDate);
             const dates = [startDate.toLocaleDateString('en-CA')];
+            
             while (startDate.toLocaleDateString('en-CA') !== endDate.toLocaleDateString('en-CA')) {
                 startDate.setDate(startDate.getDate() + 1);
                 dates.push(startDate.toLocaleDateString('en-CA'));
