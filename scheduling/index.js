@@ -126,44 +126,21 @@ async function loadJobs(jobs, sortByIndex) {
     if (jobs == null) {
         jobs = await getDBEntrees(BUSINESS_SCHEMA, JOBS_TABLE, "__createdtime__", "*", settings);
         if ((!jobs) || (jobs.error)) return;
-        // Sort by ship date
-        jobs.sort((a, b) => {
-            const nameA = a.shipDate;
-            const nameB = b.shipDate;
-            if (nameA < nameB) return 1;
-            if (nameA > nameB) return -1;
-            return 0;
-        });
+
+        sortDown(jobs, "shipDate");
+
         sortByCompleted(jobs);
-        
-        // Sort by active
-        jobs.sort((a, b) => {
-            const nameA = a.active;
-            const nameB = b.active;
-            if (nameA < nameB) return 1;
-            if (nameA > nameB) return -1;
-            return 0;
-        });
+
+        sortDown(jobs, "active");
     }
 
-
-    function sortByCompleted(array) {
-        array.sort((a, b) => {
-            if ((isCompleted(a))) {
-                return 1;
-            }
-            else {
-                return -1;
-            }
-        });
-    }
     jobs.forEach((job, index) => {job.index = index});
 
     const tasksResponse = await getDBEntrees(BUSINESS_SCHEMA, TASKS_TABLE, "active", true, settings);
     if ((!jobs) || (jobs.error)) return;
     await updateEstimateDateAndStartDate(jobs, tasksResponse);
 
-    // Estimated date preview calendar
+    // Estimated date preview calendar button
     const previewEstimatedDatesBtn = document.createElement('button');
     previewEstimatedDatesBtn.textContent = "Estimated\nDate Preview";
     previewEstimatedDatesBtn.style.cssText = `border: none;
@@ -286,7 +263,7 @@ async function loadJobs(jobs, sortByIndex) {
 
         // Name
         const name = getTableDataWithText(job.name);
-        name.onclick = async () => {renameJob(job)};
+        name.onclick = async () => {await renameJob(job)};
         name.style.cursor = "pointer";
 
         // Estimated date
@@ -445,7 +422,7 @@ async function updateEstimateDateAndStartDate(jobs, tasksResponse) {
 
     const jobsCopy = cleanupAndCopyJobs(jobs);
 
-    sortArray(jobsCopy, 'index');
+    sortDown(jobsCopy, 'index');
 
     // Add total minutes to shopTasks
     shopTasks.forEach((task) => {task.totalMinutes = Number(task.hours * 60) + task.minutes});
@@ -476,7 +453,7 @@ async function updateEstimateDateAndStartDate(jobs, tasksResponse) {
     jobsCopy.forEach((jobCopy) => {
         jobCopy.sequences.forEach((sequence, sequenceIndex) => {
             if (!sequence.tasks) return;
-            sequence.tasks.forEach((jobTask) => {
+            sequence.tasks.forEach((jobTask, taskIndex) => {
                 if (jobTask.completed) return;
                 // console.log(jobTask);
                 jobTasksArray.push({jobName: String(jobCopy.name),
@@ -486,6 +463,7 @@ async function updateEstimateDateAndStartDate(jobs, tasksResponse) {
                                     start: Number(jobTask.minuteStartPointer),
                                     end: Number(jobTask.minuteEndPointer),
                                     sequenceIndex: Number(sequenceIndex),
+                                    taskIndex: Number(taskIndex),
                                     timeInMinutes: jobTask.scaledMinutes
                                     });
             });
@@ -500,7 +478,7 @@ async function updateEstimateDateAndStartDate(jobs, tasksResponse) {
             const previousJobTask = jobTasksArray[lookBackIndex];
             // if (currentJobTask.jobID == previousJobTask.jobID) console.log(currentJobTask.jobName);
             if (currentJobTask.taskID == previousJobTask.taskID) {
-                // console.log(currentJobTask.jobName);
+                // console.log(currentJobTask.jobName, currentJobTask.taskName);
                 if (currentJobTask.start < previousJobTask.end) {
                     currentJobTask.start = previousJobTask.end;
                     currentJobTask.end = currentJobTask.start + currentJobTask.timeInMinutes;
@@ -512,6 +490,7 @@ async function updateEstimateDateAndStartDate(jobs, tasksResponse) {
     }
 
     // console.log(jobTasksArray);
+    // return
 
     let currentJobID = jobTasksArray[0].jobID;
     let jobIndex = 0;
@@ -523,6 +502,7 @@ async function updateEstimateDateAndStartDate(jobs, tasksResponse) {
             jobNameDaysFromNowArray[jobIndex].daysFromNowStart = Math.floor(Math.max((jobTask.start / (8 * 60)), 0));
             jobIndex++;
         }
+        // console.log(jobTask.jobName, jobTask.start / (8 * 60), jobTask.end / (8 * 60));
         jobNameDaysFromNowArray[jobIndex] = {};
         jobNameDaysFromNowArray[jobIndex].id = currentJobID;
         jobNameDaysFromNowArray[jobIndex].daysFromNowEnd = jobTask.end / (8 * 60);
@@ -530,10 +510,11 @@ async function updateEstimateDateAndStartDate(jobs, tasksResponse) {
         if (index == jobTasksArray.length - 1) {
             jobNameDaysFromNowArray[jobIndex].daysFromNowStart = Math.ceil(Math.max((jobTask.start / (8 * 60)), 0));
         }
-        // jobNameDaysFromNowArray[jobIndex].taskLength = jobTask.end;
+        // console.log(jobTask.jobName, jobNameDaysFromNowArray[jobIndex].daysFromNowStart, jobTask.end / (8 * 60), index);
+        jobNameDaysFromNowArray[jobIndex].taskLength = jobTask.end;
         currentJobID = jobTask.jobID;
     });
-
+    // console.log(jobNameDaysFromNowArray);
     
     jobNameDaysFromNowArray.forEach((jobTask) => {
         const startDate = getToday();
@@ -556,58 +537,94 @@ async function updateEstimateDateAndStartDate(jobs, tasksResponse) {
         });
     });
 
-    // Add tomorrow as the estimated date as well as the start date
+    jobTasksArray.forEach((jobTask) => {
+        jobs.forEach((job) => {
+            if (jobTask.jobID == job.id) {
+                job.sequences[jobTask.sequenceIndex].tasks[jobTask.taskIndex].start = jobTask.start;
+                job.sequences[jobTask.sequenceIndex].tasks[jobTask.taskIndex].end = jobTask.end;
+            }
+        });
+    });
+
+    // Add tomorrow to completed jobs
     jobs.forEach((job) => {
         if (isCompleted(job)) {
             job.estimatedDate = getTomorrow().toLocaleDateString('en-CA');
             job.startDate = getTomorrow().toLocaleDateString('en-CA');
         }
     });
+    console.log(jobs);
+    return
+}
 
-    function getShopTaskByID(taskID, tasks) {
-        for (const task of tasks) {
-            if (task.id == taskID) return task;
-        }
-    }
-
-    function cleanupAndCopyJobs(jobs) {
-        const jobsCopy = [];
-        jobs.forEach((job) => {
-            if (!job.active) return;
-            if (!job.sequences) return;
-            if (isCompleted(job)) return;
-            jobsCopy.push(JSON.parse(JSON.stringify(job)));
-        });
-        return jobsCopy;
-    }
-    
-    function sortArray(array, property) {
-        array.sort((a, b) => {
-            const nameA = a[property];
-            const nameB = b[property];
-            if (nameA < nameB) return 1;
-            if (nameA > nameB) return -1;
-            return 0;
-        });
-    }
-
-    function AddedScaledMinutesToJobTasks(jobs, shopTasks) {
-        jobs.forEach((job) => { 
-            job.sequences.forEach((sequence) => {
-                if (!sequence.tasks) return;
-                sequence.tasks.forEach((jobTask) => {
-                    shopTasks.forEach((shopTask) => {
-                        if (jobTask.id == shopTask.id) {
-                            const totalAvailableDailyMinutes = shopTask.totalMinutes = Number(shopTask.hours * 60) + shopTask.minutes;
-                            const scaledAvailableDailyMinutes = Number(totalAvailableDailyMinutes / (8 * 60));
-                            jobTask.scaledMinutes = (totalAvailableDailyMinutes / scaledAvailableDailyMinutes) || 0;
-                            // console.log(jobTask.scaledMinutes, totalAvailableDailyMinutes, scaledAvailableDailyMinutes);
-                        }
-                    });
+function AddedScaledMinutesToJobTasks(jobs, shopTasks) {
+    jobs.forEach((job) => {
+        if (!job.sequences) return;
+        job.sequences.forEach((sequence) => {
+            if (!sequence.tasks) return;
+            sequence.tasks.forEach((jobTask) => {
+                shopTasks.forEach((shopTask) => {
+                    if (jobTask.id == shopTask.id) {
+                        const shiftLength = 8;
+                        const totalAvailableDailyMinutes = Number(shopTask.totalMinutes);
+                        const minutesScale = totalAvailableDailyMinutes / (shiftLength * 60);
+                        jobTask.totalMinutes = (jobTask.hours * 60) + jobTask.minutes;
+                        jobTask.scaledMinutes = (jobTask.totalMinutes / minutesScale) || 0;
+                        // console.log(jobTask.totalMinutes);
+                        // console.log(jobTask.scaledMinutes, totalAvailableDailyMinutes, scaledAvailableDailyMinutes);
+                    }
                 });
             });
         });
+    });
+}
+
+function getShopTaskByID(taskID, tasks) {
+    for (const task of tasks) {
+        if (task.id == taskID) return task;
     }
+}
+
+/**
+* No active jobs, no jobs without sequences and no completed jobs
+*/
+function cleanupAndCopyJobs(jobs) {
+    const jobsCopy = [];
+    jobs.forEach((job) => {
+        if (!job.active) return;
+        if (!job.sequences) return;
+        if (isCompleted(job)) return;
+        jobsCopy.push(JSON.parse(JSON.stringify(job)));
+    });
+    return jobsCopy;
+}
+
+function sortByCompleted(jobs) {
+    jobs.sort((a) => {
+        if (isCompleted(a)) return 1;
+        if (!isCompleted(a)) return -1;
+        return 0;
+    });
+}
+        
+function sortDown(array, property) {
+    array.sort((a, b) => {
+        const nameA = a[property];
+        const nameB = b[property];
+        if (nameA < nameB) return 1;
+        if (nameA > nameB) return -1;
+        return 0;
+    });
+}
+        
+function sortUp(array, property) {
+    array.sort((a, b) => {
+        const nameA = a[property];
+        const nameB = b[property];
+        if (nameA < nameB) return -1;
+        if (nameA > nameB) return 1;
+        return 0;
+    });
 }
 
 function isCompleted(job) {
@@ -634,6 +651,9 @@ function getTomorrow() {
     return today
 }
 
+/**
+* eg. November 21/2022
+*/
 function getDateText(date) {
     try {
         const shipDateObj = new Date(date.split("-")[0], Number(date.split("-")[1]) - 1, date.split("-")[2]);
@@ -661,39 +681,6 @@ function incWorkDay(date, amount) {
         }
     }
 }
-    
-// function setToNextWorkDay(date) {
-//     const dayName = (date.toLocaleString('default', {weekday: 'short'}));
-//     if (dayName === "Sat") {
-//         date.setDate(date.getDate() + 2);
-//     }
-//     if (dayName === "Sun") {
-//         date.setDate(date.getDate() + 1);
-//     }
-// }
-
-// async function getAvailableShopHours(tasksResponse) {
-//     // const tasksResponse = await getDBEntrees(BUSINESS_SCHEMA, TASKS_TABLE, "id", "*", settings);
-//     if ((!tasksResponse) || (tasksResponse.error)) return;
-//     if (tasksResponse.length == 0) return;
-
-//     const returnObject = {};
-
-//     let totalHours = 0;
-//     let totalMinutes = 0;
-//     tasksResponse.forEach((task) => {
-//         totalHours += task.hours;
-//         totalMinutes += task.minutes;
-
-//         returnObject[task.id] = Number(task.hours * 60) + Number(task.minutes);
-//     });
-//     totalHours = Number(totalHours + Math.floor(totalMinutes / 60));
-//     totalMinutes = Number((((totalMinutes / 60) % 1) * 60).toFixed(0));
-//     returnObject.total = totalHours + (totalMinutes / 60);
-
-//     returnObject.totalMinutes = Number(totalHours * 60) + Number(totalMinutes);
-//     return returnObject;
-// }
 
 function getJobTimes(job) {
     // Calculate shop hours
