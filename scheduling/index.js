@@ -51,6 +51,7 @@ import {
     showContextMenu,
     showJobDialog,
     showCalendarPreviewDialog,
+    showJobTaskTimingDialog,
 } from "../dialogs.js";
 
 const settings = {
@@ -116,7 +117,9 @@ addNewJobBtn.addEventListener('click', async () => {
     );
 });
 
+// console.log(window.chrome);
 await loadJobs(null, true);
+
 
 
 
@@ -128,8 +131,9 @@ async function loadJobs(jobs, sortByIndex) {
         if ((!jobs) || (jobs.error)) return;
 
         sortDown(jobs, "shipDate");
-
-        sortByCompleted(jobs);
+        
+        jobs.forEach((job) => {job. completed = isCompleted(job)});
+        sortUp(jobs, 'completed');
 
         sortDown(jobs, "active");
     }
@@ -137,7 +141,8 @@ async function loadJobs(jobs, sortByIndex) {
     jobs.forEach((job, index) => {job.index = index});
 
     const tasksResponse = await getDBEntrees(BUSINESS_SCHEMA, TASKS_TABLE, "active", true, settings);
-    if ((!jobs) || (jobs.error)) return;
+    if ((!tasksResponse) || (tasksResponse.error)) return;
+
     await updateEstimateDateAndStartDate(jobs, tasksResponse);
 
     // Estimated date preview calendar button
@@ -161,8 +166,8 @@ async function loadJobs(jobs, sortByIndex) {
                                                   jobTimes.percentCompleted + "% completed.",
                                         });
         });
-
-        showCalendarPreviewDialog("Preview of Estimated Dates", jobsForCalendarPreview, true, true);
+        showJobTaskTimingDialog(jobs, tasksResponse);
+        // showCalendarPreviewDialog("Preview of Estimated Dates", jobsForCalendarPreview, true, true);
     };
 
     // Update all button
@@ -417,7 +422,6 @@ async function moveJobDown(jobs, jobIndex) {
 }
 
 async function updateEstimateDateAndStartDate(jobs, tasksResponse) {
-    // const jobsCopy = JSON.parse(JSON.stringify(jobs));
     const shopTasks = JSON.parse(JSON.stringify(tasksResponse));
 
     const jobsCopy = cleanupAndCopyJobs(jobs);
@@ -429,9 +433,6 @@ async function updateEstimateDateAndStartDate(jobs, tasksResponse) {
 
     // // Added scaledMinutes to job tasks
     AddedScaledMinutesToJobTasks(jobsCopy, shopTasks);
-
-    // // Add minutePointer property to shopTasks
-    // shopTasks.forEach((shopTask) => {shopTask.minutePointer = 0});
 
     // Add task pointers incrementally to jobsCopy
     jobsCopy.forEach((jobCopy) => {
@@ -455,7 +456,6 @@ async function updateEstimateDateAndStartDate(jobs, tasksResponse) {
             if (!sequence.tasks) return;
             sequence.tasks.forEach((jobTask, taskIndex) => {
                 if (jobTask.completed) return;
-                // console.log(jobTask);
                 jobTasksArray.push({jobName: String(jobCopy.name),
                                     jobID: jobCopy.id,
                                     taskID: jobTask.id,
@@ -469,40 +469,40 @@ async function updateEstimateDateAndStartDate(jobs, tasksResponse) {
             });
         });
     });
-    // console.log(jobTasksArray);
 
     for (let taskIndex = 1; taskIndex < jobTasksArray.length; taskIndex++) {
         const currentJobTask = jobTasksArray[taskIndex];
         let lookBackIndex = taskIndex - 1;
         while (lookBackIndex != -1) {
             const previousJobTask = jobTasksArray[lookBackIndex];
-            // if (currentJobTask.jobID == previousJobTask.jobID) console.log(currentJobTask.jobName);
             if (currentJobTask.taskID == previousJobTask.taskID) {
-                // console.log(currentJobTask.jobName, currentJobTask.taskName);
                 if (currentJobTask.start < previousJobTask.end) {
                     currentJobTask.start = previousJobTask.end;
                     currentJobTask.end = currentJobTask.start + currentJobTask.timeInMinutes;
                 }
             }
-            // console.log(previousJobTask);
             lookBackIndex--;
         }
-    }
 
-    // console.log(jobTasksArray);
-    // return
+        const nextJobTaskIndex = taskIndex + 1;
+        const nextJobTask = jobTasksArray[nextJobTaskIndex] || null;
+        if ((nextJobTask) && (nextJobTask.jobID == currentJobTask.jobID) && (nextJobTask.sequenceIndex == currentJobTask.sequenceIndex)) {
+            if (nextJobTask.start < currentJobTask.end) {
+                nextJobTask.start = currentJobTask.end;
+                nextJobTask.end = nextJobTask.start + nextJobTask.timeInMinutes;
+            }
+        }
+    }
 
     let currentJobID = jobTasksArray[0].jobID;
     let jobIndex = 0;
     const jobNameDaysFromNowArray = [{}];
     jobNameDaysFromNowArray[jobIndex].daysFromNowStart = 0;
-    // const jobNameDaysFromNowArray = [{id: currentJobID, daysFromNow: jobTasksArray[0].end / (8 * 60)}];
     jobTasksArray.forEach((jobTask, index) => {
         if (currentJobID != jobTask.jobID) {
             jobNameDaysFromNowArray[jobIndex].daysFromNowStart = Math.floor(Math.max((jobTask.start / (8 * 60)), 0));
             jobIndex++;
         }
-        // console.log(jobTask.jobName, jobTask.start / (8 * 60), jobTask.end / (8 * 60));
         jobNameDaysFromNowArray[jobIndex] = {};
         jobNameDaysFromNowArray[jobIndex].id = currentJobID;
         jobNameDaysFromNowArray[jobIndex].daysFromNowEnd = jobTask.end / (8 * 60);
@@ -510,11 +510,9 @@ async function updateEstimateDateAndStartDate(jobs, tasksResponse) {
         if (index == jobTasksArray.length - 1) {
             jobNameDaysFromNowArray[jobIndex].daysFromNowStart = Math.ceil(Math.max((jobTask.start / (8 * 60)), 0));
         }
-        // console.log(jobTask.jobName, jobNameDaysFromNowArray[jobIndex].daysFromNowStart, jobTask.end / (8 * 60), index);
         jobNameDaysFromNowArray[jobIndex].taskLength = jobTask.end;
         currentJobID = jobTask.jobID;
     });
-    // console.log(jobNameDaysFromNowArray);
     
     jobNameDaysFromNowArray.forEach((jobTask) => {
         const startDate = getToday();
@@ -523,10 +521,7 @@ async function updateEstimateDateAndStartDate(jobs, tasksResponse) {
         const endDate = getToday();
         incWorkDay(endDate, jobTask.daysFromNowEnd);
         jobTask.shipDate = endDate.toLocaleDateString('en-CA');
-        // console.log(jobTask.startDate, jobTask.daysFromNowStart, jobTask.daysFromNowEnd, jobTask.name);
     });
-    
-    // console.log(jobNameDaysFromNowArray);
 
     jobNameDaysFromNowArray.forEach((jobDates) => {
         jobs.forEach((job) => {
@@ -553,7 +548,6 @@ async function updateEstimateDateAndStartDate(jobs, tasksResponse) {
             job.startDate = getTomorrow().toLocaleDateString('en-CA');
         }
     });
-    console.log(jobs);
     return
 }
 
@@ -599,14 +593,51 @@ function cleanupAndCopyJobs(jobs) {
     return jobsCopy;
 }
 
-function sortByCompleted(jobs) {
-    jobs.sort((a) => {
-        if (isCompleted(a)) return 1;
-        if (!isCompleted(a)) return -1;
-        return 0;
-    });
-}
-        
+// function sortByCompleted(jobs) {
+//     // console.log(jobs.length);
+//     jobs.sort((a, b) => {
+//         if (isCompleted(a) == isCompleted(b)) return 1;
+//         if (isCompleted(a) != isCompleted(b)) return -1;
+//         return 0;
+//     });
+
+    // jobs.sort((a, b) => {
+    //     if (isCompleted(a) == isCompleted(b)) return 1;
+    //     if (isCompleted(a) != isCompleted(b)) return -1;
+    //     return 0;
+    // });
+    // jobs.sort((a, b) => {
+    //     if (isCompleted(a)) return 1;
+    //     console.log(a.name, isCompleted(a));
+    //     if (!isCompleted(a)) return -1;
+    //     return 0;
+    // });
+    // jobs.forEach((job) => {console.log(job.name)})
+// }
+
+// function sortU(array, searchProperty, matchingProperty) {
+//     const orderedArray = [];
+//     let lowestPropertyElement = array[0];
+//     array.forEach((outerArrayElement) => {
+//         array.forEach((searchElement) => {
+//             if (searchElement.isAdded) return;
+//             if (searchElement[searchProperty] < lowestPropertyElement[searchProperty]) {
+//                 lowestPropertyElement = searchElement;
+//                 searchElement.isAdded = true;
+//             }
+//         });
+//         orderedArray.push(lowestPropertyElement)
+//     });
+//     console.log(orderedArray);
+//     array.forEach((arrayElement) => {
+//         orderedArray.forEach(orderedArrayElement => {
+//             if (arrayElement[matchingProperty] == orderedArrayElement[matchingProperty]) {
+//                 arrayElement = orderedArrayElement;
+//             }
+//         })
+//     });
+// }
+
 function sortDown(array, property) {
     array.sort((a, b) => {
         const nameA = a[property];
