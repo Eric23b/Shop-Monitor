@@ -286,6 +286,66 @@ const colorSelectBlock = `
     color: black;
     cursor: pointer;`;
 
+// Job timings dialog
+const jobTimingMainContainerStyles = `
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    width: max-content`;
+const jobTimingNamesContainerStyles = `
+    display: flex;
+    flex-direction: column;
+    flex-wrap: wrap;
+    justify-content: flex-start;
+    align-items: center;
+    align-content: center;
+    width: max-content;
+    font-size: 1.2em;
+    border: 1px solid var(--border_color);`;
+const jobTimingNamesStyles = `
+    width: 100%;
+    height: 1.2em;
+    padding: 0 0.5em;
+    border: 1px solid var(--border_color);
+    text-align: center;`;
+const jobTimingDateTimesContainerStyles = `
+    display: flex;
+    flex-direction: column;
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+    width: max-content;`;
+const jobTimingDatesContainerStyles = `
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+    align-items: center;
+    border: 1px solid var(--border_color);`;
+const dateTimingDatesStyles = `
+    width: 70px;
+    border: 1px solid var(--border_color);
+    text-align: center;`;
+const jobTimingTimesContainerStyles = `
+    position: relative;
+    display: flex;
+    flex-direction: row;
+    flex-wrap: nowrap;
+    justify-content: flex-start;
+    align-items: stretch;
+    align-content: stretch;
+    width: 100%;
+    height: 1.2em;
+    border: 1px solid var(--border_color);
+    font-size: 1.2em;`;
+const jobTimingTimesStyles = `
+    position: absolute;
+    height: 22px;
+    border: 1px solid var(--border_color);
+    overflow: hidden;
+    color: black;
+    font-size: 12px;`;
+
+
 const jobCardTitleStyles = `
     margin: 0;`;
 const jobCardShipDateStyles = `
@@ -993,7 +1053,7 @@ export function showCalendarPreviewDialog(title, calendarEvents, weekdaysOnly, r
     function loadCalendarContainer(container, calendarEvents) {
         const dateProperties = getDates(calendarEvents);
         const dateIndex = dateProperties.firstSunday;
-        console.log(dateProperties.today);
+        // console.log(dateProperties.today);
         const weeks = [];
 
         // Swap start and end dates if end date is before start date
@@ -1102,6 +1162,7 @@ export function showCalendarPreviewDialog(title, calendarEvents, weekdaysOnly, r
                         else {
                             eventTitle.style.color = 'var(--color)';
                         }
+
                         if (calenderEvent.tooltip) {
                             const tooltip = document.createElement('p');
                             tooltip.textContent = calenderEvent.tooltip || "";
@@ -1291,6 +1352,201 @@ export function showCalendarEventDialog(calendarEvent, OKCallback, cancelCallbac
     body.appendChild(modalBackground);
     
     eventNameInput.focus();
+}
+
+export function showJobTaskTimingDialog(jobs, shopTasks) {
+    const jobsCopy = cleanupAndCopyJobs(jobs);
+
+    const body = document.querySelector('body');
+    const modalBackground = getModalBackground();
+    modalBackground.style.display = 'block';
+    const modalWindow = getModalWindow();
+    modalWindow.style.margin = 'auto';
+    modalWindow.style.maxWidth = 'max-content';
+    const modalTitle = getModalTitle("Task Timing");
+    const mainContainer = document.createElement('div');
+    const jobNamesContainer = document.createElement('div');
+    const datesTimesContainer = document.createElement('div');
+    const datesContainer = document.createElement('div');
+    const timingContainer = document.createElement('div');
+    const datesOverlayContainer = document.createElement('div');
+
+    mainContainer.style.cssText = jobTimingMainContainerStyles;
+
+    // Job names
+    const jobName = document.createElement('div');
+    jobName.textContent = "";
+    jobName.style.cssText = jobTimingNamesStyles;
+    jobNamesContainer.appendChild(jobName);
+    mainContainer.appendChild(jobNamesContainer);
+    jobsCopy.forEach(job => {
+        const jobName = document.createElement('div');
+        jobName.textContent = job.name;
+        jobName.style.cssText = jobTimingNamesStyles;
+        if (job.sequences.length > 1) jobName.style.height = '2.4em';
+        jobNamesContainer.style.cssText = jobTimingNamesContainerStyles;
+        jobNamesContainer.appendChild(jobName);
+        mainContainer.appendChild(jobNamesContainer);
+    });
+
+    // Dates header
+    datesContainer.style.cssText = jobTimingDatesContainerStyles;
+    const earliestDate = getCorrectDate(findEarliestDate(jobsCopy));
+    const latestDate = getCorrectDate(findLatestDate(jobsCopy));
+    const datesArray = getAllWorkDaysInArray(earliestDate, latestDate);
+    datesArray.forEach(date => {
+        const dateElement = document.createElement('div');
+        dateElement.textContent = getDateText(date);
+        dateElement.style.cssText = dateTimingDatesStyles;
+        datesContainer.appendChild(dateElement);
+    });
+    datesTimesContainer.style.cssText = jobTimingDateTimesContainerStyles;
+    datesTimesContainer.appendChild(datesContainer);
+    mainContainer.appendChild(datesTimesContainer);
+
+    // Times
+    jobsCopy.forEach(job => {
+        job.sequences.forEach(sequence => {
+            const timesContainer = document.createElement('div');
+            timesContainer.style.cssText = jobTimingTimesContainerStyles;
+            sequence.tasks.forEach(task => {
+                const taskColor = getTaskColorNumber(task.id, shopTasks);
+
+                const taskElement = document.createElement('div');
+                taskElement.textContent = (task.completed ? "✓" : "") + task.name;
+                taskElement.style.cssText = jobTimingTimesStyles;
+                taskElement.style.width = `${Math.abs(task.end - task.start) / 7}px`;
+                taskElement.style.left = `${task.start / 7}px`;
+                if (task.completed) {
+                    taskElement.style.color = `var(--color`;
+                    taskElement.style.backgroundColor = `var(--background_color)`;
+                }
+                else {
+                    taskElement.style.backgroundColor = `var(--color-${taskColor})`;
+                }
+                timesContainer.appendChild(taskElement);
+
+                const currentShipDateText = `Current Ship Date:\n${job.shipDate}\n`
+                const currentEstimatedDateText = `Estimated Ship Date:\n${job.estimatedDate}\n`
+                const taskTime = `${task.hours}:${String(task.minutes).length == 1 ? "0" + task.minutes : task.minutes} hours`;
+                const taskCompletedText = `${task.completed ? "✓ Completed" : ""}`
+                const tooltipText = `${job.name}\n${currentShipDateText}${currentEstimatedDateText}${task.name}\n${taskTime}\n${taskCompletedText}`;
+                const tooltip = document.createElement('p');
+                tooltip.textContent = tooltipText;
+                tooltip.style.cssText = calendarTooltipStyles;
+                tooltip.style.borderColor = `var(--color-${taskColor})`;
+                taskElement.onmouseover = () => {
+                    tooltip.style.display = "block";
+                    taskElement.style.zIndex = '2';
+                }
+                taskElement.onmousemove = (event) => {
+                    const numberOfLines = tooltipText.split(/\r\n|\r|\n/).length;
+                    tooltip.style.top = `calc(${event.clientY}px - ${numberOfLines + 2.5}em)`;
+                    tooltip.style.left = `${event.clientX}px`;
+                }
+                taskElement.onmouseleave = () => {
+                    tooltip.style.display = "none";
+                    taskElement.style.zIndex = '1';
+                }
+                body.appendChild(tooltip);
+            });
+            datesTimesContainer.appendChild(timesContainer);
+        });
+    });
+
+
+
+    // Close button
+    const modalCloseButton = getCloseButton(() => {
+        body.removeChild(modalBackground);
+    });
+
+
+    modalTitle.appendChild(modalCloseButton);
+    modalWindow.append(modalTitle, mainContainer);
+    modalBackground.appendChild(modalWindow);
+    body.appendChild(modalBackground);
+
+    function getTaskColorNumber(taskID, tasks) {
+        let colorNumber = 1;
+        tasks.forEach((task, index) => {
+            if (taskID == task.id) colorNumber = index + 1;
+        });
+        return colorNumber;
+    }
+
+    /**
+    * No active jobs, no jobs without sequences and no completed jobs
+    */
+    function cleanupAndCopyJobs(jobs) {
+        const jobsCopy = [];
+        jobs.forEach((job) => {
+            if (!job.active) return;
+            if (!job.sequences) return;
+            if (!job.sequences[0].tasks) return;
+            if (isCompleted(job)) return;
+            jobsCopy.push(JSON.parse(JSON.stringify(job)));
+        });
+        return jobsCopy;
+    }
+
+    function findEarliestDate(jobs) {
+        let earliestDate = getToday().toLocaleDateString('en-CA');
+        jobs.forEach(job => {
+            if (job.startDate < earliestDate) {earliestDate = job.startDate}
+        });
+        return earliestDate;
+    }
+
+    function findLatestDate(jobs) {
+        let latestDate = getToday().toLocaleDateString('en-CA');
+        jobs.forEach(job => {
+            if (job.estimatedDate > latestDate) {latestDate = job.estimatedDate}
+        });
+        return latestDate;
+    }
+
+    function getAllWorkDaysInArray(startDate, endDate) {
+        const dateCounterIndex = getCorrectDate(startDate);
+        const endDateText = endDate.toLocaleDateString('en-CA');
+        const datesArray = [];
+        let currentDateText = startDate.toLocaleDateString('en-CA');
+        while (endDateText !== currentDateText) {
+            currentDateText = dateCounterIndex.toLocaleDateString('en-CA');
+            datesArray.push(currentDateText);
+            incWorkDay(dateCounterIndex, 1);
+            // dateCounterIndex.setDate(dateCounterIndex.getDate() + 1);
+        }
+        return datesArray;
+    }
+
+    /**
+    * eg. Nov 21
+    */
+    function getDateText(date) {
+        try {
+            const dateOBJ = new Date(date.split("-")[0], Number(date.split("-")[1]) - 1, date.split("-")[2]);
+            let shipDateText = dateOBJ.toLocaleString("en-CA", { month: "short" });
+            shipDateText += " " + dateOBJ.getDate();
+            return shipDateText;
+        } catch (error) {
+            // console.error(error);
+            return "";
+        }
+    }
+
+    function isCompleted(job) {
+        if (!job.sequences) return true;
+        if (!job.sequences[0].tasks) return true;
+        let completed = true;
+        job.sequences.forEach((sequence) => {
+            if (!sequence.tasks) return;
+            sequence.tasks.forEach((jobTask) => {
+                if (!jobTask.completed) completed = false;
+            });
+        });
+        return completed;
+    }
 }
 
 // Input Dialog
@@ -1490,4 +1746,18 @@ function getCorrectDate(date) {
 function getToday() {
     const utcDate = new Date();
     return new Date(utcDate.getTime() + utcDate.getTimezoneOffset() * 60000);
+}
+function incWorkDay(date, amount) {
+    let index = 0;
+    while (index < amount) {
+        index++;
+        date.setDate(date.getDate() + 1);
+        const dayName = (date.toLocaleString('default', {weekday: 'short'}));
+        if (dayName === "Sat") {
+            date.setDate(date.getDate() + 2);
+        }
+        if (dayName === "Sun") {
+            date.setDate(date.getDate() + 1);
+        }
+    }
 }
