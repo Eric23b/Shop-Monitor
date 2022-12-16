@@ -1,6 +1,10 @@
 import {
     getDueInDaysFromNowText,
     getCorrectDateOrder,
+    getToday,
+    incWorkDay,
+    getClosedDatesArray,
+    getShortDateText,
 } from "../date-utilities.js";
 
 import {
@@ -85,19 +89,32 @@ const modalCloseButtonStyles = `
     font-size: inherit;
     border: none;
     color: var(--color);
-    background: transparent`;
+    background: transparent;`;
+
+const calendarButtonStyles = `
+    position: absolute;
+    top: 3.75rem;
+    right: 0.25rem;
+    padding: 0.25rem 0.5rem;
+    cursor: pointer;
+    font-size: .75em;
+    border: none;
+    color: var(--color);
+    border: 1px solid var(--border_color);
+    background: transparent;`;
 
 const modalInputStyles = `
     width: 100%;
     padding: 0.25rem;
     font-size: 1.2rem;
-    border: 1px solid var(--border_color); `;
+    border: 1px solid var(--border_color);`;
 
 const modalInputTextAreaStyles = `
     width: 100%;
     padding: 0.25rem;
     font-size: 1.2rem;
     border: 1px solid var(--border_color); `;
+const modalInputCheckboxStyles = ``;
 
 const currentEditorLabelStyles = `
     font-size: 1.2rem;
@@ -336,8 +353,16 @@ const jobTimingTimesContainerStyles = `
     width: 100%;
     height: 1.2em;
     border: 1px solid var(--border_color);
-    font-size: 1.2em;`;
+    font-size: 1.2em;
+    cursor: crosshair;`;
 const jobTimingTimesStyles = `
+    position: absolute;
+    height: 22px;
+    border: 1px solid var(--border_color);
+    overflow: hidden;
+    color: black;
+    font-size: 12px;`;
+const jobTimingVerticalLinesStyles = `
     position: absolute;
     height: 22px;
     border: 1px solid var(--border_color);
@@ -1053,7 +1078,6 @@ export function showCalendarPreviewDialog(title, calendarEvents, weekdaysOnly, r
     function loadCalendarContainer(container, calendarEvents) {
         const dateProperties = getDates(calendarEvents);
         const dateIndex = dateProperties.firstSunday;
-        // console.log(dateProperties.today);
         const weeks = [];
 
         // Swap start and end dates if end date is before start date
@@ -1297,6 +1321,20 @@ export function showCalendarEventDialog(calendarEvent, OKCallback, cancelCallbac
     eventNoteLabel.style.cssText = blockInputLabelStyles;
     eventNoteLabel.appendChild(TextArea);
 
+    // Business Closed checkbox
+    const ClosedCheckbox = document.createElement('input');
+    ClosedCheckbox.setAttribute('type', 'checkbox');
+    // checkbox.style.cssText = modalInputCheckboxStyles;
+    if (calendarEvent.closed) ClosedCheckbox.setAttribute('checked', 'checked');
+    ClosedCheckbox.style.cssText = jobNameInputStyles;
+    // checkbox.value = calendarEvent.closed || false;
+    const closedCheckboxLabel = document.createElement('label');
+    closedCheckboxLabel.textContent = "Closed";
+    closedCheckboxLabel.style.cssText = inLineInputLabelStyles;
+    closedCheckboxLabel.style.margin = 'auto';
+    // closedCheckboxLabel.style.cssText = blockInputLabelStyles;
+    closedCheckboxLabel.appendChild(ClosedCheckbox);
+
     // Color select
     const colorContainer = document.createElement('div');
     colorContainer.style.cssText = colorContainerStyles;
@@ -1329,6 +1367,7 @@ export function showCalendarEventDialog(calendarEvent, OKCallback, cancelCallbac
         calendarEvent.date = dateInput.value;
         calendarEvent.endDate = endDateInput.value || dateInput.value;
         calendarEvent.note = TextArea.value;
+        calendarEvent.closed = ClosedCheckbox.checked;
         calendarEvent.color = selectedColor;
         
         const correctedDate = getCorrectDateOrder(calendarEvent.date, calendarEvent.endDate);
@@ -1347,14 +1386,15 @@ export function showCalendarEventDialog(calendarEvent, OKCallback, cancelCallbac
 
     const modalButtonContainer = getButtonContainer(modalCancelButton, modalOKButton);
 
-    modalWindow.append(modalTitle, eventNameLabel, dateLabel, endDateLabel, eventNoteLabel, colorContainer, modalButtonContainer);
+    modalWindow.append(modalTitle, eventNameLabel, dateLabel, endDateLabel, eventNoteLabel, closedCheckboxLabel, colorContainer, modalButtonContainer);
     modalBackground.appendChild(modalWindow);
     body.appendChild(modalBackground);
     
     eventNameInput.focus();
 }
 
-export function showJobTaskTimingDialog(jobs, shopTasks) {
+export function showJobTaskTimingDialog(jobs, shopTasks, calendarEvents) {
+    // console.log(shopTasks);
     const jobsCopy = cleanupAndCopyJobs(jobs);
 
     const body = document.querySelector('body');
@@ -1363,7 +1403,8 @@ export function showJobTaskTimingDialog(jobs, shopTasks) {
     const modalWindow = getModalWindow();
     modalWindow.style.margin = 'auto';
     modalWindow.style.maxWidth = 'max-content';
-    const modalTitle = getModalTitle("Task Timing");
+    modalWindow.style.overflow = 'scroll';
+    const modalTitle = getModalTitle("Task Timing Preview");
     const mainContainer = document.createElement('div');
     const jobNamesContainer = document.createElement('div');
     const datesTimesContainer = document.createElement('div');
@@ -1389,27 +1430,46 @@ export function showJobTaskTimingDialog(jobs, shopTasks) {
         mainContainer.appendChild(jobNamesContainer);
     });
 
+
     // Dates header
     datesContainer.style.cssText = jobTimingDatesContainerStyles;
     const earliestDate = getCorrectDate(findEarliestDate(jobsCopy));
     const latestDate = getCorrectDate(findLatestDate(jobsCopy));
-    const datesArray = getAllWorkDaysInArray(earliestDate, latestDate);
+    const closedDatesArray = getClosedDatesArray(calendarEvents);
+    incWorkDay(latestDate, 1, closedDatesArray);
+    const datesArray = getAllWorkDaysInArray(earliestDate, latestDate, closedDatesArray);
+    const numberOfVerticalLines = datesArray.length;
+    // console.log(closedDatesArray);
     datesArray.forEach(date => {
         const dateElement = document.createElement('div');
-        dateElement.textContent = getDateText(date);
+        dateElement.textContent = getShortDateText(date.date);
         dateElement.style.cssText = dateTimingDatesStyles;
+        if (date.dateSkipped) dateElement.style.borderLeftColor = `var(--no)`;
+        if (date.dateSkipped) dateElement.style.borderLeftWidth = `3px`;
         datesContainer.appendChild(dateElement);
     });
     datesTimesContainer.style.cssText = jobTimingDateTimesContainerStyles;
     datesTimesContainer.appendChild(datesContainer);
     mainContainer.appendChild(datesTimesContainer);
 
-    // Times
+    // Task times
+    // console.log(jobsCopy);
     jobsCopy.forEach(job => {
         job.sequences.forEach(sequence => {
             const timesContainer = document.createElement('div');
             timesContainer.style.cssText = jobTimingTimesContainerStyles;
+
+            for (let lineIndex = 1; lineIndex < numberOfVerticalLines; lineIndex++) {
+                const line = document.createElement('div');
+                line.style.cssText = jobTimingVerticalLinesStyles;
+                line.style.left = `${(lineIndex * 70) - 1}px`;
+                timesContainer.appendChild(line);
+            }
+
+            let ShipPosition = 0;
             sequence.tasks.forEach(task => {
+                ShipPosition = task.end;
+
                 const taskColor = getTaskColorNumber(task.id, shopTasks);
 
                 const taskElement = document.createElement('div');
@@ -1426,42 +1486,77 @@ export function showJobTaskTimingDialog(jobs, shopTasks) {
                 }
                 timesContainer.appendChild(taskElement);
 
+                // Tooltip
                 const currentShipDateText = `Current Ship Date:\n${job.shipDate}\n`
                 const currentEstimatedDateText = `Estimated Ship Date:\n${job.estimatedDate}\n`
                 const taskTime = `${task.hours}:${String(task.minutes).length == 1 ? "0" + task.minutes : task.minutes} hours`;
                 const taskCompletedText = `${task.completed ? "✓ Completed" : ""}`
-                const tooltipText = `${job.name}\n${currentShipDateText}${currentEstimatedDateText}${task.name}\n${taskTime}\n${taskCompletedText}`;
-                const tooltip = document.createElement('p');
-                tooltip.textContent = tooltipText;
-                tooltip.style.cssText = calendarTooltipStyles;
-                tooltip.style.borderColor = `var(--color-${taskColor})`;
-                taskElement.onmouseover = () => {
-                    tooltip.style.display = "block";
-                    taskElement.style.zIndex = '2';
-                }
-                taskElement.onmousemove = (event) => {
-                    const numberOfLines = tooltipText.split(/\r\n|\r|\n/).length;
-                    tooltip.style.top = `calc(${event.clientY}px - ${numberOfLines + 2.5}em)`;
-                    tooltip.style.left = `${event.clientX}px`;
-                }
-                taskElement.onmouseleave = () => {
-                    tooltip.style.display = "none";
-                    taskElement.style.zIndex = '1';
-                }
-                body.appendChild(tooltip);
+                const tooltipText = `${job.name}\n` +
+                                    `${currentShipDateText}` +
+                                    `${currentEstimatedDateText}` +
+                                    `${task.name}\n` +
+                                    `${taskTime}\n` +
+                                    `${taskCompletedText}`;
+                addTooltip(taskElement, tooltipText, taskColor);
             });
+
+            // Ship date tooltip
+            const shipElement = document.createElement('div');
+            shipElement.textContent = "Ship Date";
+            shipElement.style.cssText = jobTimingTimesStyles;
+            console.log(Math.floor((ShipPosition / 7) / 70));
+            const leftPosition = (Math.floor((ShipPosition / 7) / 70) + 1) * 70;
+            const elementWidth = 70;
+            shipElement.style.width = `${elementWidth}px`;
+            shipElement.style.left = `${leftPosition}px`;
+            shipElement.style.color = `var(--background_color)`;
+            shipElement.style.backgroundColor = `var(--color)`;
+            const tooltipText = `${job.name}\nCurrent Ship Date:\n${job.shipDate}\nEstimated Ship Date:\n${job.estimatedDate}`;
+            addTooltip(shipElement, tooltipText);
+            timesContainer.appendChild(shipElement);
+
             datesTimesContainer.appendChild(timesContainer);
         });
     });
 
+    function addTooltip(element, tooltipText, borderColor) {
+        const tooltip = document.createElement('p');
+        tooltip.textContent = tooltipText;
+        tooltip.style.cssText = calendarTooltipStyles;
+        tooltip.style.borderColor = (borderColor) ? `var(--color-${borderColor})` : 'var(--border_color}';
+        element.onmouseover = () => {
+            tooltip.style.display = "block";
+            element.style.zIndex = '2';
+        }
+        element.onmousemove = (event) => {
+            const numberOfLines = tooltipText.split(/\r\n|\r|\n/).length;
+            tooltip.style.top = `calc(${event.clientY}px - ${numberOfLines + 2.5}em)`;
+            tooltip.style.left = `${event.clientX}px`;
+        }
+        element.onmouseleave = () => {
+            tooltip.style.display = "none";
+            element.style.zIndex = '1';
+        }
 
+        body.appendChild(tooltip);
+    }
 
     // Close button
     const modalCloseButton = getCloseButton(() => {
         body.removeChild(modalBackground);
     });
 
+    // Calendar button
+    const calendarButton = getButton("Calendar Preview", () => {
+        const calendarEvents = [];
+        jobsCopy.forEach((job) => {
+            calendarEvents.push({name: job.name, startDate: job.startDate || job.estimatedDate, endDate: job.estimatedDate});
+        })
+        showCalendarPreviewDialog("Calendar Preview", calendarEvents, true, true)
+    });
+    calendarButton.style.cssText = calendarButtonStyles;
 
+    modalTitle.appendChild(calendarButton);
     modalTitle.appendChild(modalCloseButton);
     modalWindow.append(modalTitle, mainContainer);
     modalBackground.appendChild(modalWindow);
@@ -1506,33 +1601,19 @@ export function showJobTaskTimingDialog(jobs, shopTasks) {
         return latestDate;
     }
 
-    function getAllWorkDaysInArray(startDate, endDate) {
+    function getAllWorkDaysInArray(startDate, endDate, closedDates) {
         const dateCounterIndex = getCorrectDate(startDate);
         const endDateText = endDate.toLocaleDateString('en-CA');
         const datesArray = [];
+        let dateSkipped = false;
         let currentDateText = startDate.toLocaleDateString('en-CA');
-        while (endDateText !== currentDateText) {
+        while (endDateText > currentDateText) {
             currentDateText = dateCounterIndex.toLocaleDateString('en-CA');
-            datesArray.push(currentDateText);
-            incWorkDay(dateCounterIndex, 1);
+            datesArray.push({date: currentDateText, dateSkipped : dateSkipped});
+            dateSkipped = incWorkDay(dateCounterIndex, 1, closedDates);
             // dateCounterIndex.setDate(dateCounterIndex.getDate() + 1);
         }
         return datesArray;
-    }
-
-    /**
-    * eg. Nov 21
-    */
-    function getDateText(date) {
-        try {
-            const dateOBJ = new Date(date.split("-")[0], Number(date.split("-")[1]) - 1, date.split("-")[2]);
-            let shipDateText = dateOBJ.toLocaleString("en-CA", { month: "short" });
-            shipDateText += " " + dateOBJ.getDate();
-            return shipDateText;
-        } catch (error) {
-            // console.error(error);
-            return "";
-        }
     }
 
     function isCompleted(job) {
@@ -1741,23 +1822,4 @@ function getCorrectDate(date) {
     // Stupid javascript
     const utcDate = new Date(date);
     return new Date(utcDate.getTime() + utcDate.getTimezoneOffset() * 60000);
-}
-
-function getToday() {
-    const utcDate = new Date();
-    return new Date(utcDate.getTime() + utcDate.getTimezoneOffset() * 60000);
-}
-function incWorkDay(date, amount) {
-    let index = 0;
-    while (index < amount) {
-        index++;
-        date.setDate(date.getDate() + 1);
-        const dayName = (date.toLocaleString('default', {weekday: 'short'}));
-        if (dayName === "Sat") {
-            date.setDate(date.getDate() + 2);
-        }
-        if (dayName === "Sun") {
-            date.setDate(date.getDate() + 1);
-        }
-    }
 }

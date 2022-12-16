@@ -24,6 +24,7 @@ import {
     COMPLETED_TIMER_TABLE,
     TIMER_TABLE,
     BUSINESS_SCHEMA,
+    CALENDAR_TABLE,
     EMPLOYEES_TABLE,
     JOBS_TABLE,
     STATIONS_TABLE,
@@ -53,6 +54,16 @@ import {
     showCalendarPreviewDialog,
     showJobTaskTimingDialog,
 } from "../dialogs.js";
+
+import {
+    getDueInDaysFromNowText,
+    getCorrectDateOrder,
+    getToday,
+    incWorkDay,
+    getClosedDatesArray,
+    getShortDateText,
+    getLongDateText,
+} from "../date-utilities.js";
 
 const settings = {
     url: "",
@@ -165,7 +176,14 @@ async function loadJobs(jobs, sortByIndex) {
                                                   jobTimes.percentCompleted + "% completed.",
                                         });
         });
-        showJobTaskTimingDialog(jobs, tasksResponse);
+
+        const tasksResponse = await getDBEntrees(BUSINESS_SCHEMA, TASKS_TABLE, "active", true, settings);
+        if ((!tasksResponse) || (tasksResponse.error)) return;
+
+        const calendarEventsResponse = await getDBEntrees(BUSINESS_SCHEMA, CALENDAR_TABLE, "__createdtime__", "*", settings);
+        if ((!calendarEventsResponse) || (calendarEventsResponse.error)) return;
+
+        showJobTaskTimingDialog(jobs, tasksResponse, calendarEventsResponse);
         // showCalendarPreviewDialog("Preview of Estimated Dates", jobsForCalendarPreview, true, true);
     };
 
@@ -273,7 +291,7 @@ async function loadJobs(jobs, sortByIndex) {
         // Estimated date
         const estimatedDateString = job.estimatedDate ? job.estimatedDate : "";
         const estimatedDate = getTableDataWithText(job.active ? estimatedDateString : "");
-        estimatedDate.setAttribute('title', getDateText(job.estimatedDate));
+        estimatedDate.setAttribute('title', getLongDateText(job.estimatedDate));
 
         // ⇨ Update ship date button
         let updateShipDate = document.createElement('td');
@@ -291,7 +309,7 @@ async function loadJobs(jobs, sortByIndex) {
 
         // Ship date
         const shipDate = getTableDataWithEditText(job.shipDate);
-        shipDate.setAttribute('title', getDateText(job.shipDate));
+        shipDate.setAttribute('title', getLongDateText(job.shipDate));
         // const month = new Date(job.shipDate).toLocaleString("en-CA", { month: "long" }).toLowerCase();
         // shipDate.classList.add(month);
         shipDate.onclick = async () => {
@@ -508,20 +526,25 @@ async function updateEstimateDateAndStartDate(jobs, tasksResponse) {
         jobNameDaysFromNowArray[jobIndex].taskLength = jobTask.end;
         currentJobID = jobTask.jobID;
     });
+    
+    const calendarEventsResponse = await getDBEntrees(BUSINESS_SCHEMA, CALENDAR_TABLE, "__createdtime__", "*", settings);
+    if ((!calendarEventsResponse) || (calendarEventsResponse.error)) return;
+    const closedDates = getClosedDatesArray(calendarEventsResponse);
 
     jobNameDaysFromNowArray.forEach((jobTask) => {
         const startDate = getToday();
-        incWorkDay(startDate, jobTask.daysFromNowStart);
+        incWorkDay(startDate, jobTask.daysFromNowStart, closedDates);
         jobTask.startDate = startDate.toLocaleDateString('en-CA');
         const endDate = getToday();
-        incWorkDay(endDate, jobTask.daysFromNowEnd);
+        incWorkDay(endDate, jobTask.daysFromNowEnd, closedDates);
         jobTask.shipDate = endDate.toLocaleDateString('en-CA');
     });
 
     jobNameDaysFromNowArray.forEach((jobDates) => {
         jobs.forEach((job) => {
             if (jobDates.id == job.id) {
-                job.estimatedDate = jobDates.shipDate;
+                // job.estimatedDate = jobDates.shipDate;
+                job.estimatedDate = (jobDates.shipDate > job.estimatedDate || 0) ? jobDates.shipDate : job.estimatedDate;
                 job.startDate = jobDates.startDate;
             }
         });
@@ -544,6 +567,21 @@ async function updateEstimateDateAndStartDate(jobs, tasksResponse) {
         }
     });
     return
+}
+
+function getAllWorkDaysInArray(startDate, endDate, closedDates) {
+    const dateCounterIndex = getCorrectDate(startDate);
+    const endDateText = endDate.toLocaleDateString('en-CA');
+    const datesArray = [];
+    let dateSkipped = false;
+    let currentDateText = startDate.toLocaleDateString('en-CA');
+    while (endDateText > currentDateText) {
+        currentDateText = dateCounterIndex.toLocaleDateString('en-CA');
+        datesArray.push({date: currentDateText, dateSkipped : dateSkipped});
+        dateSkipped = incWorkDay(dateCounterIndex, 1, closedDates);
+        // dateCounterIndex.setDate(dateCounterIndex.getDate() + 1);
+    }
+    return datesArray;
 }
 
 function AddedScaledMinutesToJobTasks(jobs, shopTasks) {
@@ -619,52 +657,10 @@ function isCompleted(job) {
     return completed;
 }
 
-function getToday() {
-    const utcDate = new Date();
-    return new Date(utcDate.getTime() + utcDate.getTimezoneOffset() * 60000);
-}
-
 function getTomorrow() {
     const today = getToday();
     incWorkDay(today, 1);
     return today
-}
-
-function getCorrectDate(date) {
-    // Stupid javascript
-    const utcDate = new Date(date);
-    return new Date(utcDate.getTime() + utcDate.getTimezoneOffset() * 60000);
-}
-
-/**
-* eg. November 21/2022
-*/
-function getDateText(date) {
-    try {
-        const shipDateObj = new Date(date.split("-")[0], Number(date.split("-")[1]) - 1, date.split("-")[2]);
-        let shipDateText = shipDateObj.toLocaleString("en-CA", { month: "long" });
-        shipDateText += " " + shipDateObj.getDate();
-        shipDateText += "/" + shipDateObj.getFullYear();
-        return shipDateText;
-    } catch (error) {
-        // console.error(error);
-        return "";
-    }
-}
-    
-function incWorkDay(date, amount) {
-    let index = 0;
-    while (index < amount) {
-        index++;
-        date.setDate(date.getDate() + 1);
-        const dayName = (date.toLocaleString('default', {weekday: 'short'}));
-        if (dayName === "Sat") {
-            date.setDate(date.getDate() + 2);
-        }
-        if (dayName === "Sun") {
-            date.setDate(date.getDate() + 1);
-        }
-    }
 }
 
 function getJobTimes(job) {
