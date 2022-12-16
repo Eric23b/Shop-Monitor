@@ -38,5 +38,5 @@ export const TABLE_ATTRIBUTES = {
     jobs: ["active", "finishType", "name", "checklist", "shipDate", "note"],
     stations: ["active", "name", "tasks", "editing"],
     tasks: ["active", "name", "hours", "minutes"],
-    calendar: ["name", "date", "note"],
+    calendar: ["name", "date", "endDate", "dates", "closed", "color", "note"],
 }
