@@ -55,7 +55,8 @@ export function getShortDateText(date) {
         const dateOBJ = new Date(date.split("-")[0], Number(date.split("-")[1]) - 1, date.split("-")[2]);
         let shipDateText = dateOBJ.toLocaleString("en-CA", { month: "short" });
         shipDateText += " " + dateOBJ.getDate();
-        return shipDateText;
+        // console.log(shipDateText);
+        return shipDateText.replace(".", "");
     } catch (error) {
         console.error("getShortDateText() failed:\n" + error);
         return "";
