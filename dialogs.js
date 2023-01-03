@@ -12,6 +12,22 @@ import {
     isProd,
 } from "../build.js";
 
+
+// Add to main Style Sheet
+const styles = `
+    .dialogs-disable-select {
+        -webkit-user-select: none;  
+        -moz-user-select: none;    
+        -ms-user-select: none;      
+        user-select: none;
+    }
+`;
+
+const styleSheet = document.createElement("style");
+styleSheet.innerText = styles;
+document.head.appendChild(styleSheet);
+
+
 const modalBackgroundStyles = `
     position: fixed;
     inset: 0;
@@ -1436,6 +1452,7 @@ export function showJobTaskTimingDialog(jobs, shopTasks, calendarEvents) {
     const earliestDate = getCorrectDate(findEarliestDate(jobsCopy));
     const latestDate = getCorrectDate(findLatestDate(jobsCopy));
     const closedDatesArray = getClosedDatesArray(calendarEvents);
+    // console.log(calendarEvents);
     incWorkDay(latestDate, 1, closedDatesArray);
     const datesArray = getAllWorkDaysInArray(earliestDate, latestDate, closedDatesArray);
     const numberOfVerticalLines = datesArray.length;
@@ -1444,8 +1461,10 @@ export function showJobTaskTimingDialog(jobs, shopTasks, calendarEvents) {
         const dateElement = document.createElement('div');
         dateElement.textContent = getShortDateText(date.date);
         dateElement.style.cssText = dateTimingDatesStyles;
+        dateElement.classList.add('dialogs-disable-select');
+        // console.log(date);
         if (date.dateSkipped) dateElement.style.borderLeftColor = `var(--no)`;
-        if (date.dateSkipped) dateElement.style.borderLeftWidth = `3px`;
+        if (date.dateSkipped) dateElement.style.borderLeftWidth = `5px`;
         datesContainer.appendChild(dateElement);
     });
     datesTimesContainer.style.cssText = jobTimingDateTimesContainerStyles;
@@ -1504,7 +1523,6 @@ export function showJobTaskTimingDialog(jobs, shopTasks, calendarEvents) {
             const shipElement = document.createElement('div');
             shipElement.textContent = "Ship Date";
             shipElement.style.cssText = jobTimingTimesStyles;
-            console.log(Math.floor((ShipPosition / 7) / 70));
             const leftPosition = (Math.floor((ShipPosition / 7) / 70) + 1) * 70;
             const elementWidth = 70;
             shipElement.style.width = `${elementWidth}px`;
