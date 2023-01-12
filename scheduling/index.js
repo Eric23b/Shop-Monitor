@@ -211,7 +211,7 @@ async function loadJobs(jobs, sortByIndex) {
 
     // Ship date preview calendar  
     const previewShipDatesBtn = document.createElement('button');
-    previewShipDatesBtn.textContent = "Ship Date";
+    previewShipDatesBtn.textContent = "Current\nShip Date";
     previewShipDatesBtn.style.cssText = `border: none;
                                          font-size: 1em;
                                          cursor: pointer;
