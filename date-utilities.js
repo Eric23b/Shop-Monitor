@@ -41,10 +41,23 @@ export function getCorrectDate(date) {
 
 export function formatDateToCA(inputDate) {
     if (typeof inputDate === 'string') {
-        return inputDate.replace("/", "-").replace( /\//g, "-");
+        let outputString = inputDate.replace( /\//g, "-");
+        if (outputString.split("-")[2].length == 4) {
+            const day = padNumberWithZero(outputString.split("-")[1]);
+            const month = padNumberWithZero(outputString.split("-")[0]);
+            const year = padNumberWithZero(outputString.split("-")[2]);
+            outputString = `${year}-${month}-${day}`;
+        }
+        return outputString;
     }
     else {
-        return (new Date(inputDate)).toLocaleDateString('en-CA').replace( /\//g, "-");
+        return `${inputDate.getFullYear()}-${padNumberWithZero(inputDate.getMonth() + 1)}-${padNumberWithZero(inputDate.getDate())}`;
+    }
+    function padNumberWithZero(number) {
+        if (number <= 9) {
+            return `0${Number(number)}`;
+        }
+        return String(number);
     }
 }
 
