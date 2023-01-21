@@ -144,7 +144,8 @@ document.querySelector('#calender').addEventListener('contextmenu', (event) => {
 });
 
 await buildCalender();
-search("today");
+
+jumpToDate(formatDateToCA(new Date()));
 
 startOverTimeTimer(stationName, settings, stopRunningTimer);
 
