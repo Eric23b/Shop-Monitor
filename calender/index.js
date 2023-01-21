@@ -47,6 +47,8 @@ import {
     getDueInDaysFromNowText,
     getCorrectDate,
     getCorrectDateOrder,
+    getToday,
+    formatDateToCA,
 } from "../date-utilities.js";
 
 import {
@@ -200,14 +202,14 @@ function search(searchText) {
             const inputTextA = inputText.split(" ")[0];
             const inputTextB = inputText.split(" ")[1];
             if ((name.includes(inputTextA)) && (name.split(" ")[1] === inputTextB)) {
-                jumpToDate(date);
+                // jumpToDate(date);
                 searchFound = true;
                 break;
             }
         }
         else {
             if (name.includes(inputText)) {
-                jumpToDate(date);
+                // jumpToDate(date);
                 searchFound = true;
                 break;
             }
@@ -232,7 +234,7 @@ window.onkeydown = (event) => {
 
 // Jump to today
 todayBtn.addEventListener('click', () => {
-    jumpToDate((new Date()).toLocaleDateString('en-CA'));
+    jumpToDate(formatDateToCA(new Date()));
 });
 
 
@@ -274,7 +276,7 @@ async function buildCalender(scrollTo) {
     };
 
     // Reset nameDateSearchArray and add today
-    nameDateSearchArray = [{name: "today", date: (new Date()).toLocaleDateString('en-CA')}];
+    nameDateSearchArray = [{name: "today", date: formatDateToCA(getToday())}];
     // Add jobs to search array
     jobs.forEach((job) => {
         nameDateSearchArray.push({name: job.name, date: job.shipDate});
@@ -339,7 +341,7 @@ async function buildCalender(scrollTo) {
     const dates = getDates(jobs, calendarResponse);
     
     let dateIndex;
-    if (dates.firstSunday.toLocaleDateString('en-CA') < new Date().toLocaleDateString('en-CA')) {
+    if (formatDateToCA(dates.firstSunday) < formatDateToCA(getToday())) {
         dateIndex = new Date(dates.firstSunday);
     }
     else {
@@ -374,7 +376,7 @@ async function buildCalender(scrollTo) {
     
         // Loop through days of the week
         for (let dayOfTheWeekIndex = 0; dayOfTheWeekIndex < 7; dayOfTheWeekIndex++) {
-            const calendarDate = dateIndex.toLocaleDateString('en-CA');
+            const calendarDate = formatDateToCA(dateIndex);
             const dayContainer = document.createElement('div');
             if (dates.today.toDateString('en-CA') === dateIndex.toDateString('en-CA')) {
                 dayContainer.id = "today";
@@ -467,7 +469,7 @@ async function buildCalender(scrollTo) {
             const jobsContainer = document.createElement('div');
             jobsContainer.classList.add('jobs-container');
             jobs.forEach((job) => {
-                if (job.shipDate !== dateIndex.toLocaleDateString('en-CA')) return;
+                if (job.shipDate !== formatDateToCA(dateIndex)) return;
 
                 const percentCompleted = getJobTimes(job).percentCompleted;
                 
@@ -604,6 +606,8 @@ async function buildCalender(scrollTo) {
         weeks.push(weekContainer);
     }
 
+    log(nameDateSearchArray);
+
     calenderContainer.innerHTML = "";
     calenderContainer.append(...weeks);
 }
@@ -658,11 +662,11 @@ function getWhoIsEditing(currentEditingResponse) {
 
 function getAllDatesInArray(startDate, endDate) {
     const dateCounterIndex = getCorrectDate(startDate);
-    const endDateText = endDate.toLocaleDateString('en-CA');
+    const endDateText = formatDateToCA(endDate);
     const datesArray = [];
-    let currentDateText = startDate.toLocaleDateString('en-CA');
+    let currentDateText = formatDateToCA(startDate)
     while (endDateText !== currentDateText) {
-        currentDateText = dateCounterIndex.toLocaleDateString('en-CA');
+        currentDateText = formatDateToCA(dateCounterIndex);
         datesArray.push(currentDateText);
         dateCounterIndex.setDate(dateCounterIndex.getDate() + 1);
     }
@@ -672,8 +676,8 @@ function getAllDatesInArray(startDate, endDate) {
 function getDates(jobs, events) {
     if (!events) events = [];
 
-    const earliestDate = jobs[jobs.length - 1].shipDate || (new Date()).toLocaleDateString('en-CA');
-    const latestDate = jobs[0].shipDate || (new Date()).toLocaleDateString('en-CA');
+    const earliestDate = jobs[jobs.length - 1].shipDate || formatDateToCA(getToday());
+    const latestDate = jobs[0].shipDate || formatDateToCA(getToday());
 
     const firstSunday = getCorrectDate(earliestDate);
 

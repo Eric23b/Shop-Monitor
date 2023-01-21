@@ -58,7 +58,9 @@ import {
 import {
     getDueInDaysFromNowText,
     getCorrectDateOrder,
+    formatDateToCA,
     getToday,
+    getTomorrow,
     incWorkDay,
     getClosedDatesArray,
     getShortDateText,
@@ -131,7 +133,8 @@ addNewJobBtn.addEventListener('click', async () => {
 await loadJobs(null, true);
 
 
-
+log(formatDateToCA((new Date)));
+log(formatDateToCA((new Date).toLocaleDateString('en-CA')));
 
 // FUNCTIONS
 
@@ -142,7 +145,7 @@ async function loadJobs(jobs, sortByIndex) {
 
         sortDown(jobs, "shipDate");
         
-        jobs.forEach((job) => {job. completed = isCompleted(job)});
+        jobs.forEach((job) => {job.completed = isCompleted(job)});
         sortUp(jobs, 'completed');
 
         sortDown(jobs, "active");
@@ -242,13 +245,14 @@ async function loadJobs(jobs, sortByIndex) {
     jobs.forEach((job, jobIndex) => {
         // Sneak in today row
         if ((!job.active) && (!todayAdded)) {
-            const today = getToday().toLocaleDateString('en-CA');
+            const today = formatDateToCA(getToday());
             jobsTable.appendChild(getTableHeaderRow(["Today", today, "-", "-", "-", "-", "-", "-", "-", "-", "-", ""]));
             todayAdded = true;
         }
 
         const jobTimes = getJobTimes(job);
 
+        // Table Row
         const row = document.createElement('tr');
         row.classList.add('table-row-blank-border');
         row.oncontextmenu = (event) => {event.preventDefault()}
@@ -534,10 +538,12 @@ async function updateEstimateDateAndStartDate(jobs, tasksResponse) {
     jobNameDaysFromNowArray.forEach((jobTask) => {
         const startDate = getToday();
         incWorkDay(startDate, jobTask.daysFromNowStart, closedDates);
-        jobTask.startDate = startDate.toLocaleDateString('en-CA');
+        // jobTask.startDate = startDate.toLocaleDateString('en-CA');
+        jobTask.startDate = formatDateToCA(startDate);
         const endDate = getToday();
         incWorkDay(endDate, jobTask.daysFromNowEnd, closedDates);
-        jobTask.shipDate = endDate.toLocaleDateString('en-CA');
+        // jobTask.shipDate = endDate.toLocaleDateString('en-CA');
+        jobTask.shipDate = formatDateToCA(endDate);
     });
 
     jobNameDaysFromNowArray.forEach((jobDates) => {
@@ -562,8 +568,10 @@ async function updateEstimateDateAndStartDate(jobs, tasksResponse) {
     // Add tomorrow to completed jobs
     jobs.forEach((job) => {
         if (isCompleted(job)) {
-            job.estimatedDate = getTomorrow().toLocaleDateString('en-CA');
-            job.startDate = getTomorrow().toLocaleDateString('en-CA');
+            // job.estimatedDate = getTomorrow().toLocaleDateString('en-CA');
+            // job.startDate = getTomorrow().toLocaleDateString('en-CA');
+            job.estimatedDate = formatDateToCA(getTomorrow());
+            job.startDate = formatDateToCA(getTomorrow());
         }
     });
     return
@@ -645,22 +653,22 @@ function sortUp(array, property) {
 }
 
 function isCompleted(job) {
-    if (!job.sequences) return true;
-    if (!job.sequences[0].tasks) return true;
-    let completed = true;
-    job.sequences.forEach((sequence) => {
-        if (!sequence.tasks) return;
-        sequence.tasks.forEach((jobTask) => {
-            if (!jobTask.completed) completed = false;
+    try {
+        if (!job.sequences) return true;
+        if (Object.prototype.toString.call(job.sequences) != '[object Array]') return true;
+        if (!job.sequences[0].tasks) return true;
+        let completed = true;
+        job.sequences.forEach((sequence) => {
+            if (!sequence.tasks) return;
+            sequence.tasks.forEach((jobTask) => {
+                if (!jobTask.completed) completed = false;
+            });
         });
-    });
-    return completed;
-}
-
-function getTomorrow() {
-    const today = getToday();
-    incWorkDay(today, 1);
-    return today
+        return completed;
+    } catch (error) {
+        console.warn(`isCompleted() failed for job: ${job.name}`, error);
+        return true;
+    }
 }
 
 function getJobTimes(job) {
