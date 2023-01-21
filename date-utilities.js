@@ -57,6 +57,12 @@ export function getToday() {
     return new Date(utcDate.getTime() + utcDate.getTimezoneOffset() * 60000);
 }
 
+export function getTomorrow() {
+    const today = getToday();
+    incWorkDay(today, 1);
+    return today;
+}
+
 /**
 * eg. Nov 21
 */
