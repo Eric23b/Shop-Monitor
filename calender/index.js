@@ -606,8 +606,6 @@ async function buildCalender(scrollTo) {
         weeks.push(weekContainer);
     }
 
-    log(nameDateSearchArray);
-
     calenderContainer.innerHTML = "";
     calenderContainer.append(...weeks);
 }
