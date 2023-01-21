@@ -14,6 +14,7 @@ export function getDueInDaysFromNowText(shipDate) {
 }
 
 export function getCorrectDateOrder(startDate, endDate) {
+    // cols
     if (startDate.replaceAll("-", "") > endDate.replaceAll("-", "")) {
         return {start: endDate, end: startDate};
     }
@@ -30,7 +31,7 @@ export function differenceInDays(dateOne, dateTwo) {
         const differenceInDays = differenceInTime / (1000 * 3600 * 24);
     
         return Math.floor(differenceInDays);
-    }
+}
 
 export function getCorrectDate(date) {
     // Stupid javascript
@@ -38,8 +39,17 @@ export function getCorrectDate(date) {
     return new Date(utcDate.getTime() + utcDate.getTimezoneOffset() * 60000);
 }
 
+export function formatDateToCA(inputDate) {
+    if (typeof inputDate === 'string') {
+        return inputDate.replace("/", "-").replace( /\//g, "-");
+    }
+    else {
+        return (new Date(inputDate)).toLocaleDateString('en-CA').replace( /\//g, "-");
+    }
+}
+
 export function offsetMonthBecauseJSIsStupid(date) {
-    return [date.split("-")[0], Number(date.split("-")[1]) - 1, date.split("-")[2]].join("-")
+    return [date.split("-")[0], Number(date.split("-")[1]) - 1, date.split("-")[2]].join("-");
 }
 
 export function getToday() {
