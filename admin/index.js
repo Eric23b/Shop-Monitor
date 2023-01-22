@@ -1913,8 +1913,9 @@ function msToTime(s) {
     s = (s - ms) / 1000;
     const secs = s % 60;
     s = (s - secs) / 60;
-    const mins = s % 60;
+    let mins = s % 60;
     const hrs = (s - mins) / 60;
+    mins = (mins <= 9) ? `0${mins}` : mins;
     // Pad minutes
     return hrs + ':' + mins;
     // return hrs + ':' + mins + ':' + secs;
