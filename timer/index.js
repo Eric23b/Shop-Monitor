@@ -185,7 +185,7 @@ async function getStationID(stationName) {
 async function updateStartBtn() {
     const employeeID = employeesSelect[Number(employeesSelect.value) + 1].getAttribute('db_id');
     
-    if (await employeeHasRunningTimer(employeeID) || (employeesSelect.value === "")) {
+    if (await employeeHasRunningTimer(employeeID) || (employeesSelect.value === "") || (taskSelect.value === "")) {
         startBtn.setAttribute('disabled', true);
     }
     else {
@@ -231,14 +231,20 @@ async function loadEmployees() {
     // Filter employees
     const stationsEmployees = [];
     for (const employee of employeeResponse) {
-        // Old system
-        if (typeof employee.stations === 'string') {
-            if (employee.stations.includes(thisStationName)) {
-                stationsEmployees.push(employee);
-            }
-        }
-        // New system
-        else if (Array.isArray(employee.stations)) {
+        // // Old system
+        // if (typeof employee.stations === 'string') {
+        //     if (employee.stations.includes(thisStationName)) {
+        //         stationsEmployees.push(employee);
+        //     }
+        // }
+        // // New system
+        // else if (Array.isArray(employee.stations)) {
+        //     if (employee.stations.indexOf(thisStationID) >= 0) {
+        //         stationsEmployees.push(employee);
+        //     }
+        // }
+
+        if (Array.isArray(employee.stations)) {
             if (employee.stations.indexOf(thisStationID) >= 0) {
                 stationsEmployees.push(employee);
             }
@@ -282,24 +288,16 @@ async function loadTasks() {
     }
 
     if (stationResponse.length == 0) {
-        showAlertDialog(`Error: No tasks for ${thisStationName}`);
+        showAlertDialog(`Error: No tasks assigned to station ${thisStationName}`);
         return;
     }
 
-    // Old system
-    if (typeof stationResponse[0].tasks === "string") {
-        const tasks = stationResponse[0].tasks.split(',');
-        tasks.forEach(task => {
-            task = task.trim();
-        });
-        loadSelectFromArray(taskSelect, "", false, tasks);
-        loadSelectFromArray(addTimeTaskSelect, "", false, tasks);
-    } // New system
-    else if (Array.isArray(stationResponse[0].tasks)) {
+    if (Array.isArray(stationResponse[0].tasks)) {
         const tasksResponse = await getDBEntrees(BUSINESS_SCHEMA, TASKS_TABLE, "id", "*", settings);
         if ((!tasksResponse) || (tasksResponse.error)) return;
 
         taskSelect.innerHTML = "";
+        addTimeTaskSelect.innerHTML = "";
         let index = 0;
         tasksResponse.forEach(task => {
             stationResponse[0].tasks.forEach(taskID => {
@@ -320,6 +318,45 @@ async function loadTasks() {
             });
         });
     }
+    else {
+        showAlertDialog(`Error: No tasks assigned to station ${thisStationName}`);
+        return;
+    }
+
+    // // Old system
+    // if (typeof stationResponse[0].tasks === "string") {
+    //     const tasks = stationResponse[0].tasks.split(',');
+    //     tasks.forEach(task => {
+    //         task = task.trim();
+    //     });
+    //     loadSelectFromArray(taskSelect, "", false, tasks);
+    //     loadSelectFromArray(addTimeTaskSelect, "", false, tasks);
+    // } // New system
+    // else if (Array.isArray(stationResponse[0].tasks)) {
+    //     const tasksResponse = await getDBEntrees(BUSINESS_SCHEMA, TASKS_TABLE, "id", "*", settings);
+    //     if ((!tasksResponse) || (tasksResponse.error)) return;
+
+    //     taskSelect.innerHTML = "";
+    //     let index = 0;
+    //     tasksResponse.forEach(task => {
+    //         stationResponse[0].tasks.forEach(taskID => {
+    //             if (task.id !== taskID) return;
+                
+    //             const timerOption = document.createElement("option");
+    //             timerOption.textContent = task.name;
+    //             timerOption.id = task.id;
+    //             timerOption.value = index++;
+    //             taskSelect.appendChild(timerOption);
+                
+    //             const manualTimeOption = document.createElement("option");
+    //             manualTimeOption.textContent = task.name;
+    //             manualTimeOption.id = task.id;
+    //             manualTimeOption.value = index;
+    //             addTimeTaskSelect.appendChild(manualTimeOption);
+                
+    //         });
+    //     });
+    // }
 }
 
 function loadSelectFromArray(selectElement, textAttribute, setID, array, addBlank) {
