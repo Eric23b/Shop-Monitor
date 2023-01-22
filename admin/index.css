@@ -472,8 +472,10 @@ input{
     margin-bottom: 1rem;
 }
 .small-labeled-input{
-    width: 100%;
-    /* width: 20rem; */
+    /* width: 100%; */
+    width: max-content;
+    padding: 0.25rem 0.5rem;
+    text-align: center;
 }
 
 .container{
