@@ -85,8 +85,9 @@
                 <input id="timers-job-filter-input" class="labeled-input" type="text" value="*">
             </label> -->
             <!-- <label class="small-font">H:M:S Completed/Incomplete</label> -->
-            <button id="save-timer-log-btn" class="form-btn">Save as spreadsheet</button>
+            <label class="input-label">The Last Number of Days<input id="last-number-of-days-timer-input" class="small-labeled-input" type="number" value="30" min="1"></label>
             <table id="timers-table" class="table"></table>
+            <button id="save-timer-log-btn" class="form-btn">Save as spreadsheet</button>
             <button id="delete-timer-logs-btn" class="form-btn">Delete All Timer Logs</button>
         </div>
         
@@ -119,7 +120,7 @@
         <!-- Employees -->
         <div id="employee-container" class="tab-container">
             <label class="small-input-label">New employee name
-                <input id="employee-input" class="labeled-input" type="text">
+                <input id="employee-input" class="small-labeled-input" type="text">
             </label>
             <!-- <label class="small-input-label">Work Stations
                 <input id="employee-work-stations-input" class="labeled-input" type="text" placeholder="Finishing,Assembly,etc">
@@ -133,10 +134,10 @@
                 </div>
             </h3>
             <label class="small-input-label">Shift Start
-                <input id="employee-shift-start-input" class="labeled-input" type="time">
+                <input id="employee-shift-start-input" class="small-labeled-input" type="time">
             </label>
             <label class="small-input-label">Shift End
-                <input id="employee-shift-end-input" class="labeled-input" type="time">
+                <input id="employee-shift-end-input" class="small-labeled-input" type="time">
             </label>
             <button id="add-employee-btn" class="small-btn">Add</button>
             <table id="employee-table" class="table"></table>

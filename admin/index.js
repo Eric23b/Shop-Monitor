@@ -123,7 +123,7 @@ const otherIssuesTable = document.querySelector("#other-issues-table");
 
 // Timers
 const timersTabContainer = document.querySelector("#timers-container");
-// const timersJobFilter = document.querySelector("#timers-job-filter-input");
+const timerLastNumberOfDays = document.querySelector("#last-number-of-days-timer-input");
 const saveTimerLogsBtn = document.querySelector("#save-timer-log-btn");
 const timersTable = document.querySelector("#timers-table");
 const deleteTimerLogsBtn = document.querySelector("#delete-timer-logs-btn");
@@ -324,6 +324,12 @@ tabHeader.addEventListener('click', async (event) => {
     await checkForUnresolvedIssues();
 });
 
+// Timer number of days ago Enter key
+timerLastNumberOfDays.addEventListener('keydown', (event) => {
+    if (event.key === "Enter") {
+        loadTimersTable();
+    }
+});
 // Save timer logs
 saveTimerLogsBtn.addEventListener('click', () => {
     saveTextFile(timerLogCSV, `Timer Logs ${(new Date()).toLocaleDateString()}`, "csv");
@@ -984,6 +990,16 @@ async function loadTimersTable() {
     // Get all completed tasks
     const completedTasks = await getDBEntrees(LOGS_SCHEMA, COMPLETED_TIMER_TABLE, "__createdtime__", "*", settings);
     if ((!completedTasks) || (completedTasks.error)) return;
+
+    // Remove older completed tasks
+    const numberOfDaysAgo = timerLastNumberOfDays.value;
+    for (let index = completedTasks.length - 1; index >= 0; index--) {
+        const element = completedTasks[index];
+        if (element.__createdtime__ < ((new Date).getTime() - (86400000 * Number(numberOfDaysAgo)))) {
+            completedTasks.splice(index, 1);
+        }
+    }
+
     completedTasks.sort((a, b) => {return a.__createdtime__ - b.__createdtime__});
 
     // Get all jobs
@@ -1008,9 +1024,14 @@ async function loadTimersTable() {
     // Setup header
     const tableData = [["Job", ...taskArray, "Total"]];
 
-    // Add jobs to tableData
-    jobs.forEach((job) => {
-        tableData.push([String(job.id)]);
+    // Add jobs IDs to tableData
+    const usedJobIDs = [];
+    completedTasks.forEach((task) => {
+        console.log(usedJobIDs.indexOf(task.jobID));
+        if (usedJobIDs.indexOf(task.jobID) == -1) {
+            tableData.push([String(task.jobID)]);
+            usedJobIDs.push(task.jobID);
+        }
     });
 
     for (const task of completedTasks) {
@@ -1040,21 +1061,21 @@ async function loadTimersTable() {
     });
 
     // Find the number of columns in the table
-    let maxRowLength = 1;
+    let maxNumberOfColumns = 1;
     for (const row of tableData) {
-        maxRowLength = Math.max(maxRowLength, row.length);
+        maxNumberOfColumns = Math.max(maxNumberOfColumns, row.length);
     }
 
     // Total rows
     for (let rowIndex = 1; rowIndex < tableData.length; rowIndex++) {
         const row = tableData[rowIndex];
-        row.length = maxRowLength;
+        row.length = maxNumberOfColumns;
         let rowTotal = 0;
         for (let colIndex = 1; colIndex < row.length; colIndex++) {
             const cell = row[colIndex];
             rowTotal += cell || 0;
         }
-        row[maxRowLength - 1] = rowTotal;
+        row[maxNumberOfColumns - 1] = rowTotal;
     }
 
     // Total rows
@@ -1070,16 +1091,22 @@ async function loadTimersTable() {
         }
     }
 
+    buildTimersTable(tableData);
+    loadGlobalCSV(tableData);
+}
+
+function buildTimersTable(array) {
     timersTable.innerHTML = "";
-    timersTable.appendChild(getTableHeaderRow(tableData[0]));
-    
-    for (let rowIndex = 1; rowIndex < tableData.length; rowIndex++) {
-        const row = tableData[rowIndex];
+    timersTable.appendChild(getTableHeaderRow(array[0]));
+    for (let rowIndex = 1; rowIndex < array.length; rowIndex++) {
+        const row = array[rowIndex];
         timersTable.appendChild(getTableDataRow(row));
     }
+}
 
+function loadGlobalCSV(array) {
     timerLogCSV = "";
-    tableData.forEach((row) => {
+    array.forEach((row) => {
         timerLogCSV += row.join(",") + "\n";
     });
 }
@@ -1888,9 +1915,9 @@ function msToTime(s) {
     s = (s - secs) / 60;
     const mins = s % 60;
     const hrs = (s - mins) / 60;
-  
-    // return hrs + ':' + mins;
-    return hrs + ':' + mins + ':' + secs;
+    // Pad minutes
+    return hrs + ':' + mins;
+    // return hrs + ':' + mins + ':' + secs;
     // return hrs + ':' + mins + ':' + secs + '.' + ms;
 }
 
