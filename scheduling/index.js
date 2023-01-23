@@ -655,7 +655,7 @@ function sortUp(array, property) {
 function isCompleted(job) {
     try {
         if (!job.sequences) return true;
-        if (Object.prototype.toString.call(job.sequences) != '[object Array]') return true;
+        if (!Array.isArray(job.sequences)) return true;
         if (!job.sequences[0].tasks) return true;
         let completed = true;
         job.sequences.forEach((sequence) => {
