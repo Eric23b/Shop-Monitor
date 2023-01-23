@@ -185,12 +185,12 @@ async function getStationID(stationName) {
 async function updateStartBtn() {
     const employeeID = employeesSelect[Number(employeesSelect.value) + 1].getAttribute('db_id');
     
-    if (await employeeHasRunningTimer(employeeID) || (employeesSelect.value === "") || (taskSelect.value === "")) {
-        startBtn.setAttribute('disabled', true);
-    }
-    else {
+    // if (await employeeHasRunningTimer(employeeID) || (employeesSelect.value === "") || (taskSelect.value === "")) {
+    //     startBtn.setAttribute('disabled', true);
+    // }
+    // else {
         startBtn.removeAttribute('disabled');
-    }
+    // }
 }
 async function updateAddTimeBtn() {
     addTimeBtn.removeAttribute('disabled');
