@@ -284,7 +284,7 @@ async function buildCalender(scrollTo) {
     });
 
 
-    const calendarResponse = await getDBEntrees(BUSINESS_SCHEMA, CALENDAR_TABLE, "id", "*", settings);
+    let calendarResponse = await getDBEntrees(BUSINESS_SCHEMA, CALENDAR_TABLE, "id", "*", settings);
     if ((!calendarResponse) || (calendarResponse.error) || calendarResponse.length === 0) {
         calendarResponse = [];
     };
