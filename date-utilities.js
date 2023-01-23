@@ -16,6 +16,7 @@ export function getDueInDaysFromNowText(shipDate) {
 export function getCorrectDateOrder(startDate, endDate) {
     const today = formatDateToCA(getToday());
     if (typeof startDate !== "string") return {start: today, end: today}
+    if (typeof endDate !== "string") return {start: today, end: today}
     // cols
     if (startDate.replaceAll("-", "") > endDate.replaceAll("-", "")) {
         return {start: endDate, end: startDate};
