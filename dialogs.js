@@ -1596,6 +1596,7 @@ export function showJobTaskTimingDialog(jobs, shopTasks, calendarEvents) {
         jobs.forEach((job) => {
             if (!job.active) return;
             if (!job.sequences) return;
+            if (!Array.isArray(job.sequences)) return;
             if (!job.sequences[0].tasks) return;
             if (isCompleted(job)) return;
             jobsCopy.push(JSON.parse(JSON.stringify(job)));
