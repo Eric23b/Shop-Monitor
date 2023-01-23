@@ -1597,6 +1597,7 @@ export function showJobTaskTimingDialog(jobs, shopTasks, calendarEvents) {
             if (!job.active) return;
             if (!job.sequences) return;
             if (!Array.isArray(job.sequences)) return;
+            // TODO:
             if (!job.sequences[0].tasks) return;
             if (!Array.isArray(job.sequences[0].tasks)) return;
             if (isCompleted(job)) return;
