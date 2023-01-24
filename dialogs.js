@@ -1740,6 +1740,20 @@ export function showAlertDialog(message, okCallback) {
     // modalOKButton.focus();
 }
 
+// Loading
+export async function showLoadingDialog(doneCallback) {
+    const body = document.querySelector('body');
+    const modalBackground = getModalBackground();
+
+    modalBackground.textContent = "Loading...";
+    
+    body.appendChild(modalBackground);
+    
+    await doneCallback();
+
+    body.removeChild(modalBackground);
+}
+
 // Yes/No or Confirm Dialog
 export function showYesNoDialog(message, yesCallback, noCallback) {
     const body = document.querySelector('body');
