@@ -65,6 +65,7 @@ import {
 import {
     showYesNoDialog,
     showAlertDialog,
+    showLoadingDialog,
     showInputDialog,
     showJobDialog,
     showJobCardDialog,
@@ -143,9 +144,11 @@ document.querySelector('#calender').addEventListener('contextmenu', (event) => {
     event.preventDefault();
 });
 
-await buildCalender();
+showLoadingDialog(async() => {
+    await buildCalender();
+    jumpToDate(formatDateToCA(new Date()));
+});
 
-jumpToDate(formatDateToCA(new Date()));
 
 startOverTimeTimer(stationName, settings, stopRunningTimer);
 
@@ -155,7 +158,9 @@ addNumberOfRunningTimersToTimerPageLink(timerPageLink, stationName, settings);
 const autoUpdateTimer = new Timer(
     () => {
         if (dialogIsOpen()) return;
-        buildCalender();
+        showLoadingDialog(async() => {
+            await buildCalender();
+        });
     },
     1000 * 60 * 1,
     true
@@ -249,9 +254,11 @@ addNewJobBtn.addEventListener('click', async () => {
 
     showJobDialog(null, jobsResponse, tasksResponse, 
         async (newJob) => {
-            await insertDBEntry(BUSINESS_SCHEMA, JOBS_TABLE, newJob, settings);
-            await buildCalender();
-            jumpToDate(newJob.shipDate);
+            showLoadingDialog(async() => {
+                await insertDBEntry(BUSINESS_SCHEMA, JOBS_TABLE, newJob, settings);
+                await buildCalender();
+                jumpToDate(newJob.shipDate);
+            });
         },
         async (oldJob) => {
             // await buildCalender();
@@ -261,8 +268,11 @@ addNewJobBtn.addEventListener('click', async () => {
 
 addNewEventBtn.addEventListener('click', async () => {
     showCalendarEventDialog(null, async (calendarEvent) => {
-        await insertDBEntry(BUSINESS_SCHEMA, CALENDAR_TABLE, calendarEvent, settings);
-        buildCalender();
+        showLoadingDialog(async() => {
+            await insertDBEntry(BUSINESS_SCHEMA, CALENDAR_TABLE, calendarEvent, settings);
+            await buildCalender();
+            jumpToDate(calendarEvent.date);
+        });
     });
 });
 
@@ -434,7 +444,9 @@ async function buildCalender(scrollTo) {
                 }
                 draggingJobID = "";
                 draggingCalendarEvent = {id: "", startDate: "", endDate: "", isStartDate: true};
-                await buildCalender();
+                showLoadingDialog(async() => {
+                    await buildCalender();
+                });
             });
 
             const dayHeader = document.createElement('div');
@@ -499,9 +511,12 @@ async function buildCalender(scrollTo) {
 
                         showJobDialog(job, jobsResponse, tasksResponse, 
                             async (newJob) => {
-                                await updateDBEntry(BUSINESS_SCHEMA, JOBS_TABLE, newJob, settings);
-                                await updateDBEntry(BUSINESS_SCHEMA, STATIONS_TABLE, {id: stationID, editing: ""}, settings);
-                                await buildCalender();
+                                showLoadingDialog(async() => {
+                                    await updateDBEntry(BUSINESS_SCHEMA, JOBS_TABLE, newJob, settings);
+                                    await updateDBEntry(BUSINESS_SCHEMA, STATIONS_TABLE, {id: stationID, editing: ""}, settings);
+                                    await buildCalender();
+                                    jumpToDate(newJob.shipDate);
+                                });
                             },
                             async (originalJob) => {
                                 await updateDBEntry(BUSINESS_SCHEMA, STATIONS_TABLE, {id: stationID, editing: ""}, settings);
@@ -512,8 +527,10 @@ async function buildCalender(scrollTo) {
                     jobTitle.addEventListener('contextmenu', async (event) => {
                         event.preventDefault();
                         showYesNoDialog(`Delete "${job.name}"?`, async () => {
-                            await deleteDBEntry(BUSINESS_SCHEMA, JOBS_TABLE, job.id, settings);
-                            await buildCalender();
+                            showLoadingDialog(async() => {
+                                await deleteDBEntry(BUSINESS_SCHEMA, JOBS_TABLE, job.id, settings);
+                                await buildCalender();
+                            });
                         });
                     });
 
@@ -566,8 +583,11 @@ async function buildCalender(scrollTo) {
                             eventTitle.onclick = async () => {
                                 showCalendarEventDialog(calenderEvent, 
                                     async (newEvent) => {
-                                        await updateDBEntry(BUSINESS_SCHEMA, CALENDAR_TABLE, newEvent, settings);
-                                        await buildCalender();
+                                        showLoadingDialog(async() => {
+                                            await updateDBEntry(BUSINESS_SCHEMA, CALENDAR_TABLE, newEvent, settings);
+                                            await buildCalender();
+                                            jumpToDate(newEvent.date);
+                                        });
                                     },
                                     async (oldJob) => {
                                         // await buildCalender();
@@ -577,8 +597,10 @@ async function buildCalender(scrollTo) {
                             eventTitle.addEventListener('contextmenu', async (e) => {
                                 e.preventDefault();
                                 showYesNoDialog(`Delete "${calenderEvent.name}"?`, async () => {
-                                    await deleteDBEntry(BUSINESS_SCHEMA, CALENDAR_TABLE, calenderEvent.id, settings);
-                                    await buildCalender();
+                                    showLoadingDialog(async() => {
+                                        await deleteDBEntry(BUSINESS_SCHEMA, CALENDAR_TABLE, calenderEvent.id, settings);
+                                        await buildCalender();
+                                    });
                                 });
                             });
                         }
