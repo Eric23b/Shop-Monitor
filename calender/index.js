@@ -203,14 +203,14 @@ function search(searchText) {
             const inputTextA = inputText.split(" ")[0];
             const inputTextB = inputText.split(" ")[1];
             if ((name.includes(inputTextA)) && (name.split(" ")[1] === inputTextB)) {
-                // jumpToDate(date);
+                jumpToDate(date);
                 searchFound = true;
                 break;
             }
         }
         else {
             if (name.includes(inputText)) {
-                // jumpToDate(date);
+                jumpToDate(date);
                 searchFound = true;
                 break;
             }
