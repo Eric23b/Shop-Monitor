@@ -23,6 +23,9 @@ import {
 
 import {
     getDueInDaysFromNowText,
+    formatDateToCA,
+    getToday,
+    getMonth,
 } from "../date-utilities.js";
 
 import {
@@ -497,7 +500,7 @@ function setTheme() {
 }
 
 function updateDateTime() {
-    dateLabel.textContent = `${(new Date()).toLocaleDateString()} ${(new Date()).toLocaleTimeString('en-US')}`;
+    dateLabel.textContent = `${formatDateToCA(getToday())} ${(new Date()).toLocaleTimeString('en-US')}`;
 }
 
 async function canEditJobs() {
