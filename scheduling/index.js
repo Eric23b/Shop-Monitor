@@ -142,6 +142,7 @@ async function loadJobs(jobs, sortByIndex) {
         sortDown(jobs, "shipDate");
         
         jobs.forEach((job) => {job.completed = isCompleted(job)});
+
         sortUp(jobs, 'completed');
 
         sortDown(jobs, "active");
@@ -564,8 +565,6 @@ async function updateEstimateDateAndStartDate(jobs, tasksResponse) {
     // Add tomorrow to completed jobs
     jobs.forEach((job) => {
         if (isCompleted(job)) {
-            // job.estimatedDate = getTomorrow().toLocaleDateString('en-CA');
-            // job.startDate = getTomorrow().toLocaleDateString('en-CA');
             job.estimatedDate = formatDateToCA(getTomorrow());
             job.startDate = formatDateToCA(getTomorrow());
         }
@@ -652,7 +651,9 @@ function isCompleted(job) {
     try {
         if (!job.sequences) return true;
         if (!Array.isArray(job.sequences)) return true;
-        if (!job.sequences[0].tasks) return true;
+        if (job.sequences.length === 0) return true;
+        if (!job.sequences[0].tasks) return;
+        if (!Array.isArray(job.sequences[0].tasks)) return true;
         let completed = true;
         job.sequences.forEach((sequence) => {
             if (!sequence.tasks) return;
@@ -662,7 +663,7 @@ function isCompleted(job) {
         });
         return completed;
     } catch (error) {
-        console.warn(`isCompleted() failed for job: ${job.name}`, error);
+        console.warn(`isCompleted() failed for job: ${job.name}.`);
         return true;
     }
 }

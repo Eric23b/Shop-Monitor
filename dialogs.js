@@ -1461,7 +1461,6 @@ export function showJobTaskTimingDialog(jobs, shopTasks, calendarEvents) {
         dateElement.textContent = getShortDateText(date.date);
         dateElement.style.cssText = dateTimingDatesStyles;
         dateElement.classList.add('dialogs-disable-select');
-        console.log(date);
         if (date.dateSkipped) dateElement.style.borderLeftColor = `var(--no)`;
         if (date.dateSkipped) dateElement.style.borderLeftWidth = `5px`;
         datesContainer.appendChild(dateElement);
@@ -1638,16 +1637,24 @@ export function showJobTaskTimingDialog(jobs, shopTasks, calendarEvents) {
     }
 
     function isCompleted(job) {
-        if (!job.sequences) return true;
-        if (!job.sequences[0].tasks) return true;
-        let completed = true;
-        job.sequences.forEach((sequence) => {
-            if (!sequence.tasks) return;
-            sequence.tasks.forEach((jobTask) => {
-                if (!jobTask.completed) completed = false;
+        try {
+            if (!job.sequences) return true;
+            if (!Array.isArray(job.sequences)) return true;
+            if (job.sequences.length === 0) return true;
+            if (!job.sequences[0].tasks) return;
+            if (!Array.isArray(job.sequences[0].tasks)) return true;
+            let completed = true;
+            job.sequences.forEach((sequence) => {
+                if (!sequence.tasks) return;
+                sequence.tasks.forEach((jobTask) => {
+                    if (!jobTask.completed) completed = false;
+                });
             });
-        });
-        return completed;
+            return completed;
+        } catch (error) {
+            console.warn(`isCompleted() failed for job: ${job.name}.`);
+            return true;
+        }
     }
 }
 
