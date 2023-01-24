@@ -5,6 +5,7 @@ import {
     incWorkDay,
     getClosedDatesArray,
     getShortDateText,
+    formatDateToCA,
 } from "../date-utilities.js";
 
 import {
@@ -654,7 +655,7 @@ export function showJobDialog(job, jobs, allTasks, OKCallback, cancelCallback, w
         }
 
         job.name = jobName;
-        job.shipDate = jobShipDateInput.value || jobs[0].shipDate || (new Date()).toLocaleDateString('en-CA');
+        job.shipDate = jobShipDateInput.value || jobs[0].shipDate || formatDateToCA(getToday());
         job.estimatedDate = job.shipDate;
         job.active = jobActiveInput.checked;
         job.note = jobNotesTextArea.value;
@@ -1108,11 +1109,11 @@ export function showCalendarPreviewDialog(title, calendarEvents, weekdaysOnly, r
         calendarEvents.forEach(event => {
             const startDate = getCorrectDate(event.startDate);
             const endDate = getCorrectDate(event.endDate);
-            const dates = [startDate.toLocaleDateString('en-CA')];
+            const dates = [formatDateToCA(startDate)];
             
-            while (startDate.toLocaleDateString('en-CA') !== endDate.toLocaleDateString('en-CA')) {
+            while (formatDateToCA(startDate) !== formatDateToCA(endDate)) {
                 startDate.setDate(startDate.getDate() + 1);
-                dates.push(startDate.toLocaleDateString('en-CA'));
+                dates.push(formatDateToCA(startDate));
             }
             event.dates = dates;
         });
@@ -1125,7 +1126,7 @@ export function showCalendarPreviewDialog(title, calendarEvents, weekdaysOnly, r
         
             // Loop through days of the week
             for (let dayOfTheWeekIndex = 0; dayOfTheWeekIndex < 7; dayOfTheWeekIndex++) {
-                const calendarDate = dateIndex.toLocaleDateString('en-CA');
+                const calendarDate = formatDateToCA(dateIndex);
                 const dayContainer = document.createElement('div');
                 dayContainer.style.cssText = calendarDayContainerStyles;
 
@@ -1239,7 +1240,7 @@ export function showCalendarPreviewDialog(title, calendarEvents, weekdaysOnly, r
                 dateIndex.setDate(dateIndex.getDate() + 1);
     
                 // Stop looping
-                if (dateIndex.toLocaleDateString('en-CA') === dateProperties.lastSaturday.toLocaleDateString('en-CA')) endCalender = true;
+                if (formatDateToCA(dateIndex) === formatDateToCA(dateProperties.lastSaturday)) endCalender = true;
             };
             weeks.push(weekContainer);
         }
@@ -1258,7 +1259,7 @@ export function showCalendarPreviewDialog(title, calendarEvents, weekdaysOnly, r
             if (dateA > dateB) return -1;
             return 0;
         });
-        const latestDate = events[0].endDate || getCorrectDate().toLocaleDateString('en-CA');
+        const latestDate = events[0].endDate || formatDateToCA(getCorrectDate());
 
         // Sort by start date
         events.sort((a, b) => {
@@ -1268,10 +1269,10 @@ export function showCalendarPreviewDialog(title, calendarEvents, weekdaysOnly, r
             if (dateA > dateB) return 1;
             return 0;
         });
-        const earliestDate = events[0].startDate || getCorrectDate().toLocaleDateString('en-CA');
+        const earliestDate = events[0].startDate || formatDateToCA(getCorrectDate());
 
-        const today = getCorrectDate((new Date().toLocaleDateString('en-CA')));
-        const todayText = today.toLocaleDateString('en-CA');
+        const today = getToday();
+        const todayText = formatDateToCA(getToday());
     
         let firstSunday = getCorrectDate(earliestDate);
         if (firstSunday > getToday()) {
@@ -1452,17 +1453,15 @@ export function showJobTaskTimingDialog(jobs, shopTasks, calendarEvents) {
     const earliestDate = getCorrectDate(findEarliestDate(jobsCopy));
     const latestDate = getCorrectDate(findLatestDate(jobsCopy));
     const closedDatesArray = getClosedDatesArray(calendarEvents);
-    // console.log(calendarEvents);
     incWorkDay(latestDate, 1, closedDatesArray);
     const datesArray = getAllWorkDaysInArray(earliestDate, latestDate, closedDatesArray);
     const numberOfVerticalLines = datesArray.length;
-    // console.log(closedDatesArray);
     datesArray.forEach(date => {
         const dateElement = document.createElement('div');
         dateElement.textContent = getShortDateText(date.date);
         dateElement.style.cssText = dateTimingDatesStyles;
         dateElement.classList.add('dialogs-disable-select');
-        // console.log(date);
+        console.log(date);
         if (date.dateSkipped) dateElement.style.borderLeftColor = `var(--no)`;
         if (date.dateSkipped) dateElement.style.borderLeftWidth = `5px`;
         datesContainer.appendChild(dateElement);
@@ -1598,6 +1597,7 @@ export function showJobTaskTimingDialog(jobs, shopTasks, calendarEvents) {
             if (!job.sequences) return;
             if (!Array.isArray(job.sequences)) return;
             // TODO:
+            if (!job.sequences.length > 0) return;
             if (!job.sequences[0].tasks) return;
             if (!Array.isArray(job.sequences[0].tasks)) return;
             if (isCompleted(job)) return;
@@ -1607,7 +1607,7 @@ export function showJobTaskTimingDialog(jobs, shopTasks, calendarEvents) {
     }
 
     function findEarliestDate(jobs) {
-        let earliestDate = getToday().toLocaleDateString('en-CA');
+        let earliestDate = formatDateToCA(getToday());
         jobs.forEach(job => {
             if (job.startDate < earliestDate) {earliestDate = job.startDate}
         });
@@ -1615,7 +1615,7 @@ export function showJobTaskTimingDialog(jobs, shopTasks, calendarEvents) {
     }
 
     function findLatestDate(jobs) {
-        let latestDate = getToday().toLocaleDateString('en-CA');
+        let latestDate = formatDateToCA(getToday());
         jobs.forEach(job => {
             if (job.estimatedDate > latestDate) {latestDate = job.estimatedDate}
         });
@@ -1624,12 +1624,12 @@ export function showJobTaskTimingDialog(jobs, shopTasks, calendarEvents) {
 
     function getAllWorkDaysInArray(startDate, endDate, closedDates) {
         const dateCounterIndex = getCorrectDate(startDate);
-        const endDateText = endDate.toLocaleDateString('en-CA');
+        const endDateText = formatDateToCA(endDate);
         const datesArray = [];
         let dateSkipped = false;
-        let currentDateText = startDate.toLocaleDateString('en-CA');
+        let currentDateText = formatDateToCA(startDate);
         while (endDateText > currentDateText) {
-            currentDateText = dateCounterIndex.toLocaleDateString('en-CA');
+            currentDateText = formatDateToCA(dateCounterIndex);
             datesArray.push({date: currentDateText, dateSkipped : dateSkipped});
             dateSkipped = incWorkDay(dateCounterIndex, 1, closedDates);
             // dateCounterIndex.setDate(dateCounterIndex.getDate() + 1);
