@@ -132,10 +132,6 @@ addNewJobBtn.addEventListener('click', async () => {
 
 await loadJobs(null, true);
 
-
-log(formatDateToCA((new Date)));
-log(formatDateToCA((new Date).toLocaleDateString('en-CA')));
-
 // FUNCTIONS
 
 async function loadJobs(jobs, sortByIndex) {
