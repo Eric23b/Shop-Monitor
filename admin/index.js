@@ -63,6 +63,7 @@ import {
 import {
     showYesNoDialog,
     showAlertDialog,
+    showLoadingDialog,
     showInputDialog,
     showJobDialog,
 } from "../dialogs.js";
@@ -327,7 +328,9 @@ tabHeader.addEventListener('click', async (event) => {
 // Timer number of days ago Enter key
 timerLastNumberOfDays.addEventListener('keydown', (event) => {
     if (event.key === "Enter") {
-        loadTimersTable();
+        showLoadingDialog(async () => {
+            await loadTimersTable();
+        });
     }
 });
 // Save timer logs
@@ -341,7 +344,9 @@ deleteTimerLogsBtn.addEventListener('click', async () => {
         message += await createTable(COMPLETED_TIMER_TABLE, LOGS_SCHEMA, settings, dbActive) + "\n";
         message += await createAttributes(TABLE_ATTRIBUTES.completed_timers, COMPLETED_TIMER_TABLE, LOGS_SCHEMA, settings, dbActive) + "\n";
         showAlertDialog(message);
-        await loadTimersTable();
+        showLoadingDialog(async () => {
+            await loadTimersTable();
+        });
     });
 });
 
@@ -669,66 +674,90 @@ async function showTabContent(tab) {
         case "part-issue":
             partsTabContainer.style.display = "flex";
             partTabBtn.classList.add("active-tab");
-            await loadPartIssues();
+            showLoadingDialog(async () => {
+                await loadPartIssues();
+            });
             break;
         case "supply-issues":
             supplyLowTabContainer.style.display = "flex";
             supplyLowTabBtn.classList.add("active-tab");
-            await loadSuppliesIssues();
+            showLoadingDialog(async () => {
+                await loadSuppliesIssues();
+            });
             break;
         case "time-clock":
             timeClockTabContainer.style.display = "flex";
             timeClockTabBtn.classList.add("active-tab");
-            await loadTimeClockIssues();
+            showLoadingDialog(async () => {
+                await loadTimeClockIssues();
+            });
             break;
         case "other-issues":
             otherIssuesTabContainer.style.display = "flex";
             otherIssuesTabBtn.classList.add("active-tab");
-            await loadOtherIssues();
+            showLoadingDialog(async () => {
+                await loadOtherIssues();
+            });
             break;
         case "timers":
             timersTabContainer.style.display = "flex";
             timersTabBtn.classList.add("active-tab");
-            await loadTimersTable();
+            showLoadingDialog(async() => {
+                await loadTimersTable();
+            });
             break;
         case "jobs":
             jobsTabContainer.style.display = "flex";
             jobsTabBtn.classList.add("active-tab");
-            await loadJobsTable();
+            showLoadingDialog(async () => {
+                await loadJobsTable();
+            });
             break;
         case "employees":
             employeesTabContainer.style.display = "flex";
             employeesTabBtn.classList.add("active-tab");
-            await loadWorkStationsCheckboxList();
-            await loadEmployeeTable();
+            showLoadingDialog(async () => {
+                await loadWorkStationsCheckboxList();
+                await loadEmployeeTable();
+            });
             break;
         case "work-stations":
             workStationsTabContainer.style.display = "flex";
             workStationsTabBtn.classList.add("active-tab");
             await loadTasksCheckboxList();
-            await loadWorkStationTable();
+            showLoadingDialog(async () => {
+                await loadWorkStationTable();
+            });
             break;
         case "users":
             usersTabContainer.style.display = "flex";
             usersTabBtn.classList.add("active-tab");
-            await loadUsersTable();
-            await loadRolesList();
+            showLoadingDialog(async () => {
+                await loadUsersTable();
+                await loadRolesList();
+            });
             break;
         case "tasks":
             taskTabContainer.style.display = "flex";
             tasksTabBtn.classList.add("active-tab");
             await loadTasksTable();
+                showLoadingDialog(async () => {
+            });
             break;
         case "supply-list":
             supplyListTabContainer.style.display = "flex";
             supplyListTabBtn.classList.add("active-tab");
-            await loadSupplyListTable();
+            showLoadingDialog(async () => {
+                await loadSupplyListTable();
+            });
             break;
         case "settings":
             settingsContainer.style.display = "flex";
             settingsTabBtn.classList.add("active-tab");
-            await loadDataListWithItemOptions(stationNamesDatalist, BUSINESS_SCHEMA, STATIONS_TABLE, "__createdtime__", "*");
-            stationName.value = getLocalStorageValue('stationName') || "";
+            showLoadingDialog(async () => {
+                await loadDataListWithItemOptions(stationNamesDatalist, BUSINESS_SCHEMA, STATIONS_TABLE, "__createdtime__", "*");
+                stationName.value = getLocalStorageValue('stationName') || "";
+            });
             break;
     
         default:
