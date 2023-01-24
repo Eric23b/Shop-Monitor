@@ -1,5 +1,5 @@
 export function getDueInDaysFromNowText(shipDate) {
-    const dueInDaysFromNow = differenceInDays((new Date()).toLocaleDateString('en-CA'), shipDate);
+    const dueInDaysFromNow = differenceInDays(formatDateToCA(getToday()), shipDate);
     if (dueInDaysFromNow > 0) {
         const dueInDaysPlural = (dueInDaysFromNow > 1) ? "s" : "";
         return `Due in ${dueInDaysFromNow} day${dueInDaysPlural}`;
@@ -79,6 +79,10 @@ export function getTomorrow() {
     return today;
 }
 
+export function getMonth(length) {
+    return (new Date()).toLocaleString("en-CA", {month: length});
+}
+
 /**
 * eg. Nov 21
 */
@@ -121,7 +125,7 @@ export function incWorkDay(date, amount, closedDates) {
         const dayName = (date.toLocaleString('default', {weekday: 'short'}));
         if (dayName === "Sat") {skippedDate = true; continue;};
         if (dayName === "Sun") {skippedDate = true; continue;};
-        if ((closedDates) && ((closedDates).indexOf(date.toLocaleDateString('en-CA')) > -1)) {skippedDate = true; continue;};
+        if ((closedDates) && ((closedDates).indexOf(formatDateToCA(date)) > -1)) {skippedDate = true; continue;};
 
         index++;
     }
@@ -150,10 +154,10 @@ export function getClosedDatesArray(calendarEvents) {
         
         let errorCounter = 1;
         const indexDateObj = getCorrectDate(start);
-        closedDatesArray.push(indexDateObj.toLocaleDateString('en-CA'));
-        while (indexDateObj.toLocaleDateString('en-CA') != end) {
+        closedDatesArray.push(formatDateToCA(indexDateObj));
+        while (formatDateToCA(indexDateObj) != end) {
             indexDateObj.setDate(indexDateObj.getDate() + 1);
-            closedDatesArray.push(indexDateObj.toLocaleDateString('en-CA'));
+            closedDatesArray.push(formatDateToCA(indexDateObj));
 
             if (errorCounter++ > 365) {console.error('Closed Date While Loop Endless!'); break}
         }
