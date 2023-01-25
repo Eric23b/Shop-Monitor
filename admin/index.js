@@ -127,6 +127,7 @@ const timersTabContainer = document.querySelector("#timers-container");
 const timerLastNumberOfDays = document.querySelector("#last-number-of-days-timer-input");
 const saveTimerLogsBtn = document.querySelector("#save-timer-log-btn");
 const timersTable = document.querySelector("#timers-table");
+const deleteOldTimerLogsBtn = document.querySelector("#delete-old-timer-logs-btn");
 const deleteTimerLogsBtn = document.querySelector("#delete-timer-logs-btn");
 
 // Jobs
@@ -337,6 +338,39 @@ timerLastNumberOfDays.addEventListener('keydown', (event) => {
 saveTimerLogsBtn.addEventListener('click', () => {
     saveTextFile(timerLogCSV, `Timer Logs ${(new Date()).toLocaleDateString()}`, "csv");
 });
+// Delete Older Timer Logs
+timerLastNumberOfDays.addEventListener('keyup', updateDeleteOldTimerLogsBtn);
+timerLastNumberOfDays.addEventListener('change', updateDeleteOldTimerLogsBtn);
+function updateDeleteOldTimerLogsBtn() {
+    deleteOldTimerLogsBtn.textContent = `Delete timers ${timerLastNumberOfDays.value} days and older`;
+}
+deleteOldTimerLogsBtn.addEventListener('click', async () => {
+    const numberOfDaysAgo = timerLastNumberOfDays.value;
+    let completedTasks = [];
+    await showLoadingDialog(async () => {
+        completedTasks = await getDBEntrees(LOGS_SCHEMA, COMPLETED_TIMER_TABLE, "__createdtime__", "*", settings);
+        if ((!completedTasks) || (completedTasks.error)) return;
+
+        const numberOfDaysAgo = timerLastNumberOfDays.value;
+        for (let index = completedTasks.length - 1; index >= 0; index--) {
+            const element = completedTasks[index];
+            if (element.__createdtime__ > ((new Date).getTime() - (86400000 * Number(numberOfDaysAgo)))) {
+                completedTasks.splice(index, 1);
+            }
+        }
+        console.log(completedTasks);
+    });
+    showYesNoDialog(`Are you sure you want to delete jobs that are older than ${numberOfDaysAgo} days?`, async () => {
+        const numberOfDeletedLogs = completedTasks.length;
+        await showLoadingDialog(async () => {
+            completedTasks.forEach((task) => {
+                deleteDBEntry(LOGS_SCHEMA, COMPLETED_TIMER_TABLE, task.id, settings);
+            });
+            await loadTimersTable();
+        });
+        showAlertDialog(`${numberOfDeletedLogs} logs were deleted.`);
+    });
+})
 // Delete Timer Logs
 deleteTimerLogsBtn.addEventListener('click', async () => {
     showYesNoDialog("Are you sure you want to delete all timer logs?", async () => {
@@ -1079,7 +1113,6 @@ async function loadTimersTable() {
         }
     }
 
-    console.log(completedTasks);
     // Replace jobIDs with their names
     tableData.forEach((row) => {
         let jobNameFound = false;
@@ -1089,6 +1122,7 @@ async function loadTimersTable() {
                 jobNameFound = true;
             }
         });
+        // Find job names for deleted jobs
         if (!jobNameFound) {
             completedTasks.forEach((task) => {
                 if (task.jobID === row[0]) {
@@ -1097,8 +1131,6 @@ async function loadTimersTable() {
             });
         }
     });
-
-    // TODO: Replace unfound ids with names 
 
     // Find the number of columns in the table
     let maxNumberOfColumns = 1;
