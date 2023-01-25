@@ -1079,13 +1079,23 @@ async function loadTimersTable() {
         }
     }
 
+    console.log(completedTasks);
     // Replace jobIDs with their names
     tableData.forEach((row) => {
+        let jobNameFound = false;
         jobs.forEach((job) => {
             if (job.id === row[0]) {
                 row[0] = String(job.name);
+                jobNameFound = true;
             }
         });
+        if (!jobNameFound) {
+            completedTasks.forEach((task) => {
+                if (task.jobID === row[0]) {
+                    row[0] = String(task.jobName);
+                }
+            });
+        }
     });
 
     // TODO: Replace unfound ids with names 
