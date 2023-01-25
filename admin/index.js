@@ -1056,7 +1056,6 @@ async function loadTimersTable() {
     // Add jobs IDs to tableData
     const usedJobIDs = [];
     completedTasks.forEach((task) => {
-        console.log(usedJobIDs.indexOf(task.jobID));
         if (usedJobIDs.indexOf(task.jobID) == -1) {
             tableData.push([String(task.jobID)]);
             usedJobIDs.push(task.jobID);
@@ -1088,6 +1087,8 @@ async function loadTimersTable() {
             }
         });
     });
+
+    // TODO: Replace unfound ids with names 
 
     // Find the number of columns in the table
     let maxNumberOfColumns = 1;
