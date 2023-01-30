@@ -358,10 +358,9 @@ deleteOldTimerLogsBtn.addEventListener('click', async () => {
                 completedTasks.splice(index, 1);
             }
         }
-        console.log(completedTasks);
     });
-    showYesNoDialog(`Are you sure you want to delete jobs that are older than ${numberOfDaysAgo} days?`, async () => {
-        const numberOfDeletedLogs = completedTasks.length;
+    const numberOfDeletedLogs = completedTasks.length;
+    showYesNoDialog(`Are you sure you want to delete \njobs that are older than ${numberOfDaysAgo} days?\n${numberOfDeletedLogs} logs will be deleted.`, async () => {
         await showLoadingDialog(async () => {
             completedTasks.forEach((task) => {
                 deleteDBEntry(LOGS_SCHEMA, COMPLETED_TIMER_TABLE, task.id, settings);
