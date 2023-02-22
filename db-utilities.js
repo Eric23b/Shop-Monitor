@@ -70,6 +70,7 @@ export async function isSuperUser(serverSettings) {
     const response = await sendDBRequest(serverSettings.url, requestOptions);
 
     if (!response) return false;
+    if (response.error) return false;
 
     return response.role.permission.super_user || false;
 }
