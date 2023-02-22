@@ -114,15 +114,21 @@ else {
     stationID = stationIDResponse[0].id;
 };
 
-const theme = getLocalStorageValue('theme') || "light";
 
-const superUser = await isSuperUser(settings);
-const canEditCalendar = await canEditCalendarEvent();
-const canEditJob = await canEditJobs();
-
+let superUser = true;
+let canEditCalendar = true;
+let canEditJob = true;
+[superUser, canEditCalendar, canEditJob] = await Promise.all([isSuperUser(settings),
+                                                              canEditCalendarEvent(),
+                                                              canEditJobs()]
+                                                              );
 console.log('Is super user: ' + superUser);
 console.log('Can edit calendar events: ' + canEditCalendar);
 console.log('Can edit jobs: ' + canEditJob);
+
+
+const theme = getLocalStorageValue('theme') || "light";
+
 
 // INITIALIZE CODE
 
