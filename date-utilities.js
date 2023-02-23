@@ -27,13 +27,13 @@ export function getCorrectDateOrder(startDate, endDate) {
 }
 
 export function differenceInDays(dateOne, dateTwo) {
-        const date1 = getCorrectDate(dateOne);
-        const date2 = getCorrectDate(dateTwo);
-        
-        const differenceInTime = date2.getTime() - date1.getTime();
-        const differenceInDays = differenceInTime / (1000 * 3600 * 24);
+    const date1 = getCorrectDate(dateOne);
+    const date2 = getCorrectDate(dateTwo);
     
-        return Math.floor(differenceInDays);
+    const differenceInTime = date2.getTime() - date1.getTime();
+    const differenceInDays = differenceInTime / (1000 * 3600 * 24);
+
+    return Math.floor(differenceInDays);
 }
 
 export function getCorrectDate(date) {
@@ -69,8 +69,9 @@ export function offsetMonthBecauseJSIsStupid(date) {
 }
 
 export function getToday() {
-    const utcDate = new Date();
-    return new Date(utcDate.getTime() + utcDate.getTimezoneOffset() * 60000);
+    return new Date();
+    // const utcDate = new Date();
+    // return new Date(utcDate.getTime() + utcDate.getTimezoneOffset() * 60000);
 }
 
 export function getTomorrow() {
