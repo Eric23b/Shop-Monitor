@@ -68,6 +68,10 @@ export function offsetMonthBecauseJSIsStupid(date) {
     return [date.split("-")[0], Number(date.split("-")[1]) - 1, date.split("-")[2]].join("-");
 }
 
+export function isToday(date) {
+    return (formatDateToCA(date) == formatDateToCA(getToday()));
+}
+
 export function getToday() {
     return new Date();
     // const utcDate = new Date();
