@@ -190,6 +190,7 @@ const stationName = document.querySelector("#station-name");
 const stationNamesDatalist = document.querySelector("#station-names-data-list");
 // const lateJobsDays = document.querySelector("#late-job-days");
 const saveDataBaseButton = document.querySelector("#save-db-backup-btn");
+const restoreDataBaseButton = document.querySelector("#restore-db-backup-btn");
 const runDBSetupBtn = document.querySelector("#run-db-setup-btn");
 const removePasswordBtn = document.querySelector("#remove-password-btn");
 
@@ -615,7 +616,40 @@ saveDataBaseButton.addEventListener('click', async () => {
     saveTextFile(JSON.stringify(jsonData, null, 1), `Database Backup ${date}`, "json");
 });
 
-runDBSetupBtn.addEventListener('click', async () => {
+restoreDataBaseButton.addEventListener('change', async (event) => {
+    const reader = new FileReader();
+    reader.onload = onReaderLoad;
+    reader.readAsText(event.target.files[0]);
+
+    async function onReaderLoad(event){
+        await showLoadingDialog(async () => {
+            await restoreDataBase(JSON.parse(event.target.result));
+        }, "Working to restore database...");
+    }
+});
+async function restoreDataBase(jsonFileDate) {
+    let message = 'Setting up Schemas, Tables, and Attributes:\n';
+    message += await runBDSetup(false) + "\n";
+    message += "\nRestoring Data:\n";
+
+    for (const schemaName in jsonFileDate) {
+        if (!Object.hasOwnProperty.call(jsonFileDate, schemaName)) return;
+        const schemaObj = jsonFileDate[schemaName];
+        for (const tableName in schemaObj) {
+            if (!Object.hasOwnProperty.call(schemaObj, tableName)) return;
+            const tableObj = schemaObj[tableName];
+            for (const row in tableObj) {
+                if (!Object.hasOwnProperty.call(tableObj, row)) return;
+                const data = tableObj[row];
+                message += await insertDBEntry(schemaName, tableName, data, settings, dbActive) + "\n";
+            }
+        }
+    }
+    showAlert("Database message", message, null, ["successfully", "inserted", "already exists"]);
+}
+
+runDBSetupBtn.addEventListener('click', () => {runBDSetup(true)});
+async function runBDSetup(showAlertMessage) {
     let message = "";
     // Inventory
     message += await createSchema(INVENTORY_SCHEMA, settings, dbActive) + "\n";
@@ -655,14 +689,18 @@ runDBSetupBtn.addEventListener('click', async () => {
     message += await createTable(TASKS_TABLE, BUSINESS_SCHEMA, settings, dbActive) + "\n";
     message += await createAttributes(TABLE_ATTRIBUTES.tasks, TASKS_TABLE, BUSINESS_SCHEMA, settings, dbActive) + "\n";
 
+    // Calendar
     message += await createTable(CALENDAR_TABLE, BUSINESS_SCHEMA, settings, dbActive) + "\n";
     message += await createAttributes(TABLE_ATTRIBUTES.calendar, CALENDAR_TABLE, BUSINESS_SCHEMA, settings, dbActive) + "\n";
     
+    // System
     message += await createSchema(SYSTEM_SCHEMA, settings, dbActive) + "\n";
     message += await createTable(MESSAGES_TABLE, SYSTEM_SCHEMA, settings, dbActive) + "\n";
 
-    showAlert("Database message", message, null, ["successfully"]);
-});
+    if (showAlertMessage) showAlert("Database message", message, null, ["successfully"]);
+
+    return message;
+}
 
 removePasswordBtn.addEventListener('click', () => {
     setLocalStorageValue('password', "");
