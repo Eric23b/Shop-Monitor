@@ -1748,11 +1748,11 @@ export function showAlertDialog(message, okCallback) {
 }
 
 // Loading
-export async function showLoadingDialog(doneCallback) {
+export async function showLoadingDialog(doneCallback, text) {
     const body = document.querySelector('body');
     const modalBackground = getModalBackground();
 
-    modalBackground.textContent = "Loading...";
+    modalBackground.textContent = text || "Loading...";
     
     body.appendChild(modalBackground);
     
