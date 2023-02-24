@@ -115,6 +115,8 @@ export async function insertDBEntry(schema, table, data, serverSettings, dbActiv
     const response = await sendDBRequest(serverSettings.url, requestOptions);
 
     if (dbActiveCallback) dbActiveCallback(!response.error);
+
+    return response.message || response.error;
 }
 
 export async function updateDBEntry(schema, table, data, serverSettings, dbActiveCallback) {
