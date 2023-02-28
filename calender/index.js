@@ -130,7 +130,10 @@ if (superUser) {
 document.documentElement.setAttribute('data-color-theme', theme);
 
 showLoadingDialog(async () => {
-    loadCalendar();
+    // loadCalendar();
+    buildCalender();
+    await addJobsToCalendar();
+    await AddEventsToCalendar();
     jumpToDate(formatDateToCA(new Date()));
 });
 
