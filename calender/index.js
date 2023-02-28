@@ -106,6 +106,9 @@ const stationName = getLocalStorageValue('stationName') || "";
 
 const theme = getLocalStorageValue('theme') || "light";
 
+
+buildCalender();
+
 const stationID = await getStationID();
 
 let superUser = false;
@@ -131,7 +134,6 @@ document.documentElement.setAttribute('data-color-theme', theme);
 
 showLoadingDialog(async () => {
     // loadCalendar();
-    buildCalender();
     await addJobsToCalendar();
     await AddEventsToCalendar();
     jumpToDate(formatDateToCA(new Date()));
