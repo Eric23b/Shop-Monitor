@@ -114,13 +114,17 @@ let canEditJob = false;
 let canEditCalendar = false;
 
 // INITIALIZE CODE //
-buildCalender();
+// buildCalender();
 
 showLoadingDialog(async () => {
-    stationID = await getStationID();
+    buildCalender();
+    
     [superUser, canEditJob, canEditCalendar] = await getPermissions();
 
-    loadCalendar();
+    stationID = await getStationID();
+    addJobsToCalendar();
+    
+    AddEventsToCalendar();
 
     jumpToDate(formatDateToCA(new Date()));
 });
