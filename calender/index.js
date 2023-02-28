@@ -225,6 +225,7 @@ window.onkeydown = (event) => {
 
     // Jump to search
     if (event.key === "f" && event.ctrlKey) {
+        event.preventDefault();
         searchInput.value = "";
         searchInput.focus();
     }
