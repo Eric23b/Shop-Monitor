@@ -90,6 +90,10 @@ body *{
     /* accent-color: var(--accent_color); */
 }
 
+.yes-background{
+    background-color: var(--yes);
+}
+
 
 
 .main-container{
@@ -123,7 +127,7 @@ body *{
 .header-link:hover{
     opacity: 1;
 }
-.header-spacer{
+.flex-spacer{
     flex-grow: 1;
     pointer-events: none;
 }
@@ -177,27 +181,86 @@ body *{
     border-right: 1px solid var(--border_color);
     border-bottom: 1px solid var(--border_color);
     font-size: clamp(0.25em, 1.5vw, 1.125em);
-    transition: background-color 1s;
+    transition: background-color .5s;
+}
+.day:hover{
+    background-color: var(--background_hover_color);
 }
 .day-header-container{
     display: flex;
     flex-direction: row;
     justify-content: space-between;
+    padding: 0.25em;
+    color: var(--inactive);
+    background-color: transparent;
+    pointer-events: none;
+}
+.day-header-container::before{
+    content: attr(data-before);
+}
+.day-header-container::after{
+    content: attr(data-after);
+}
+.day-highlight-before::before{
+    color: var(--yes);
+}
+.day-highlight-after::after{
+    color: var(--yes);
+}
+.day-underline-before::before{
+    text-decoration: underline;
+}
+.day-underline-after::after{
+    text-decoration: underline;
+}
+.day-events-container{
+    position: relative;
+    flex-grow: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    gap: 2px;
+    background: transparent;
+    padding: 0 1px 1px 1px;
+    margin: 0 2px 0 2px;
+    pointer-events: none;
+}
+.day-event{
+    margin: 0;
+    background: transparent;
+    cursor: pointer;
+    overflow: visible;
+    pointer-events: auto;
+    box-sizing: content-box;
+    border: solid 1px transparent;
+}
+.day-event:hover{
+    border: solid 1px var(--border_color);
+}
+
+.progress-bar{
+    position: absolute;
+    left: 0;
+    border-top: 2px solid var(--yes);
     background: transparent;
     pointer-events: none;
 }
-.day-week-name{
-    margin: 0.5rem;
-    background: transparent;
-    color: var(--inactive);
-}
-.day-number{
-    margin: 0.5rem;
-    background: transparent;
-    color: var(--inactive);
 
-}
-.jobs-container{
+/* .day-event::before{
+    position: absolute;
+    left: 0;
+    content: "I";
+    display: block;
+    border-bottom: 2px solid;
+    border-color: red;
+    width: attr(data-percent-completed px);
+    width: 100%;
+    color: transparent;
+} */
+
+
+/* .jobs-container{
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -218,7 +281,7 @@ body *{
     align-self: flex-start;
     border-top: 2px solid var(--yes);
     background: transparent;
-}
+} */
 
 .events-container{
     display: flex;
@@ -345,6 +408,9 @@ body *{
     border-radius: 0.25rem;
 }
 .search-examples span{
+    color: #74c9f8;
+    color: #212121;
+    color: hsl(0, 0%, 96%);
     color: var(--yes);
 }
 
