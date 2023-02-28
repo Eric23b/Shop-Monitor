@@ -6,13 +6,30 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link defer rel="stylesheet" href="./calender/style.css">
     <script defer type="module" src="./calender/index.js"></script>
-    <title>Calender</title>
+    <title>Calendar</title>
+    <meta name="description" content="WC Shop Monitor is a utility for monitoring and organizing cabinet shop operations.">
 </head>
 <body>
+    <section class="main-container">
+        <!-- Header -->
+        <section class="header">
+            <a class="header-link" href="./calender.html">↻</a>
+            <a class="header-link super-user" href="/">Home</a>
+            <div class="flex-spacer"></div>
+            <a class="header-link super-user" href="./admin.html">Admin</a>
+            <a class="header-link super-user" href="./scheduling.html">Scheduling</a>
+            <a class="header-link" href="./jobs.html">Jobs</a>
+            <a class="header-link timer-page-link" href="./timer.html">Timer</a>
+            <a class="header-link" href="./issues.html">Issues</a>
+        </section>
+        <section id="calender" class="calender"></section>
+    </section>
+
+    <!-- Footer -->
     <div class="footer-container">
         <button id="today-button" class="today-button">Today</button>
 
-        <div class="header-spacer"></div>
+        <div class="flex-spacer"></div>
 
         <div class="search-container">
             <p class="search-examples"><span></span>
@@ -35,8 +52,9 @@
             </svg>
         </div>
 
-        <div class="header-spacer"></div>
+        <div class="flex-spacer"></div>
 
+        <!-- Add Event Button -->
         <button id="add-event-btn" class="add-event-btn" title="New Event" style="display: none;">
             <svg xmlns="http://www.w3.org/2000/svg" width="34" height="34" fill="var(--yes)" viewBox="0 0 16 16">
                 <path d="M8 7a.5.5 0 0 1 .5.5V9H10a.5.5 0 0 1 0 1H8.5v1.5a.5.5 0 0 1-1 0V10H6a.5.5 0 0 1 0-1h1.5V7.5A.5.5 0 0 1 8 7z"/>
@@ -44,6 +62,7 @@
             </svg>
         </button>
 
+        <!-- Add Job button -->
         <button id="add-job-btn" class="add-job-btn" title="New Job" style="display: none;">
             <svg xmlns="http://www.w3.org/2000/svg" width="34" height="34" fill="var(--yes)" viewBox="0 0 16 16">
                 <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
@@ -52,19 +71,5 @@
         </button>
 
     </div>
-
-    <section class="main-container">
-        <section class="header">
-            <a class="header-link" href="./calender.html">↻</a>
-            <a class="header-link super-user" href="/">Home</a>
-            <div class="header-spacer"></div>
-            <a class="header-link super-user" href="./admin.html">Admin</a>
-            <a class="header-link super-user" href="./scheduling.html">Scheduling</a>
-            <a class="header-link" href="./jobs.html">Jobs</a>
-            <a class="header-link timer-page-link" href="./timer.html">Timer</a>
-            <a class="header-link" href="./issues.html">Issues</a>
-        </section>
-        <section id="calender" class="calender"></section>
-    </section>
 </body>
 </html>
