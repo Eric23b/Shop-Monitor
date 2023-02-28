@@ -105,22 +105,25 @@ const searchButton = document.querySelector('#search-btn');
 const stationName = getLocalStorageValue('stationName') || "";
 
 const theme = getLocalStorageValue('theme') || "light";
+document.documentElement.setAttribute('data-color-theme', theme);
 
-
-buildCalender();
-
-const stationID = await getStationID();
+let stationID = "";
 
 let superUser = false;
 let canEditJob = false;
 let canEditCalendar = false;
-[superUser, canEditJob, canEditCalendar] = await getPermissions();
-
-console.log(superUser, canEditJob, canEditCalendar);
-
-
 
 // INITIALIZE CODE //
+buildCalender();
+
+showLoadingDialog(async () => {
+    stationID = await getStationID();
+    [superUser, canEditJob, canEditCalendar] = await getPermissions();
+
+    loadCalendar();
+
+    jumpToDate(formatDateToCA(new Date()));
+});
 
 // Show hidden admin elements
 if (superUser) {
@@ -129,15 +132,6 @@ if (superUser) {
         element.classList.remove('super-user');
     });
 }
-
-document.documentElement.setAttribute('data-color-theme', theme);
-
-showLoadingDialog(async () => {
-    // loadCalendar();
-    await addJobsToCalendar();
-    await AddEventsToCalendar();
-    jumpToDate(formatDateToCA(new Date()));
-});
 
 startOverTimeTimer(stationName, settings, stopRunningTimer);
 
