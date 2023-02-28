@@ -39,4 +39,4 @@ export const TABLE_ATTRIBUTES = {
     stations: ["active", "name", "tasks", "editing"],
     tasks: ["active", "name", "hours", "minutes"],
     calendar: ["name", "date", "endDate", "dates", "closed", "color", "note"],
-}
+};
