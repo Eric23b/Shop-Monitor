@@ -228,6 +228,7 @@ body *{
 }
 .day-event{
     margin: 0;
+    padding: 0 0.1em;
     background: transparent;
     cursor: pointer;
     overflow: visible;
