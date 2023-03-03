@@ -137,6 +137,7 @@ startOverTimeTimer(stationName, settings, stopRunningTimer);
 
 addNumberOfRunningTimersToTimerPageLink(timerPageLink, stationName, settings);
 
+
 const autoUpdateTimer = new Timer(
     () => {
         if (dialogIsOpen()) return;
@@ -146,7 +147,7 @@ const autoUpdateTimer = new Timer(
             await addEventsToCalendar();
         });
     },
-    1000 * 10 * 1,
+    1000 * 60 * 1,
     true
 );
 
