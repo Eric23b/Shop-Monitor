@@ -77,18 +77,12 @@ import {
 const log = console.log;
 let tIndex = 0;
 
-const daysOfTheWeek = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-
 const settings = {
     url: getLocalStorageValue('serverURL') || "",
     authorization: getLocalStorageValue('serverAuthorization') || "",
 }
 
-
 let nameDateSearchArray = [];
-
-let draggingJobID = "";
-let draggingCalendarEvent = {id: "", startDate: "", endDate: "", isStartDate: true};
 
 const timerPageLink = document.querySelector('.timer-page-link');
 
@@ -107,35 +101,34 @@ const stationName = getLocalStorageValue('stationName') || "";
 const theme = getLocalStorageValue('theme') || "light";
 document.documentElement.setAttribute('data-color-theme', theme);
 
-let stationID = "";
-
 let superUser = false;
 let canEditJob = false;
 let canEditCalendar = false;
 
+
+
 // INITIALIZE CODE //
-// buildCalender();
+
+buildCalender();
 
 showLoadingDialog(async () => {
-    buildCalender();
-    
     [superUser, canEditJob, canEditCalendar] = await getPermissions();
 
-    stationID = await getStationID();
+    // Show hidden admin elements
+    if (superUser) {
+        const superUserElements = document.querySelectorAll('.super-user');
+        superUserElements.forEach((element) => {
+            element.classList.remove('super-user');
+        });
+    }
+
     addJobsToCalendar();
-    
     AddEventsToCalendar();
 
     jumpToDate(formatDateToCA(new Date()));
 });
 
-// Show hidden admin elements
-if (superUser) {
-    const superUserElements = document.querySelectorAll('.super-user');
-    superUserElements.forEach((element) => {
-        element.classList.remove('super-user');
-    });
-}
+// let stationID = await getStationID();
 
 startOverTimeTimer(stationName, settings, stopRunningTimer);
 
@@ -836,32 +829,38 @@ async function addJobsToCalendar() {
                 event.dataTransfer.setData("text", JSON.stringify({id: job.id, isJob: true}));
                 event.dataTransfer.effectAllowed = "move";
                 event.target.style.cursor = 'grabbing';
-                draggingJobID = job.id;
             });
             jobElement.addEventListener('dragend', (event) => {event.target.style.cursor = 'pointer'});
 
             // Click
             jobElement.onclick = async (event) => {
-                console.log(await getTasks());
                 const jobsResponse = await getJobs();
 
                 const tasksResponse = await getTasks();
 
+                const stationID = await getStationID();
+
                 const whoIsEditingJob = await checkOutItemForEditing(job.id, stationID);
+                console.log(whoIsEditingJob);
 
                 showJobDialog(job, jobsResponse, tasksResponse,
+                    // OK click
                     async (newJob) => {
                         showLoadingDialog(async() => {
                             await updateDBEntry(BUSINESS_SCHEMA, JOBS_TABLE, newJob, settings);
                             await updateDBEntry(BUSINESS_SCHEMA, STATIONS_TABLE, {id: stationID, editing: ""}, settings);
-                            loadCalendar();
+                            addJobsToCalendar();
                             jumpToDate(newJob.shipDate);
                         });
                     },
+                    // Cancel click
                     async (originalJob) => {
-                        await updateDBEntry(BUSINESS_SCHEMA, STATIONS_TABLE, {id: stationID, editing: ""}, settings);
+                        console.log(whoIsEditingJob, stationName);
+                        if (whoIsEditingJob == stationName) {
+                            await updateDBEntry(BUSINESS_SCHEMA, STATIONS_TABLE, {id: stationID, editing: ""}, settings);
+                        }
                     },
-                    whoIsEditingJob
+                    (whoIsEditingJob == stationName) ? "" : whoIsEditingJob
                 );
             }
 
@@ -959,9 +958,6 @@ async function AddEventsToCalendar() {
         eventTitle.addEventListener('dragstart', (event) => {
             event.dataTransfer.setData("text", JSON.stringify([calenderEvent.id, calenderEvent.date]));
             event.dataTransfer.effectAllowed = "move";
-            draggingCalendarEvent.id = calenderEvent.id;
-            draggingCalendarEvent.startDate = calenderEvent.date;
-            draggingCalendarEvent.endDate = endDate;
             // draggingCalendarEvent.isStartDate = calenderEvent.dates[0] === calendarDate;
         });
         eventTitle.addEventListener('dragover', (e) => {e.preventDefault()});
@@ -1141,7 +1137,7 @@ function jumpToDate(date) {
 
 async function getPermissions() {
     const userInfo = await getUserInfo(settings);
-    console.log(userInfo);
+    // console.log(userInfo);
 
     const isSuperUser = (userInfo.role.role === 'super_user') || userInfo.role.permission.super_user || false;
     
@@ -1165,9 +1161,12 @@ async function getPermissions() {
 async function checkOutItemForEditing(itemID, stationID) {
     const currentEditingResponse = await getDBEntrees(BUSINESS_SCHEMA, STATIONS_TABLE, "editing", itemID, settings);
     if ((!currentEditingResponse) || (currentEditingResponse.error) || (currentEditingResponse.length === 0)) {
-        updateDBEntry(BUSINESS_SCHEMA, STATIONS_TABLE, {id: stationID, editing: itemID}, settings);
-        return "";
+        await updateDBEntry(BUSINESS_SCHEMA, STATIONS_TABLE, {id: stationID, editing: itemID}, settings);
+        const stationIDResponse = await getDBEntrees(BUSINESS_SCHEMA, STATIONS_TABLE, "id", stationID, settings);
+        // console.log('1', String(stationIDResponse[0].name));
+        return String(stationIDResponse[0].name);
     }
+    // console.log('2', String(stationIDResponse[0].name));
     return String(currentEditingResponse[0].name);
 }
 
