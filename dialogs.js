@@ -1751,12 +1751,15 @@ export function showAlertDialog(message, okCallback) {
 export async function showLoadingDialog(doneCallback, text) {
     const body = document.querySelector('body');
     const modalBackground = getModalBackground();
+    showWaitingCursor(modalBackground);
 
     modalBackground.textContent = text || "Loading...";
     
     body.appendChild(modalBackground);
     
     await doneCallback();
+
+    showWaitingCursor(modalBackground);
 
     body.removeChild(modalBackground);
 }
@@ -1864,4 +1867,12 @@ function getCorrectDate(date) {
     // Stupid javascript
     const utcDate = new Date(date);
     return new Date(utcDate.getTime() + utcDate.getTimezoneOffset() * 60000);
+}
+
+function showWaitingCursor() {
+    for (const element of arguments) element.style.cursor = "wait";
+}
+
+function stopWaitingCursor() {
+    for (const element of arguments) element.style.cursor = "default";
 }
