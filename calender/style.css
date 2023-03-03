@@ -1,13 +1,13 @@
 
 :root{
     --color: #191d25;
-    --background_color: #edeff3;
+    --background_color: #f6f6f6;
     --background_transparent_color: #edeff3c2;
     --background_hover_color: #b2b8c6;
     --border_color: #454750;
     --active: #191d25;
-    --inactive: #191d2586;
-    --yes: forestgreen;
+    --inactive: #191d259e;
+    --yes: rgb(16, 108, 16);
     --no: tomato;
     --accent_color: #0ba27a;
     --color-1: #f5b673;
@@ -27,7 +27,7 @@
         --background_hover_color: #323238;
         --border_color: #51525a;
         --active: #e0e0eb;
-        --inactive: #e0e0eb80;
+        --inactive: #e0e0eba1;
         --yes: springgreen;
         --no: tomato;
         --accent_color: #2ceeba;
