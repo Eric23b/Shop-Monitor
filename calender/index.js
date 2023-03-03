@@ -130,6 +130,9 @@ showLoadingDialog(async () => {
         });
     }
 
+    if (canEditJob) addNewJobBtn.style.display = 'block';
+    if (canEditCalendar) addNewEventBtn.style.display = 'block';
+
     addJobsToCalendar();
     addEventsToCalendar();
 
