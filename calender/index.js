@@ -664,9 +664,6 @@ function buildCalender() {
     }
     lastDate.setDate(lastDate.getDate() + (30 * 7));
 
-    const allDatesInArray = getAllDatesInArray(dateIndex, lastDate);
-    // console.log(allDatesInArray);
-
     const weeks = [];
 
     let endCalender = false;
@@ -686,63 +683,6 @@ function buildCalender() {
             dayContainer.setAttribute('data-date', calendarDate);
             dayContainer.classList.add(`date-${calendarDate}`);
             dayContainer.classList.add('day');
-            // dayContainer.addEventListener('dragover', (event) => {event.preventDefault()});
-            // dayContainer.addEventListener('drop', async () => {
-            //     // dayContainer.classList.remove('drag-over');
-
-            //     // Job drag drop
-            //     if (draggingJobID && canEditJob) {
-            //         await updateDBEntry(BUSINESS_SCHEMA, JOBS_TABLE, {id: draggingJobID, shipDate: calendarDate}, settings);
-            //     }
-
-            //     // Calender drag drop
-            //     if (draggingCalendarEvent.id && canEditCalendar) {
-            //         if (draggingCalendarEvent.startDate === draggingCalendarEvent.endDate) {
-            //             await updateDBEntry(BUSINESS_SCHEMA, CALENDAR_TABLE, {id: draggingCalendarEvent.id, date: calendarDate}, settings);
-            //         }
-            //         else {
-            //             let startDate = draggingCalendarEvent.startDate;
-            //             let endDate = draggingCalendarEvent.endDate;
-
-            //             if (draggingCalendarEvent.isStartDate) {
-            //                 if (calendarDate.replaceAll("-", "") > endDate.replaceAll("-", "")) {
-            //                     startDate = endDate;
-            //                     endDate = calendarDate;
-            //                 }
-            //                 else {
-            //                     startDate = calendarDate;
-            //                 }
-            //             }
-            //             else {
-            //                 if (calendarDate.replaceAll("-", "") > endDate.replaceAll("-", "")) {
-            //                     endDate = calendarDate;
-            //                 }
-            //                 if (calendarDate.replaceAll("-", "") < startDate.replaceAll("-", "")) {
-            //                     endDate = startDate;
-            //                     startDate = calendarDate;
-            //                 }
-            //                 else {
-            //                     endDate = calendarDate;
-            //                 }
-            //             }
-
-            //             await updateDBEntry(BUSINESS_SCHEMA, CALENDAR_TABLE, {
-            //                 id: draggingCalendarEvent.id,
-            //                 date: startDate,
-            //                 endDate: endDate}, settings);
-            //         }
-            //     }
-            //     draggingJobID = "";
-            //     draggingCalendarEvent = {id: "", startDate: "", endDate: "", isStartDate: true};
-
-            //     // refreshJobs();
-
-            //     // showLoadingDialog(async() => {
-            //     //     buildCalender();
-            //     //     await addJobsToCalendar();
-            //     //     await AddEventsToCalendar();
-            //     // });
-            // });
 
             const dayHeader = document.createElement('div');
             dayHeader.classList.add('day-header-container');
@@ -844,14 +784,8 @@ function buildCalender() {
                     date: startDate,
                     endDate: endDate}, settings);
             }
-            // await updateDBEntry(BUSINESS_SCHEMA, CALENDAR_TABLE, {id: data.id, date: dropDate}, settings);
         }
     }
-}
-
-async function refreshJobs() {
-    removeAllElementsWithClassName();
-    addJobsToCalendar();
 }
 
 // Add Jobs to Calendar
@@ -898,12 +832,9 @@ async function addJobsToCalendar() {
                 showWaitingCursor(bodyElement, jobElement);
                 
                 const jobsResponse = await getJobs();
-
                 const tasksResponse = await getTasks();
-
                 const stationID = await getStationID();
-                
-                const whoIsEditingJob = await checkOutItemForEditing(job.id, stationID);
+                const whoIsEditingJob = await checkOutItemForEditing(job.id, stationName, stationID);
                 
                 stopWaitingCursor(bodyElement, jobElement);
 
@@ -1255,15 +1186,15 @@ async function getPermissions() {
 }
 
 
-async function checkOutItemForEditing(itemID, stationID) {
+async function checkOutItemForEditing(itemID, stationName, stationID) {
     const currentEditingResponse = await getDBEntrees(BUSINESS_SCHEMA, STATIONS_TABLE, "editing", itemID, settings);
     if ((!currentEditingResponse) || (currentEditingResponse.error) || (currentEditingResponse.length === 0)) {
         await updateDBEntry(BUSINESS_SCHEMA, STATIONS_TABLE, {id: stationID, editing: itemID}, settings);
-        const stationIDResponse = await getDBEntrees(BUSINESS_SCHEMA, STATIONS_TABLE, "id", stationID, settings);
-        // console.log('1', String(stationIDResponse[0].name));
-        return String(stationIDResponse[0].name);
+
+        // const stationIDResponse = await getDBEntrees(BUSINESS_SCHEMA, STATIONS_TABLE, "id", stationID, settings);
+
+        return String(stationName);
     }
-    // console.log('2', String(stationIDResponse[0].name));
     return String(currentEditingResponse[0].name);
 }
 
