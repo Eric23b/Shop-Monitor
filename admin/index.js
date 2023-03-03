@@ -1623,7 +1623,7 @@ async function loadWorkStationTable() {
 }
 
 async function loadWorkStationsCheckboxList() {
-    const workStationsResponse = await getDBEntrees(BUSINESS_SCHEMA, STATIONS_TABLE, "active", "true", settings, dbActive);
+    const workStationsResponse = await getDBEntrees(BUSINESS_SCHEMA, STATIONS_TABLE, "active", true, settings, dbActive);
     if ((!workStationsResponse) || (workStationsResponse.error)) return;
 
     employeeWorkStationsContainer.innerHTML = "";
@@ -1644,7 +1644,7 @@ async function loadWorkStationsCheckboxList() {
 }
 
 async function loadTasksCheckboxList() {
-    const tasksResponse = await getDBEntrees(BUSINESS_SCHEMA, TASKS_TABLE, "active", "true", settings, dbActive);
+    const tasksResponse = await getDBEntrees(BUSINESS_SCHEMA, TASKS_TABLE, "active", true, settings, dbActive);
     if ((!tasksResponse) || (tasksResponse.error)) return;
 
     workStationTasksContainer.innerHTML = "";

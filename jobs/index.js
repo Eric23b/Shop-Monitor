@@ -145,8 +145,8 @@ function search() {
 
 // Load
 async function loadJobs(event, searchValue) {
-    const jobsResponse = await getDBEntrees(BUSINESS_SCHEMA, JOBS_TABLE, "active", "true", settings);
-    
+    const jobsResponse = await getDBEntrees(BUSINESS_SCHEMA, JOBS_TABLE, "active", true, settings);
+
     if ((!jobsResponse) || (jobsResponse.error)) return;
 
     switch (sort.value) {
