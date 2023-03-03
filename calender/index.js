@@ -82,7 +82,12 @@ const settings = {
     authorization: getLocalStorageValue('serverAuthorization') || "",
 }
 
-let nameDateSearchArray = [];
+const searchArrays = {
+    date: [],
+    jobs: [],
+    events: [],
+    months: [],
+};
 
 const bodyElement = document.querySelector('body');
 
@@ -185,8 +190,14 @@ function search(searchText) {
     
     let searchFound = false;
 
-    // nameDateSearchArray is updated every time buildCalender is run.
-    for (const element of nameDateSearchArray) {
+    const searchCollection = [
+        ...searchArrays.days,
+        ...searchArrays.jobs,
+        ...searchArrays.events,
+        ...searchArrays.months,
+    ];
+
+    for (const element of searchCollection) {
         const name = String(element.name).toLowerCase().trim();
         const date = String(element.date).toLowerCase().trim();
 
@@ -635,8 +646,8 @@ function loadCalendar() {
 
 
 function buildCalender() {
-    // Reset nameDateSearchArray and add today
-    nameDateSearchArray = [{name: "today", date: formatDateToCA(getToday())}];
+    searchArrays.days = [];
+    searchArrays.months = [];
 
     let dateIndex = getToday();
     dateIndex.setMonth(dateIndex.getMonth() - 6);
@@ -663,6 +674,9 @@ function buildCalender() {
         // Loop through days of the week
         for (let dayOfTheWeekIndex = 0; dayOfTheWeekIndex < 7; dayOfTheWeekIndex++) {
             const calendarDate = formatDateToCA(dateIndex);
+
+            // Add days to search array
+            searchArrays.days.push({name: calendarDate, date: calendarDate});
 
             const dayContainer = document.createElement('div');
             if (dateIndex == getToday()) dayContainer.id = "today";
@@ -738,7 +752,7 @@ function buildCalender() {
                 dayHeader.classList.add('day-highlight-before');
 
                 // Add months to search array
-                nameDateSearchArray.push({name: monthText, date: calendarDate});
+                searchArrays.months.push({name: monthText, date: calendarDate});
             }
             else {
                 dayHeader.setAttribute('data-before', dateIndex.toLocaleString('default', {weekday: 'short'}));
@@ -845,8 +859,9 @@ async function addJobsToCalendar() {
     }
 
     // Add jobs to search array
+    searchArrays.jobs = [];
     jobs.forEach((job) => {
-        nameDateSearchArray.push({name: job.name, date: job.shipDate});
+        searchArrays.jobs.push({name: job.name, date: job.shipDate});
     });
 
     // Loop through jobs
@@ -932,8 +947,6 @@ async function addJobsToCalendar() {
 
         jobElement.appendChild(jobProgressBar);
 
-        nameDateSearchArray.push({name: job.name, date: job.shipDate});
-
         // Try to remove exciting job just in case
         removeAllElementsWithClassName(job.id);
 
@@ -949,8 +962,9 @@ async function addEventsToCalendar() {
     };
 
     // Add calendar event to search array
+    searchArrays.events = [];
     calendarResponse.forEach((calendarEvent) => {
-        nameDateSearchArray.push({name: calendarEvent.name, date: calendarEvent.date});
+        searchArrays.events.push({name: calendarEvent.name, date: calendarEvent.date});
     });
 
     // Add end date if is missing
