@@ -235,6 +235,7 @@ body *{
     pointer-events: auto;
     box-sizing: content-box;
     border: solid 1px transparent;
+    text-align: center;
 }
 .day-event:hover{
     border: solid 1px var(--border_color);
