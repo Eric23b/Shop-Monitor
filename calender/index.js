@@ -84,6 +84,8 @@ const settings = {
 
 let nameDateSearchArray = [];
 
+const bodyElement = document.querySelector('body');
+
 const timerPageLink = document.querySelector('.timer-page-link');
 
 const addNewJobBtn = document.querySelector('#add-job-btn');
@@ -113,6 +115,7 @@ buildCalender();
 
 showLoadingDialog(async () => {
     [superUser, canEditJob, canEditCalendar] = await getPermissions();
+    console.log(superUser, canEditJob, canEditCalendar);
 
     // Show hidden admin elements
     if (superUser) {
@@ -123,7 +126,7 @@ showLoadingDialog(async () => {
     }
 
     addJobsToCalendar();
-    AddEventsToCalendar();
+    addEventsToCalendar();
 
     jumpToDate(formatDateToCA(new Date()));
 });
@@ -139,7 +142,8 @@ const autoUpdateTimer = new Timer(
         if (dialogIsOpen()) return;
         showLoadingDialog(async() => {
             // loadCalendar();
-            addJobsToCalendar();
+            await addJobsToCalendar();
+            await addEventsToCalendar();
         });
     },
     1000 * 10 * 1,
@@ -270,7 +274,7 @@ addNewEventBtn.addEventListener('click', async () => {
 function loadCalendar() {
     buildCalender();
     addJobsToCalendar();
-    AddEventsToCalendar();
+    addEventsToCalendar();
 }
 
 
@@ -772,7 +776,9 @@ function buildCalender() {
         event.preventDefault();
         const data = JSON.parse(event.dataTransfer.getData("text"));
 
+        // Find date of day container
         const droppedElement = document.querySelector(`[data-id="${data.id}"]`);
+        if (!droppedElement) return;
         let dayContainer = event.target;
         if (!dayContainer.classList.contains('day')) dayContainer = event.target.parentElement.parentElement;
         if (!dayContainer.classList.contains('day')) return;
@@ -780,11 +786,47 @@ function buildCalender() {
 
         const dropDate = dayContainer.getAttribute('data-date');
 
+        // Job
         if (data.isJob && canEditJob) {
             await updateDBEntry(BUSINESS_SCHEMA, JOBS_TABLE, {id: data.id, shipDate: dropDate}, settings);
         }
+        // Calendar event
         else if (canEditCalendar) {
-            await updateDBEntry(BUSINESS_SCHEMA, CALENDAR_TABLE, {id: data.id, date: dropDate}, settings);
+            if (data.startDate === data.endDate) {
+                await updateDBEntry(BUSINESS_SCHEMA, CALENDAR_TABLE, {id: data.id, date: dropDate}, settings);
+            }
+            else {
+                let startDate = data.startDate;
+                let endDate = data.endDate;
+
+                if (dropDate == startDate) {
+                    if (dropDate.replaceAll("-", "") > endDate.replaceAll("-", "")) {
+                        startDate = endDate;
+                        endDate = dropDate;
+                    }
+                    else {
+                        startDate = dropDate;
+                    }
+                }
+                else {
+                    if (dropDate.replaceAll("-", "") > endDate.replaceAll("-", "")) {
+                        endDate = dropDate;
+                    }
+                    if (dropDate.replaceAll("-", "") < startDate.replaceAll("-", "")) {
+                        endDate = startDate;
+                        startDate = dropDate;
+                    }
+                    else {
+                        endDate = dropDate;
+                    }
+                }
+
+                await updateDBEntry(BUSINESS_SCHEMA, CALENDAR_TABLE, {
+                    id: data.id,
+                    date: startDate,
+                    endDate: endDate}, settings);
+            }
+            // await updateDBEntry(BUSINESS_SCHEMA, CALENDAR_TABLE, {id: data.id, date: dropDate}, settings);
         }
     }
 }
@@ -834,14 +876,17 @@ async function addJobsToCalendar() {
 
             // Click
             jobElement.onclick = async (event) => {
+                showWaitingCursor(bodyElement, jobElement);
+                
                 const jobsResponse = await getJobs();
 
                 const tasksResponse = await getTasks();
 
                 const stationID = await getStationID();
-
+                
                 const whoIsEditingJob = await checkOutItemForEditing(job.id, stationID);
-                console.log(whoIsEditingJob);
+                
+                stopWaitingCursor(bodyElement, jobElement);
 
                 showJobDialog(job, jobsResponse, tasksResponse,
                     // OK click
@@ -849,13 +894,13 @@ async function addJobsToCalendar() {
                         showLoadingDialog(async() => {
                             await updateDBEntry(BUSINESS_SCHEMA, JOBS_TABLE, newJob, settings);
                             await updateDBEntry(BUSINESS_SCHEMA, STATIONS_TABLE, {id: stationID, editing: ""}, settings);
-                            addJobsToCalendar();
+                            // addJobsToCalendar();
+                            loadCalendar();
                             jumpToDate(newJob.shipDate);
                         });
                     },
                     // Cancel click
                     async (originalJob) => {
-                        console.log(whoIsEditingJob, stationName);
                         if (whoIsEditingJob == stationName) {
                             await updateDBEntry(BUSINESS_SCHEMA, STATIONS_TABLE, {id: stationID, editing: ""}, settings);
                         }
@@ -896,77 +941,96 @@ async function addJobsToCalendar() {
 }
 
 // Add Events to Calendar
-async function AddEventsToCalendar() {
+async function addEventsToCalendar() {
     let calendarResponse = await getDBEntrees(BUSINESS_SCHEMA, CALENDAR_TABLE, "id", "*", settings);
     if ((!calendarResponse) || (calendarResponse.error) || calendarResponse.length === 0) {
         calendarResponse = [];
     };
-
-    // const allDatesInArray = getAllDatesInArray(dateIndex, lastDate);
-
-    // calendarResponse.forEach((calendarEvent) => {
-    //     calendarEvent.dates = [];
-    //     allDatesInArray.forEach((date) => {
-    //         if ((date >= calendarEvent.date) && (date <= calendarEvent.endDate)) {
-    //             calendarEvent.dates.push(date);
-    //         }
-    //     });
-    // });
 
     // Add calendar event to search array
     calendarResponse.forEach((calendarEvent) => {
         nameDateSearchArray.push({name: calendarEvent.name, date: calendarEvent.date});
     });
 
-    // // const allDatesInArray = getAllDatesInArray(dateIndex, lastDatePlusNDays);
+    // Add end date if is missing
+    calendarResponse.forEach((calendarEvent) => {
+        if (calendarEvent.endDate == "") calendarEvent.endDate = calendarEvent.date; 
+    });
+
+    // Correct date order
+    calendarResponse.forEach((calendarEvent) => {
+        if (calendarEvent.date > calendarEvent.endDate) {
+            const tmp = calendarEvent.date;
+            calendarEvent.date = calendarEvent.endDate;
+            calendarEvent.endDate = tmp;
+        }
+    });
+
+    // Build dates array
+    calendarResponse.forEach((calendarEvent) => {
+        if (calendarEvent.date == calendarEvent.endDate) {
+            calendarEvent.dates = [calendarEvent.date];
+        }
+        else if (calendarEvent.date != calendarEvent.endDate) {
+            let loopCount = 0;
+            const dateIndex = getCorrectDate(calendarEvent.date);
+            calendarEvent.dates = [];
+            while (formatDateToCA(dateIndex) <= calendarEvent.endDate) {
+                calendarEvent.dates.push(formatDateToCA(dateIndex));
+                dateIndex.setDate(dateIndex.getDate() + 1);
+
+                if (loopCount++ > 100) break;
+            }
+        }
+    });
+
     // calendarResponse.forEach((calendarEvent) => {
-    //     const dateIndex = getCorrectDate(calendarEvent.date);
-
-    //     calendarEvent.endDate = calendarEvent.endDate || calendarEvent.date;
-
-    //     calendarEvent.dates = [];
-    //     while (formatDateToCA(dateIndex) !== calendarEvent.endDate) {
-    //         // TODO: Forever loop
-    //         calendarEvent.dates.push(formatDateToCA(dateIndex));
-    //         dateIndex.setDate(dateIndex.getDate() + 1);
-    //     }
-    //     // allDatesInArray.forEach((date) => {
-    //     //     if ((date >= calendarEvent.date) && (date <= calendarEvent.endDate)) {
-    //     //         calendarEvent.dates.push(date);
-    //     //     }
-    //     // });
-    //     console.log(calendarEvent.dates);
+    //     calendarEvent.dates.forEach((date) => {
+    //         console.log(date);
+    //     });
     // });
 
-
-    // Add Calender Events
     // const eventContainer = document.createElement('div');
     // eventContainer.classList.add('events-container');
 
     calendarResponse.forEach((calenderEvent) => {
-        const eventContainer = document.querySelector(`.date-${calenderEvent.date} .day-events-container`);
-        if (!eventContainer) return;
+        if (!document.querySelector(`.date-${calenderEvent.date} .day-events-container`)) return;
 
         const endDate = calenderEvent.endDate || calenderEvent.date;
         const isMultiDayEvent = calenderEvent.dates.length > 1;
 
 
         const eventTitle = document.createElement('p');
+
+        eventTitle.setAttribute('data-id', calenderEvent.id);
+        eventTitle.classList.add(calenderEvent.id);
+
+        // eventTitle.style.width = "100%";
         eventTitle.classList.add('day-event');
-        eventTitle.setAttribute('draggable', 'true');
         eventTitle.setAttribute('title', calenderEvent.note || "");
+
+        // Dragging
+        eventTitle.setAttribute('draggable', 'true');
         eventTitle.addEventListener('dragstart', (event) => {
-            event.dataTransfer.setData("text", JSON.stringify([calenderEvent.id, calenderEvent.date]));
+            event.dataTransfer.setData("text", JSON.stringify({
+                id: calenderEvent.id,
+                isJob: false,
+                startDate: calenderEvent.date,
+                endDate: calenderEvent.endDate,
+            }));
             event.dataTransfer.effectAllowed = "move";
-            // draggingCalendarEvent.isStartDate = calenderEvent.dates[0] === calendarDate;
+            event.target.style.cursor = 'grabbing';
         });
-        eventTitle.addEventListener('dragover', (e) => {e.preventDefault()});
+        eventTitle.addEventListener('dragover', (event) => {
+            event.preventDefault();
+            event.dataTransfer.dropEffect = "move";
+        });
         eventTitle.textContent = calenderEvent.name;
         eventTitle.style.color = "black";
         if (isMultiDayEvent) eventTitle.style.width = "100%";
         eventTitle.style.backgroundColor = `var(--color-${calenderEvent.color || 1})`;
 
-        if (canEditCalendar) {
+        // if (canEditCalendar) {
             eventTitle.style.cursor = 'pointer';
             eventTitle.onclick = async () => {
                 showCalendarEventDialog(calenderEvent, 
@@ -982,8 +1046,8 @@ async function AddEventsToCalendar() {
                     }
                 );
             };
-            eventTitle.addEventListener('contextmenu', async (e) => {
-                e.preventDefault();
+            eventTitle.addEventListener('contextmenu', async (event) => {
+                event.preventDefault();
                 showYesNoDialog(`Delete "${calenderEvent.name}"?`, async () => {
                     showLoadingDialog(async() => {
                         await deleteDBEntry(BUSINESS_SCHEMA, CALENDAR_TABLE, calenderEvent.id, settings);
@@ -991,8 +1055,23 @@ async function AddEventsToCalendar() {
                     });
                 });
             });
-        }
+        // }
+
+
+        removeAllElementsWithClassName(calenderEvent.id);
+
+        // Add Events to Calendar 
+        // calenderEvent.dates.forEach((date) => {
+        //     const clone = eventTitle.cloneNode(true);
+        //     const eventContainer = document.querySelector(`.date-${date} .day-events-container`);
+        //     if (!eventContainer) return;
+        //     eventContainer.appendChild(clone);
+        // });
+        
+        const eventContainer = document.querySelector(`.date-${calenderEvent.date} .day-events-container`);
+        if (!eventContainer) return;
         eventContainer.appendChild(eventTitle);
+
     });
 }
 
@@ -1190,4 +1269,12 @@ function removeAllElementsWithClassName(className) {
     while (elements.length > 0) {
       elements[0].parentNode.removeChild(elements[0]);
     }
+}
+
+function showWaitingCursor() {
+    for (const element of arguments) element.style.cursor = "wait";
+}
+
+function stopWaitingCursor() {
+    for (const element of arguments) element.style.cursor = "default";
 }
