@@ -292,362 +292,6 @@ function loadCalendar() {
     addEventsToCalendar();
 }
 
-
-
-// async function buildCalender(scrollTo) {
-//     const jobs = await getDBEntrees(BUSINESS_SCHEMA, JOBS_TABLE, "id", "*", settings);
-//     if ((!jobs) || (jobs.error) || jobs.length === 0) {
-//         jobs = [];
-//     };
-
-//     // Reset nameDateSearchArray and add today
-//     nameDateSearchArray = [{name: "today", date: formatDateToCA(getToday())}];
-//     // Add jobs to search array
-//     jobs.forEach((job) => {
-//         nameDateSearchArray.push({name: job.name, date: job.shipDate});
-//     });
-
-
-//     let calendarResponse = await getDBEntrees(BUSINESS_SCHEMA, CALENDAR_TABLE, "id", "*", settings);
-//     if ((!calendarResponse) || (calendarResponse.error) || calendarResponse.length === 0) {
-//         calendarResponse = [];
-//     };
-
-//     // Sort events date
-//     calendarResponse.sort((a, b) => {
-//         const nameA = a.date;
-//         const nameB = b.date;
-//         if (nameA < nameB) return -1;
-//         if (nameA > nameB) return 1;
-//         return 0;
-//     });
-
-//     // Add calendar event to search array
-//     calendarResponse.forEach((calendarEvent) => {
-//         nameDateSearchArray.push({name: calendarEvent.name, date: calendarEvent.date});
-//     });
-
-//     // Sort calendar events by number of days
-//     calendarResponse.sort((a, b) => {
-//         // TODO: Check if dates are not null
-//         const aEventsLength = Number((a.endDate || a.date ).replaceAll("-", "")) - Number(a.date.replaceAll("-", ""));
-//         const bEventsLength = Number((b.endDate || b.date ).replaceAll("-", "")) - Number(b.date.replaceAll("-", ""));
-//         if (aEventsLength < bEventsLength) {
-//             return -1;
-//         }
-//         else if (aEventsLength > bEventsLength) {
-//             return 1;
-//         }
-//         else {
-//             return 0;
-//         }
-//     });
-
-//     // Sort by ship date
-//     jobs.sort((a, b) => {
-//         const nameA = a.shipDate;
-//         const nameB = b.shipDate;
-//         if (nameA < nameB) return 1;
-//         if (nameA > nameB) return -1;
-//         return 0;
-//     });
-
-//     // Correct any miss ordered dates (end date before start date)
-//     calendarResponse.forEach((calendarEvent) => {
-//         if (calendarEvent.date === calendarEvent.endDate) return;
-//         const correctedDate = getCorrectDateOrder(calendarEvent.date, calendarEvent.endDate);
-//         calendarEvent.date = correctedDate.start;
-//         calendarEvent.endDate = correctedDate.end;
-//     });
-
-//     const canEditJob = await canEditJobs();
-//     const canEditCalendar = await canEditCalendarEvent();
-    
-//     const dates = getDates(jobs, calendarResponse);
-    
-//     let dateIndex;
-//     if (formatDateToCA(dates.firstSunday) < formatDateToCA(getToday())) {
-//         dateIndex = new Date(dates.firstSunday);
-//     }
-//     else {
-//         // Find earliest Sunday
-//         dateIndex = new Date();
-//         while (dateIndex.toLocaleString('default', {weekday: 'short'}) !== "Sun") {
-//             dateIndex.setDate(dateIndex.getDate() - 1);
-//         }
-//     }
-//     dateIndex.setDate(dateIndex.getDate() - (15 * 7));  // weeks
-    
-//     const lastDatePlusNDays = getCorrectDate(dates.lastSaturday);
-    
-//     lastDatePlusNDays.setDate(lastDatePlusNDays.getDate() + (22 * 7));
-
-//     const allDatesInArray = getAllDatesInArray(dateIndex, lastDatePlusNDays);
-//     calendarResponse.forEach((calendarEvent) => {
-//         calendarEvent.dates = [];
-//         allDatesInArray.forEach((date) => {
-//             if ((date >= calendarEvent.date) && (date <= calendarEvent.endDate)) {
-//                 calendarEvent.dates.push(date);
-//             }
-//         });
-//     });
-
-//     const weeks = [];
-
-//     let endCalender = false;
-//     while (!endCalender) {
-//         const weekContainer = document.createElement('div');
-//         weekContainer.classList.add('week');
-    
-//         // Loop through days of the week
-//         for (let dayOfTheWeekIndex = 0; dayOfTheWeekIndex < 7; dayOfTheWeekIndex++) {
-//             const calendarDate = formatDateToCA(dateIndex);
-//             const dayContainer = document.createElement('div');
-//             if (dates.today.toDateString('en-CA') === dateIndex.toDateString('en-CA')) {
-//                 dayContainer.id = "today";
-//             }
-//             dayContainer.classList.add(`date-${calendarDate}`);
-//             dayContainer.classList.add('day');
-//             dayContainer.addEventListener('dragenter', () => {dayContainer.classList.add('drag-over')});
-//             dayContainer.addEventListener('dragleave', () => {dayContainer.classList.remove('drag-over')});
-//             dayContainer.addEventListener('dragover', (event) => {event.preventDefault()});
-//             dayContainer.addEventListener('drop', async () => {
-//                 dayContainer.classList.remove('drag-over');
-
-//                 // Job drag drop
-//                 if (draggingJobID && canEditJob) {
-//                     await updateDBEntry(BUSINESS_SCHEMA, JOBS_TABLE, {id: draggingJobID, shipDate: calendarDate}, settings);
-//                 }
-
-//                 // Calender drag drop
-//                 if (draggingCalendarEvent.id && canEditCalendar) {
-//                     if (draggingCalendarEvent.startDate === draggingCalendarEvent.endDate) {
-//                         await updateDBEntry(BUSINESS_SCHEMA, CALENDAR_TABLE, {id: draggingCalendarEvent.id, date: calendarDate}, settings);
-//                     }
-//                     else {
-//                         let startDate = draggingCalendarEvent.startDate;
-//                         let endDate = draggingCalendarEvent.endDate;
-
-//                         if (draggingCalendarEvent.isStartDate) {
-//                             if (calendarDate.replaceAll("-", "") > endDate.replaceAll("-", "")) {
-//                                 startDate = endDate;
-//                                 endDate = calendarDate;
-//                             }
-//                             else {
-//                                 startDate = calendarDate;
-//                             }
-//                         }
-//                         else {
-//                             if (calendarDate.replaceAll("-", "") > endDate.replaceAll("-", "")) {
-//                                 endDate = calendarDate;
-//                             }
-//                             if (calendarDate.replaceAll("-", "") < startDate.replaceAll("-", "")) {
-//                                 endDate = startDate;
-//                                 startDate = calendarDate;
-//                             }
-//                             else {
-//                                 endDate = calendarDate;
-//                             }
-//                         }
-
-//                         await updateDBEntry(BUSINESS_SCHEMA, CALENDAR_TABLE, {
-//                             id: draggingCalendarEvent.id,
-//                             date: startDate,
-//                             endDate: endDate}, settings);
-//                     }
-//                 }
-//                 draggingJobID = "";
-//                 draggingCalendarEvent = {id: "", startDate: "", endDate: "", isStartDate: true};
-//                 showLoadingDialog(async() => {
-//                     await buildCalender();
-//                 });
-//             });
-
-//             const dayHeader = document.createElement('div');
-//             dayHeader.classList.add('day-header-container');
-    
-//             const dayNameElement = document.createElement('p');
-//             const options = { month: "long" };
-//             const monthText = (new Intl.DateTimeFormat("en-CA", options).format(dateIndex));
-//             dayNameElement.classList.add('day-week-name');
-//             if (dateIndex.getDate() == 1) {
-//                 dayNameElement.textContent = monthText
-//                 dayNameElement.classList.add('day-title-first-of-the-month');
-
-//                 // Add months to search array
-//                 nameDateSearchArray.push({name: monthText, date: calendarDate});
-//             }
-//             else {
-//                 dayNameElement.textContent = dateIndex.toLocaleString('default', {weekday: 'short'});
-//             }
-    
-//             const dayNumberElement = document.createElement('p');
-//             const dayNumber = dateIndex.toLocaleString('default', {day: 'numeric'});
-//             dayNumberElement.classList.add('day-number');
-//             if (dates.today.toDateString('en-CA') === dateIndex.toDateString('en-CA')) {
-//                 dayNumberElement.classList.add('today');
-//             }
-//             dayNumberElement.textContent = dayNumber;
-
-//             // Add month/ and day to search array
-//             nameDateSearchArray.push({name: monthText + " " + dayNumber, date: calendarDate});
-
-//             // Add Jobs
-//             const jobsContainer = document.createElement('div');
-//             jobsContainer.classList.add('jobs-container');
-//             jobs.forEach((job) => {
-//                 if (job.shipDate !== formatDateToCA(dateIndex)) return;
-
-//                 const percentCompleted = getJobTimes(job).percentCompleted;
-                
-//                 const jobTitle = document.createElement('p');
-//                 jobTitle.setAttribute('draggable', 'true');
-//                 jobTitle.setAttribute('title', job.note || "");
-//                 jobTitle.addEventListener('dragstart', () => {draggingJobID = job.id});
-//                 if (!job.active) jobTitle.style.color = "var(--inactive)";
-//                 jobTitle.textContent = job.name;
-
-//                 const jobProgressBar = document.createElement('div');
-//                 if (canEditJob) {
-//                     jobTitle.style.cursor = 'pointer';
-//                     jobTitle.onclick = async () => {
-//                         const jobsResponse = await getDBEntrees(BUSINESS_SCHEMA, JOBS_TABLE, "id", "*", settings);
-//                         if ((!jobsResponse) || (jobsResponse.error)) return;
-            
-//                         const tasksResponse = await getDBEntrees(BUSINESS_SCHEMA, TASKS_TABLE, "id", "*", settings);
-//                         if ((!tasksResponse) || (tasksResponse.error)) return;
-            
-//                         const currentEditingResponse = await getDBEntrees(BUSINESS_SCHEMA, STATIONS_TABLE, "editing", job.id, settings);
-//                         const whoIsEditingJob = getWhoIsEditing(currentEditingResponse);
-//                         if (whoIsEditingJob === "") {
-//                             await updateDBEntry(BUSINESS_SCHEMA, STATIONS_TABLE, {id: stationID, editing: job.id}, settings);
-//                         }
-
-//                         showJobDialog(job, jobsResponse, tasksResponse, 
-//                             async (newJob) => {
-//                                 showLoadingDialog(async() => {
-//                                     await updateDBEntry(BUSINESS_SCHEMA, JOBS_TABLE, newJob, settings);
-//                                     await updateDBEntry(BUSINESS_SCHEMA, STATIONS_TABLE, {id: stationID, editing: ""}, settings);
-//                                     await buildCalender();
-//                                     jumpToDate(newJob.shipDate);
-//                                 });
-//                             },
-//                             async (originalJob) => {
-//                                 await updateDBEntry(BUSINESS_SCHEMA, STATIONS_TABLE, {id: stationID, editing: ""}, settings);
-//                             },
-//                             whoIsEditingJob
-//                         );
-//                     };
-//                     jobTitle.addEventListener('contextmenu', async (event) => {
-//                         event.preventDefault();
-//                         showYesNoDialog(`Delete "${job.name}"?`, async () => {
-//                             showLoadingDialog(async() => {
-//                                 await deleteDBEntry(BUSINESS_SCHEMA, JOBS_TABLE, job.id, settings);
-//                                 await buildCalender();
-//                             });
-//                         });
-//                     });
-
-//                     jobProgressBar.style.width = `${percentCompleted}%`;
-//                     jobProgressBar.classList.add('job-progress-bar');
-//                     if (!job.active) jobProgressBar.style.borderColor = "var(--inactive)";
-//                 }
-//                 else { // Can't edit jobs
-//                     jobTitle.style.cursor = 'pointer';
-//                     jobTitle.onclick = async () => {
-//                         const jobsResponse = await getDBEntrees(BUSINESS_SCHEMA, JOBS_TABLE, "id", "*", settings);
-//                         if ((!jobsResponse) || (jobsResponse.error)) return;
-                        
-//                         showJobCardDialog(job, async (newJob) => {
-//                             await updateDBEntry(BUSINESS_SCHEMA, JOBS_TABLE, newJob, settings);
-//                         });
-//                     };
-//                 }
-//                 jobsContainer.appendChild(jobTitle);
-//                 jobsContainer.appendChild(jobProgressBar);
-            
-//             });
-
-//             // // Add Calender Events
-//             const eventContainer = document.createElement('div');
-//             eventContainer.classList.add('events-container');
-
-//             calendarResponse.forEach((calenderEvent) => {
-//                 const endDate = calenderEvent.endDate || calenderEvent.date;
-//                 const isMultiDayEvent = calenderEvent.dates.length > 1;
-
-//                 if (calenderEvent.dates.indexOf(calendarDate) !== -1) {
-
-//                     const eventTitle = document.createElement('p');
-//                     eventTitle.setAttribute('draggable', 'true');
-//                     eventTitle.setAttribute('title', calenderEvent.note || "");
-//                     eventTitle.addEventListener('dragstart', () => {
-//                         draggingCalendarEvent.id = calenderEvent.id;
-//                         draggingCalendarEvent.startDate = calenderEvent.date;
-//                         draggingCalendarEvent.endDate = endDate;
-//                         draggingCalendarEvent.isStartDate = calenderEvent.dates[0] === calendarDate;
-//                     });
-//                     eventTitle.textContent = calenderEvent.name;
-//                     eventTitle.style.color = "black";
-//                     if (isMultiDayEvent) eventTitle.style.width = "100%";
-//                     eventTitle.style.backgroundColor = `var(--color-${calenderEvent.color || 1})`;
-
-//                         if (canEditCalendar) {
-//                             eventTitle.style.cursor = 'pointer';
-//                             eventTitle.onclick = async () => {
-//                                 showCalendarEventDialog(calenderEvent, 
-//                                     async (newEvent) => {
-//                                         showLoadingDialog(async() => {
-//                                             await updateDBEntry(BUSINESS_SCHEMA, CALENDAR_TABLE, newEvent, settings);
-//                                             await buildCalender();
-//                                             jumpToDate(newEvent.date);
-//                                         });
-//                                     },
-//                                     async (oldJob) => {
-//                                         // await buildCalender();
-//                                     }
-//                                 );
-//                             };
-//                             eventTitle.addEventListener('contextmenu', async (e) => {
-//                                 e.preventDefault();
-//                                 showYesNoDialog(`Delete "${calenderEvent.name}"?`, async () => {
-//                                     showLoadingDialog(async() => {
-//                                         await deleteDBEntry(BUSINESS_SCHEMA, CALENDAR_TABLE, calenderEvent.id, settings);
-//                                         await buildCalender();
-//                                     });
-//                                 });
-//                             });
-//                         }
-//                         eventContainer.appendChild(eventTitle);
-//                     }
-//             });
-
-//             dayHeader.appendChild(dayNameElement);
-//             dayHeader.appendChild(dayNumberElement);
-    
-//             dayContainer.appendChild(dayHeader);
-//             dayContainer.appendChild(jobsContainer);
-//             dayContainer.appendChild(eventContainer);
-//             // dayContainer.appendChild(inActiveJobsContainer);
-    
-//             weekContainer.appendChild(dayContainer);
-
-//             // Add dates to search array
-//             nameDateSearchArray.push({name: calendarDate, date: calendarDate});
-
-//             // Increment day
-//             dateIndex.setDate(dateIndex.getDate() + 1);
-
-//             if (dateIndex.toDateString('en-CA') === lastDatePlusNDays.toDateString('en-CA')) endCalender = true;
-//         };
-//         weeks.push(weekContainer);
-//     }
-
-//     calenderContainer.innerHTML = "";
-//     calenderContainer.append(...weeks);
-// }
-
-
 function buildCalender() {
     searchArrays.days = [];
     searchArrays.months = [];
@@ -664,6 +308,9 @@ function buildCalender() {
     }
     lastDate.setDate(lastDate.getDate() + (30 * 7));
 
+    const todayString = formatDateToCA(getToday());
+    const lastDateString = formatDateToCA(lastDate);
+
     const weeks = [];
 
     let endCalender = false;
@@ -674,6 +321,7 @@ function buildCalender() {
         // Loop through days of the week
         for (let dayOfTheWeekIndex = 0; dayOfTheWeekIndex < 7; dayOfTheWeekIndex++) {
             const calendarDate = formatDateToCA(dateIndex);
+            const dayOfTheMonth = dateIndex.getDate();
 
             // Add days to search array
             searchArrays.days.push({name: calendarDate, date: calendarDate});
@@ -686,11 +334,11 @@ function buildCalender() {
 
             const dayHeader = document.createElement('div');
             dayHeader.classList.add('day-header-container');
-            dayHeader.setAttribute('data-after', dateIndex.getDate());
+            dayHeader.setAttribute('data-after', dayOfTheMonth);
     
             // Day name
-            const monthText = dateIndex.toLocaleString('default', {month: 'long'});
-            if (dateIndex.getDate() == 1) {
+            if (dayOfTheMonth == 1) {
+                const monthText = dateIndex.toLocaleString('default', {month: 'long'});
                 dayHeader.setAttribute('data-before', monthText);
                 dayHeader.classList.add('day-highlight-before');
 
@@ -702,7 +350,7 @@ function buildCalender() {
             }
     
             // Day number
-            if (formatDateToCA(dateIndex) == formatDateToCA(getToday())) {
+            if (calendarDate == todayString) {
                 dayHeader.classList.add('day-highlight-after', 'day-underline-after');
             }
 
@@ -718,7 +366,7 @@ function buildCalender() {
             dateIndex.setDate(dateIndex.getDate() + 1);
 
             // Exit loop test
-            if (dateIndex.toDateString('en-CA') === lastDate.toDateString('en-CA')) endCalender = true;
+            if (formatDateToCA(dateIndex) == lastDateString) endCalender = true;
         }
         weeks.push(weekContainer);
     }
