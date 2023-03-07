@@ -159,7 +159,9 @@ const autoUpdateTimer = new Timer(
     true
 );
 
-
+window.onmousemove = () => {
+    autoUpdateTimer.reset();
+}
 
 // EVENT LISTENERS //
 
