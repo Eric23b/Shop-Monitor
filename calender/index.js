@@ -64,6 +64,7 @@ import {
 } from "../table-utilities.js";
 
 import {
+    showContextMenu,
     showYesNoDialog,
     showAlertDialog,
     showLoadingDialog,
@@ -133,7 +134,7 @@ showLoadingDialog(async () => {
     if (canEditJob) addNewJobBtn.style.display = 'block';
     if (canEditCalendar) addNewEventBtn.style.display = 'block';
 
-    addJobsToCalendar();
+    await addJobsToCalendar();
     addEventsToCalendar();
 
     jumpToDate(formatDateToCA(new Date()));
@@ -149,11 +150,8 @@ addNumberOfRunningTimersToTimerPageLink(timerPageLink, stationName, settings);
 const autoUpdateTimer = new Timer(
     () => {
         if (dialogIsOpen()) return;
-        showLoadingDialog(async() => {
-            // loadCalendar();
-            await addJobsToCalendar();
-            await addEventsToCalendar();
-        });
+        loadJobsAndEvents;
+        console.log('load');
     },
     1000 * 60 * 1,
     true
@@ -255,7 +253,8 @@ todayBtn.addEventListener('click', () => {
 
 
 // New Job Button
-addNewJobBtn.addEventListener('click', async () => {
+addNewJobBtn.addEventListener('click', addNewJob);
+async function addNewJob(date) {
     const jobsResponse = await getJobs();
     const tasksResponse = await getTasks();
 
@@ -263,35 +262,48 @@ addNewJobBtn.addEventListener('click', async () => {
         async (newJob) => {
             showLoadingDialog(async() => {
                 await insertDBEntry(BUSINESS_SCHEMA, JOBS_TABLE, newJob, settings);
-                loadCalendar();
+                await loadCalendar();
                 jumpToDate(newJob.shipDate);
             });
         },
         async (oldJob) => {
             // loadCalendar();
-        }
+        },
+        "",
+        {date}
     );
-});
+}
 
-addNewEventBtn.addEventListener('click', async () => {
+// New Event Button
+addNewEventBtn.addEventListener('click', async () => {addNewCalendarEvent()});
+async function addNewCalendarEvent(date) {
     showCalendarEventDialog(null, async (calendarEvent) => {
         showLoadingDialog(async() => {
             await insertDBEntry(BUSINESS_SCHEMA, CALENDAR_TABLE, calendarEvent, settings);
-            loadCalendar();
+            await loadCalendar();
             jumpToDate(calendarEvent.date);
         });
-    });
-});
+    }, null, {date: date});
+}
 
 
 
 
 // FUNCTIONS
 
-function loadCalendar() {
+async function loadCalendar() {
+    startWaitingCursor(document.querySelector('body'));
     buildCalender();
-    addJobsToCalendar();
-    addEventsToCalendar();
+    await addJobsToCalendar();
+    await addEventsToCalendar();
+    stopWaitingCursor(document.querySelector('body'));
+}
+
+async function loadJobsAndEvents() {
+    startWaitingCursor(document.querySelector('body'));
+    await addJobsToCalendar();
+    await addEventsToCalendar();
+    stopWaitingCursor(document.querySelector('body'));
 }
 
 function buildCalender() {
@@ -380,6 +392,26 @@ function buildCalender() {
         event.preventDefault();
         event.dataTransfer.dropEffect = "move";
     };
+
+    // Right click add job/event menu
+    calenderContainer.oncontextmenu = async (event) => {
+        const dayElement = event.target;
+        if (!dayElement.classList.contains('day')) return;
+
+        const date = dayElement.getAttribute('data-date');
+
+        showContextMenu(event, ["✚ Job", "✚ Event"], (text) => {
+            switch (text) {
+                case "✚ Job": addNewJob(date); break;
+                case "✚ Event": addNewCalendarEvent(date); break;
+                default: break;
+            }
+        });
+
+        event.preventDefault();
+    }
+
+    // Drop event
     calenderContainer.ondrop = async (event) => {
         event.preventDefault();
         const data = JSON.parse(event.dataTransfer.getData("text"));
@@ -397,43 +429,43 @@ function buildCalender() {
         // Job
         if (data.isJob && canEditJob) {
             await updateDBEntry(BUSINESS_SCHEMA, JOBS_TABLE, {id: data.id, shipDate: dropDate}, settings);
+            loadJobsAndEvents();
         }
         // Calendar event
         else if (canEditCalendar) {
-            if (data.startDate === data.endDate) {
-                await updateDBEntry(BUSINESS_SCHEMA, CALENDAR_TABLE, {id: data.id, date: dropDate}, settings);
+            let calendarEntry = {id: data.id};
+            // single day event
+            if (!data.isMultiDayEvent) {
+                calendarEntry = {id: data.id, date: dropDate, startDate: dropDate, endDate: dropDate};
             }
+            // Multi day event
             else {
-                let startDate = data.startDate;
-                let endDate = data.endDate;
-
-                if (dropDate == startDate) {
-                    if (dropDate.replaceAll("-", "") > endDate.replaceAll("-", "")) {
-                        startDate = endDate;
-                        endDate = dropDate;
+                if (data.isStartOfEvent) {
+                    if (dropDate < data.endDate) {
+                        calendarEntry = {id: data.id, date: dropDate, startDate: dropDate};
                     }
-                    else {
-                        startDate = dropDate;
+                    else if (dropDate > data.endDate) {
+                        calendarEntry = {id: data.id, date: data.endDate, startDate: data.endDate, endDate: dropDate}
+                    }
+                    else if (dropDate == data.endDate) {
+                        calendarEntry = {id: data.id, date: dropDate, startDate: dropDate, endDate: dropDate};
                     }
                 }
                 else {
-                    if (dropDate.replaceAll("-", "") > endDate.replaceAll("-", "")) {
-                        endDate = dropDate;
+                    if (dropDate < data.startDate) {
+                        calendarEntry = {id: data.id, date: dropDate, startDate: dropDate, endDate: data.startDate};
                     }
-                    if (dropDate.replaceAll("-", "") < startDate.replaceAll("-", "")) {
-                        endDate = startDate;
-                        startDate = dropDate;
+                    else if (dropDate > data.startDate) {
+                        calendarEntry = {id: data.id, endDate: dropDate};
                     }
-                    else {
-                        endDate = dropDate;
+                    else if (dropDate == data.startDate) {
+                        calendarEntry = {id: data.id, date: dropDate, startDate: dropDate, endDate: dropDate};
                     }
                 }
-
-                await updateDBEntry(BUSINESS_SCHEMA, CALENDAR_TABLE, {
-                    id: data.id,
-                    date: startDate,
-                    endDate: endDate}, settings);
             }
+
+            await updateDBEntry(BUSINESS_SCHEMA, CALENDAR_TABLE, calendarEntry, settings);
+            loadJobsAndEvents();
         }
     }
 }
@@ -444,6 +476,7 @@ async function addJobsToCalendar() {
     if ((!jobs) || (jobs.error) || jobs.length === 0) {
         jobs = [];
     }
+    getJobs();
 
     // Add jobs to search array
     searchArrays.jobs = [];
@@ -479,13 +512,16 @@ async function addJobsToCalendar() {
 
             // Click
             jobElement.onclick = async (event) => {
-                showWaitingCursor(bodyElement, jobElement);
+                // ⏳
+                startWaitingCursor(bodyElement, jobElement);
                 
-                const jobsResponse = await getJobs();
-                const tasksResponse = await getTasks();
-                const stationID = await getStationID();
+                let jobsResponse;
+                let tasksResponse;
+                let stationID;
+                [jobsResponse, tasksResponse, stationID] = await Promise.all([getJobs(), getTasks(), getStationID()]);
                 const whoIsEditingJob = await checkOutItemForEditing(job.id, stationName, stationID);
                 
+                // ⌛
                 stopWaitingCursor(bodyElement, jobElement);
 
                 showJobDialog(job, jobsResponse, tasksResponse,
@@ -493,7 +529,7 @@ async function addJobsToCalendar() {
                     async (newJob) => {
                         showLoadingDialog(async() => {
                             await updateDBEntry(BUSINESS_SCHEMA, JOBS_TABLE, newJob, settings);
-                            await updateDBEntry(BUSINESS_SCHEMA, STATIONS_TABLE, {id: stationID, editing: ""}, settings);
+                            updateDBEntry(BUSINESS_SCHEMA, STATIONS_TABLE, {id: stationID, editing: ""}, settings);
                             // addJobsToCalendar();
                             loadCalendar();
                             jumpToDate(newJob.shipDate);
@@ -540,10 +576,7 @@ async function addJobsToCalendar() {
 
 // Add Events to Calendar
 async function addEventsToCalendar() {
-    let calendarResponse = await getDBEntrees(BUSINESS_SCHEMA, CALENDAR_TABLE, "id", "*", settings);
-    if ((!calendarResponse) || (calendarResponse.error) || calendarResponse.length === 0) {
-        calendarResponse = [];
-    };
+    const calendarResponse = await getCalendarEvents();
 
     // Add calendar event to search array
     searchArrays.events = [];
@@ -553,7 +586,12 @@ async function addEventsToCalendar() {
 
     // Add end date if is missing
     calendarResponse.forEach((calendarEvent) => {
-        if (calendarEvent.endDate == "") calendarEvent.endDate = calendarEvent.date; 
+        if (!calendarEvent.endDate) calendarEvent.endDate = calendarEvent.date; 
+    });
+
+    // Add start date if is missing
+    calendarResponse.forEach((calendarEvent) => {
+        if (!calendarEvent.startDate) calendarEvent.startDate = calendarEvent.date; 
     });
 
     // Correct date order
@@ -567,37 +605,42 @@ async function addEventsToCalendar() {
 
     // Build dates array
     calendarResponse.forEach((calendarEvent) => {
-        if (calendarEvent.date == calendarEvent.endDate) {
+        if (calendarEvent.startDate == calendarEvent.endDate) {
             calendarEvent.dates = [calendarEvent.date];
         }
-        else if (calendarEvent.date != calendarEvent.endDate) {
-            let loopCount = 0;
+        else {
+            let loopSafetyCount = 0;
             const dateIndex = getCorrectDate(calendarEvent.date);
             calendarEvent.dates = [];
             while (formatDateToCA(dateIndex) <= calendarEvent.endDate) {
                 calendarEvent.dates.push(formatDateToCA(dateIndex));
                 dateIndex.setDate(dateIndex.getDate() + 1);
 
-                if (loopCount++ > 100) break;
+                if (loopSafetyCount++ > 100) break;
             }
         }
     });
 
-    // calendarResponse.forEach((calendarEvent) => {
-    //     calendarEvent.dates.forEach((date) => {
-    //         console.log(date);
-    //     });
-    // });
+    // console.log(calendarResponse);
 
-    // const eventContainer = document.createElement('div');
-    // eventContainer.classList.add('events-container');
+    // Build calendarEvents with calendarResponse.dates
+    const calendarEvents = [];
+    calendarResponse.forEach((calendarEvent) => {
+        calendarEvent.dates.forEach((date, index) => {
+            const event = JSON.parse(JSON.stringify(calendarEvent));
+            event.isMultiDayEvent = calendarEvent.dates.length > 1;
+            event.isStartOfEvent = index == 0;
+            event.date = date;
+            calendarEvents.push(event);
+        });
+    });
 
-    calendarResponse.forEach((calenderEvent) => {
+    // console.log(calendarEvents);
+
+    removeAllElementsWithClassName('calendar-event');
+
+    calendarEvents.forEach((calenderEvent) => {
         if (!document.querySelector(`.date-${calenderEvent.date} .day-events-container`)) return;
-
-        const endDate = calenderEvent.endDate || calenderEvent.date;
-        const isMultiDayEvent = calenderEvent.dates.length > 1;
-
 
         const eventTitle = document.createElement('p');
 
@@ -606,6 +649,7 @@ async function addEventsToCalendar() {
 
         // eventTitle.style.width = "100%";
         eventTitle.classList.add('day-event');
+        eventTitle.classList.add('calendar-event');
         eventTitle.setAttribute('title', calenderEvent.note || "");
 
         // Dragging
@@ -614,7 +658,9 @@ async function addEventsToCalendar() {
             event.dataTransfer.setData("text", JSON.stringify({
                 id: calenderEvent.id,
                 isJob: false,
-                startDate: calenderEvent.date,
+                isMultiDayEvent: calenderEvent.isMultiDayEvent,
+                isStartOfEvent: calenderEvent.isStartOfEvent,
+                startDate: calenderEvent.startDate,
                 endDate: calenderEvent.endDate,
             }));
             event.dataTransfer.effectAllowed = "move";
@@ -626,7 +672,7 @@ async function addEventsToCalendar() {
         });
         eventTitle.textContent = calenderEvent.name;
         eventTitle.style.color = "black";
-        if (isMultiDayEvent) eventTitle.style.width = "100%";
+        if (calenderEvent.isMultiDayEvent) eventTitle.style.width = "100%";
         eventTitle.style.backgroundColor = `var(--color-${calenderEvent.color || 1})`;
 
         // if (canEditCalendar) {
@@ -657,7 +703,7 @@ async function addEventsToCalendar() {
         // }
 
 
-        removeAllElementsWithClassName(calenderEvent.id);
+        // removeAllElementsWithClassName(calenderEvent.id);
 
         // Add Events to Calendar 
         // calenderEvent.dates.forEach((date) => {
@@ -744,6 +790,10 @@ async function getJobs(column, filter) {
 
 async function getTasks(column, filter) {
     return await getDBTable(BUSINESS_SCHEMA, TASKS_TABLE, column, filter);
+}
+
+async function getCalendarEvents(column, filter) {
+    return await getDBTable(BUSINESS_SCHEMA, CALENDAR_TABLE, column, filter);
 }
 
 async function getDBTable(schema, table, column, filter) {
@@ -870,7 +920,7 @@ function removeAllElementsWithClassName(className) {
     }
 }
 
-function showWaitingCursor() {
+function startWaitingCursor() {
     for (const element of arguments) element.style.cursor = "wait";
 }
 
