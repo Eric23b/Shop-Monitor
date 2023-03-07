@@ -472,11 +472,7 @@ function buildCalender() {
 
 // Add Jobs to Calendar
 async function addJobsToCalendar() {
-    let jobs = await getDBEntrees(BUSINESS_SCHEMA, JOBS_TABLE, "id", "*", settings);
-    if ((!jobs) || (jobs.error) || jobs.length === 0) {
-        jobs = [];
-    }
-    getJobs();
+    const jobs = await getJobs();
 
     // Add jobs to search array
     searchArrays.jobs = [];
