@@ -543,12 +543,16 @@ export function showContextMenu(clickEvent, optionsArray, callback) {
     body.appendChild(modalBackground);
 }
 
-export function showJobDialog(job, jobs, allTasks, OKCallback, cancelCallback, whoIsEditingTitle) {
+export function showJobDialog(job, jobs, allTasks, OKCallback, cancelCallback, whoIsEditingTitle, options) {
     const originalJob = JSON.parse(JSON.stringify(job));
 
     const isNewJob = job === null;
 
     if (isNewJob) job = {active: true};
+
+    if (options) {
+        job.shipDate = job.shipDate || options.date;
+    }
 
     const body = document.querySelector('body');
     const modalBackground = getModalBackground();
@@ -1291,8 +1295,12 @@ export function showCalendarPreviewDialog(title, calendarEvents, weekdaysOnly, r
     }
 }
 
-export function showCalendarEventDialog(calendarEvent, OKCallback, cancelCallback) {
+export function showCalendarEventDialog(calendarEvent, OKCallback, cancelCallback, options) {
     if (!calendarEvent) calendarEvent = {};
+    
+    if (options) {
+        calendarEvent.date = options.date;
+    }
 
     const body = document.querySelector('body');
     const modalBackground = getModalBackground();
