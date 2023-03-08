@@ -510,7 +510,7 @@ function getLabeledCheckbox(label, isChecked, deletable, containerElement) {
     return checkboxLabel;
 }
 
-export function showContextMenu(clickEvent, optionsArray, callback) {
+export function showContextMenu(clickEvent, optionsArray, callback, options) {
     const body = document.querySelector('body');
     const modalBackground = getModalBackground();
     const modalWindow = getModalWindow();
@@ -530,17 +530,28 @@ export function showContextMenu(clickEvent, optionsArray, callback) {
         event.preventDefault();
         body.removeChild(modalBackground);
     }
+
+    if (options?.title) {
+        const modalTitle = document.createElement('label');
+        modalTitle.style.textAlign = 'center';
+        modalTitle.style.margin = '0.2em';
+        modalTitle.textContent = options.title;
+        modalWindow.append(modalTitle);
+    }
     
     optionsArray.forEach((text) => {
+        if (!text) return;
         const optionBtn = getButton(text, () => {
             callback(text);
         });
         optionBtn.style.cssText = contextMenuButton;
         modalWindow.append(optionBtn);
     });
-
+    
     modalBackground.appendChild(modalWindow);
     body.appendChild(modalBackground);
+    
+    if (modalWindow.childElementCount === 0) body.removeChild(modalBackground);
 }
 
 export function showJobDialog(job, jobs, allTasks, OKCallback, cancelCallback, whoIsEditingTitle, options) {
