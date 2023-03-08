@@ -121,7 +121,7 @@ buildCalender();
 
 showLoadingDialog(async () => {
     [superUser, canEditJob, canEditCalendar] = await getPermissions();
-    console.log(superUser, canEditJob, canEditCalendar);
+    console.log(`Super User: ${superUser}\nCan Edit Jobs: ${canEditJob}\nCan Edit Calendar Events: ${canEditCalendar}`);
 
     // Show hidden admin elements
     if (superUser) {
@@ -151,7 +151,6 @@ const autoUpdateTimer = new Timer(
     () => {
         if (dialogIsOpen()) return;
         loadJobsAndEvents;
-        console.log('load');
     },
     1000 * 60 * 1,
     true
@@ -233,7 +232,7 @@ function search(searchText) {
     }
 }
 
-
+// Keyboard shortcuts
 window.onkeydown = (event) => {
     // Go to home page ./
     if (event.key === "8" && event.ctrlKey) window.location = "/";
@@ -286,7 +285,87 @@ async function addNewCalendarEvent(date) {
     }, null, {date: date});
 }
 
+// Calendar dragover event
+calenderContainer.ondragover = (event) => {
+    event.preventDefault();
+    event.dataTransfer.dropEffect = "move";
+};
 
+// Calendar right click add job/event menu
+calenderContainer.oncontextmenu = async (event) => {
+    const dayElement = event.target;
+    if (!dayElement.classList.contains('day')) return;
+
+    const date = dayElement.getAttribute('data-date');
+
+    showContextMenu(event, [canEditJob ? "✚ Job" : "", canEditCalendar ? "✚ Event" : ""], (text) => {
+        switch (text) {
+            case "✚ Job": addNewJob(date); break;
+            case "✚ Event": addNewCalendarEvent(date); break;
+            default: break;
+        }
+    });
+
+    event.preventDefault();
+}
+
+// Calendar drop event
+calenderContainer.ondrop = async (event) => {
+    event.preventDefault();
+    const data = JSON.parse(event.dataTransfer.getData("text"));
+
+    // Find date of day container
+    const droppedElement = document.querySelector(`[data-id="${data.id}"]`);
+    if (!droppedElement) return;
+    let dayContainer = event.target;
+    if (!dayContainer.classList.contains('day')) dayContainer = event.target.parentElement.parentElement;
+    if (!dayContainer.classList.contains('day')) return;
+    dayContainer.querySelector('.day-events-container').appendChild(droppedElement);
+
+    const dropDate = dayContainer.getAttribute('data-date');
+
+    // Job
+    if (data.isJob && canEditJob) {
+        await updateDBEntry(BUSINESS_SCHEMA, JOBS_TABLE, {id: data.id, shipDate: dropDate}, settings);
+        loadJobsAndEvents();
+    }
+    // Calendar event
+    else if (canEditCalendar) {
+        let calendarEntry = {id: data.id};
+        // single day event
+        if (!data.isMultiDayEvent) {
+            calendarEntry = {id: data.id, date: dropDate, startDate: dropDate, endDate: dropDate};
+        }
+        // Multi day event
+        else {
+            if (data.isStartOfEvent) {
+                if (dropDate < data.endDate) {
+                    calendarEntry = {id: data.id, date: dropDate, startDate: dropDate};
+                }
+                else if (dropDate > data.endDate) {
+                    calendarEntry = {id: data.id, date: data.endDate, startDate: data.endDate, endDate: dropDate}
+                }
+                else if (dropDate == data.endDate) {
+                    calendarEntry = {id: data.id, date: dropDate, startDate: dropDate, endDate: dropDate};
+                }
+            }
+            else {
+                if (dropDate < data.startDate) {
+                    calendarEntry = {id: data.id, date: dropDate, startDate: dropDate, endDate: data.startDate};
+                }
+                else if (dropDate > data.startDate) {
+                    calendarEntry = {id: data.id, endDate: dropDate};
+                }
+                else if (dropDate == data.startDate) {
+                    calendarEntry = {id: data.id, date: dropDate, startDate: dropDate, endDate: dropDate};
+                }
+            }
+        }
+
+        await updateDBEntry(BUSINESS_SCHEMA, CALENDAR_TABLE, calendarEntry, settings);
+        loadJobsAndEvents();
+    }
+}
 
 
 // FUNCTIONS
@@ -387,87 +466,6 @@ function buildCalender() {
 
     calenderContainer.innerHTML = "";
     calenderContainer.append(...weeks);
-
-    calenderContainer.ondragover = (event) => {
-        event.preventDefault();
-        event.dataTransfer.dropEffect = "move";
-    };
-
-    // Right click add job/event menu
-    calenderContainer.oncontextmenu = async (event) => {
-        const dayElement = event.target;
-        if (!dayElement.classList.contains('day')) return;
-
-        const date = dayElement.getAttribute('data-date');
-
-        showContextMenu(event, ["✚ Job", "✚ Event"], (text) => {
-            switch (text) {
-                case "✚ Job": addNewJob(date); break;
-                case "✚ Event": addNewCalendarEvent(date); break;
-                default: break;
-            }
-        });
-
-        event.preventDefault();
-    }
-
-    // Drop event
-    calenderContainer.ondrop = async (event) => {
-        event.preventDefault();
-        const data = JSON.parse(event.dataTransfer.getData("text"));
-
-        // Find date of day container
-        const droppedElement = document.querySelector(`[data-id="${data.id}"]`);
-        if (!droppedElement) return;
-        let dayContainer = event.target;
-        if (!dayContainer.classList.contains('day')) dayContainer = event.target.parentElement.parentElement;
-        if (!dayContainer.classList.contains('day')) return;
-        dayContainer.querySelector('.day-events-container').appendChild(droppedElement);
-
-        const dropDate = dayContainer.getAttribute('data-date');
-
-        // Job
-        if (data.isJob && canEditJob) {
-            await updateDBEntry(BUSINESS_SCHEMA, JOBS_TABLE, {id: data.id, shipDate: dropDate}, settings);
-            loadJobsAndEvents();
-        }
-        // Calendar event
-        else if (canEditCalendar) {
-            let calendarEntry = {id: data.id};
-            // single day event
-            if (!data.isMultiDayEvent) {
-                calendarEntry = {id: data.id, date: dropDate, startDate: dropDate, endDate: dropDate};
-            }
-            // Multi day event
-            else {
-                if (data.isStartOfEvent) {
-                    if (dropDate < data.endDate) {
-                        calendarEntry = {id: data.id, date: dropDate, startDate: dropDate};
-                    }
-                    else if (dropDate > data.endDate) {
-                        calendarEntry = {id: data.id, date: data.endDate, startDate: data.endDate, endDate: dropDate}
-                    }
-                    else if (dropDate == data.endDate) {
-                        calendarEntry = {id: data.id, date: dropDate, startDate: dropDate, endDate: dropDate};
-                    }
-                }
-                else {
-                    if (dropDate < data.startDate) {
-                        calendarEntry = {id: data.id, date: dropDate, startDate: dropDate, endDate: data.startDate};
-                    }
-                    else if (dropDate > data.startDate) {
-                        calendarEntry = {id: data.id, endDate: dropDate};
-                    }
-                    else if (dropDate == data.startDate) {
-                        calendarEntry = {id: data.id, date: dropDate, startDate: dropDate, endDate: dropDate};
-                    }
-                }
-            }
-
-            await updateDBEntry(BUSINESS_SCHEMA, CALENDAR_TABLE, calendarEntry, settings);
-            loadJobsAndEvents();
-        }
-    }
 }
 
 // Add Jobs to Calendar
