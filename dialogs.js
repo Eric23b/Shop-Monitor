@@ -515,6 +515,8 @@ export function showContextMenu(clickEvent, optionsArray, callback, options) {
     const modalBackground = getModalBackground();
     const modalWindow = getModalWindow();
 
+    modalBackground.style.background = 'transparent';
+
     modalWindow.style.cssText = contextMenuContainerStyles;
 
     if (clickEvent.button != 2) return; 
@@ -1306,7 +1308,7 @@ export function showCalendarPreviewDialog(title, calendarEvents, weekdaysOnly, r
     }
 }
 
-export function showCalendarEventDialog(calendarEvent, OKCallback, cancelCallback, options) {
+export function showCalendarEventDialog(calendarEvent, OKCallback, cancelCallback, deleteCallback, options) {
     if (!calendarEvent) calendarEvent = {};
     
     if (options) {
@@ -1420,7 +1422,17 @@ export function showCalendarEventDialog(calendarEvent, OKCallback, cancelCallbac
         body.removeChild(modalBackground);
     });
 
-    const modalButtonContainer = getButtonContainer(modalCancelButton, modalOKButton);
+    // Delete callback
+    const modalDeleteButton = getButton("Delete", () => {
+        if (deleteCallback) deleteCallback(calendarEvent.id);
+        body.removeChild(modalBackground);
+    });
+    modalDeleteButton.onmouseenter = () => {
+        modalDeleteButton.style.backgroundColor = "var(--no)";
+    }
+    modalDeleteButton.style.marginRight = "auto";
+
+    const modalButtonContainer = getButtonContainer(deleteCallback ? modalDeleteButton : "", modalCancelButton, modalOKButton);
 
     modalWindow.append(modalTitle, eventNameLabel, dateLabel, endDateLabel, eventNoteLabel, closedCheckboxLabel, colorContainer, modalButtonContainer);
     modalBackground.appendChild(modalWindow);

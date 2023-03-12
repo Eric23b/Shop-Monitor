@@ -135,7 +135,7 @@ showLoadingDialog(async () => {
     if (canEditCalendar) addNewEventBtn.style.display = 'block';
 
     await addJobsToCalendar();
-    addEventsToCalendar();
+    await addEventsToCalendar();
 
     jumpToDate(formatDateToCA(new Date()));
 });
@@ -276,13 +276,17 @@ async function addNewJob(date) {
 // New Event Button
 addNewEventBtn.addEventListener('click', async () => {addNewCalendarEvent()});
 async function addNewCalendarEvent(date) {
-    showCalendarEventDialog(null, async (calendarEvent) => {
+    showCalendarEventDialog(null,
+    async (calendarEvent) => {
         showLoadingDialog(async() => {
             await insertDBEntry(BUSINESS_SCHEMA, CALENDAR_TABLE, calendarEvent, settings);
             await loadCalendar();
             jumpToDate(calendarEvent.date);
         });
-    }, null, {date: date});
+    },
+    null,
+    null,
+    {date: date});
 }
 
 // Calendar dragover event
@@ -629,7 +633,6 @@ async function addEventsToCalendar() {
         });
     });
 
-    // console.log(calendarEvents);
 
     removeAllElementsWithClassName('calendar-event');
 
@@ -680,9 +683,12 @@ async function addEventsToCalendar() {
                             jumpToDate(newEvent.date);
                         });
                     },
-                    async (oldJob) => {
-                        // await buildCalender();
-                    }
+                    null,
+                    async (id) => {
+                        console.log(id);
+                        await deleteDBEntry(BUSINESS_SCHEMA, CALENDAR_TABLE, id, settings);
+                        loadCalendar();
+                    },
                 );
             };
             eventTitle.addEventListener('contextmenu', async (event) => {
@@ -695,17 +701,6 @@ async function addEventsToCalendar() {
                 });
             });
         // }
-
-
-        // removeAllElementsWithClassName(calenderEvent.id);
-
-        // Add Events to Calendar 
-        // calenderEvent.dates.forEach((date) => {
-        //     const clone = eventTitle.cloneNode(true);
-        //     const eventContainer = document.querySelector(`.date-${date} .day-events-container`);
-        //     if (!eventContainer) return;
-        //     eventContainer.appendChild(clone);
-        // });
         
         const eventContainer = document.querySelector(`.date-${calenderEvent.date} .day-events-container`);
         if (!eventContainer) return;
@@ -713,22 +708,6 @@ async function addEventsToCalendar() {
 
     });
 }
-
-// calenderContainer.onmouseover = (event) => {
-//     if ((draggingJobID) && (event.target.classList.contains('day'))) {
-//         event.target.classList.add('drag-over');
-//         event.target.onmouseleave = () => {
-//             event.target.classList.remove('drag-over');
-//         }
-//         // console.log(event.target.classList[0].replaceAll('date-', ''));
-//     }
-// }
-
-// calenderContainer.onmouseleave = (event) => {
-//     if (event.target.classList.contains('day')) {
-//         console.log(event.target.classList[0].replaceAll('date-', ''));
-//     }
-// }
 
 function getJobTimes(job) {
     // Calculate shop hours
