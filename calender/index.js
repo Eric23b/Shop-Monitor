@@ -510,6 +510,7 @@ async function addJobsToCalendar() {
 
             // Click
             jobElement.onclick = async (event) => {
+                console.log(event);
                 // ⏳
                 startWaitingCursor(bodyElement, jobElement);
                 
@@ -542,6 +543,15 @@ async function addJobsToCalendar() {
                     (whoIsEditingJob == stationName) ? "" : whoIsEditingJob
                 );
             }
+            jobElement.oncontextmenu = async (event) => {
+                event.preventDefault();
+                showYesNoDialog(`Delete "${job.name}"?`, async () => {
+                    showLoadingDialog(async() => {
+                        await deleteDBEntry(BUSINESS_SCHEMA, JOBS_TABLE, job.id, settings);
+                        loadCalendar();
+                    });
+                });
+            };
 
         }
         else {
