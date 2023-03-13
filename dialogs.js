@@ -6,12 +6,12 @@ import {
     getClosedDatesArray,
     getShortDateText,
     formatDateToCA,
-} from "../date-utilities.js";
+} from "./date-utilities.js";
 
 import {
     isDev,
     isProd,
-} from "../build.js";
+} from "./build.js";
 
 
 // Add to main Style Sheet
@@ -478,7 +478,7 @@ export function showJobCardDialog(job, OKCallback) {
         modalWindow.querySelectorAll('*').forEach((element) => {element.setAttribute('disabled', 'disabled');});
         modalWindow.querySelectorAll('*').forEach((element) => {element.style.color = 'var(--inactive)';});
         modalWindow.querySelectorAll('*').forEach((element) => {element.style.cursor = 'default';});
-        OKBtn.removeAttribute('disabled', 'disabled');
+        OKBtn.removeAttribute('disabled');
         OKBtn.style.color = 'var(--color)';
         OKBtn.style.cursor = 'pointer';
     }
@@ -519,7 +519,7 @@ export function showContextMenu(clickEvent, optionsArray, callback, options) {
 
     modalWindow.style.cssText = contextMenuContainerStyles;
 
-    if (clickEvent.button != 2) return; 
+    if (clickEvent.button !== 2) return; 
     modalWindow.style.display = 'flex';
     modalWindow.style.top = `${clickEvent.clientY}px`;
     modalWindow.style.left = `${clickEvent.clientX}px`;
@@ -981,7 +981,7 @@ function showAddTaskFromTextDialog(sequences, allTasks, OKCallback, cancelCallba
         errors.push(...getTaskTimes(text).errors);
     
         if ((!allTasks) || (allTasks.error)) return;
-        if (allTasks.length == 0) return;
+        if (allTasks.length === 0) return;
     
     
         for (const ownTask of taskList) {
@@ -1023,7 +1023,7 @@ function showAddTaskFromTextDialog(sequences, allTasks, OKCallback, cancelCallba
                 tasks: [data]
             },)
         }
-    };
+    }
 
     function getTaskTimes(text) {
         const errors = [];
@@ -1174,7 +1174,7 @@ export function showCalendarPreviewDialog(title, calendarEvents, weekdaysOnly, r
                 const monthText = (new Intl.DateTimeFormat("en-CA", options).format(dateIndex));
                 dayNameElement.classList.add('day-week-name');
                 dayNameElement.style.cssText = dayNameElementStyles;
-                if (dateIndex.getDate() == 1) {
+                if (dateIndex.getDate() === 1) {
                     dayNameElement.textContent = monthText;
                     dayNameElement.style.color = 'var(--yes)';
                 }
@@ -1537,7 +1537,7 @@ export function showJobTaskTimingDialog(jobs, shopTasks, calendarEvents) {
                 // Tooltip
                 const currentShipDateText = `Current Ship Date:\n${job.shipDate}\n`
                 const currentEstimatedDateText = `Estimated Ship Date:\n${job.estimatedDate}\n`
-                const taskTime = `${task.hours}:${String(task.minutes).length == 1 ? "0" + task.minutes : task.minutes} hours`;
+                const taskTime = `${task.hours}:${String(task.minutes).length === 1 ? "0" + task.minutes : task.minutes} hours`;
                 const taskCompletedText = `${task.completed ? "✓ Completed" : ""}`
                 const tooltipText = `${job.name}\n` +
                                     `${currentShipDateText}` +
@@ -1612,7 +1612,7 @@ export function showJobTaskTimingDialog(jobs, shopTasks, calendarEvents) {
     function getTaskColorNumber(taskID, tasks) {
         let colorNumber = 1;
         tasks.forEach((task, index) => {
-            if (taskID == task.id) colorNumber = index + 1;
+            if (taskID === task.id) colorNumber = index + 1;
         });
         return colorNumber;
     }
@@ -1834,9 +1834,9 @@ function getModalBackground() {
 }
 
 function getModalWindow() {
-    const window = document.createElement('div');
-    window.style.cssText = modalWindowStyles;
-    return window
+    const modalWindow = document.createElement('div');
+    modalWindow.style.cssText = modalWindowStyles;
+    return modalWindow
 }
 
 function getModalTitle(message) {
