@@ -393,28 +393,33 @@ async function jobActivity(job, active) {
 }
 
 async function editJob(job) {
-    const jobsResponse = await getDBEntrees(BUSINESS_SCHEMA, JOBS_TABLE, "id", "*", settings);
-    if ((!jobsResponse) || (jobsResponse.error)) return;
-
-    const tasksResponse = await getDBEntrees(BUSINESS_SCHEMA, TASKS_TABLE, "id", "*", settings);
-    if ((!tasksResponse) || (tasksResponse.error)) return;
+    let jobsResponse;
+    let tasksResponse;
+    let stationID;
+    [jobsResponse, tasksResponse, stationID] = await Promise.all([getJobs(), getTasks(), getStationID()]);
+    const whoIsEditingJob = await checkOutItemForEditing(job.id, stationName, stationID);
     
     showJobDialog(job, jobsResponse, tasksResponse, 
         async (newJob) => {
             await updateDBEntry(BUSINESS_SCHEMA, JOBS_TABLE, newJob, settings);
+            updateDBEntry(BUSINESS_SCHEMA, STATIONS_TABLE, {id: stationID, editing: ""}, settings);
             await loadJobs();
         },
         async (oldJob) => {
+            if (whoIsEditingJob == stationName) {
+                await updateDBEntry(BUSINESS_SCHEMA, STATIONS_TABLE, {id: stationID, editing: ""}, settings);
+            }
             // await loadJobs(jobs);
         },
         // Delete click
         async (id) => {
-            // if (whoIsEditingJob == stationName) {
-            //     await updateDBEntry(BUSINESS_SCHEMA, STATIONS_TABLE, {id: stationID, editing: ""}, settings);
-            // }
+            if (whoIsEditingJob == stationName) {
+                await updateDBEntry(BUSINESS_SCHEMA, STATIONS_TABLE, {id: stationID, editing: ""}, settings);
+            }
             await deleteDBEntry(BUSINESS_SCHEMA, JOBS_TABLE, id, settings);
             await loadJobs();
         },
+        (whoIsEditingJob == stationName) ? "" : whoIsEditingJob
     );
 }
 
@@ -444,6 +449,42 @@ async function moveJobDown(jobs, jobIndex) {
     const tempJob = jobs.splice(jobIndex + 1, 1);
     jobs.splice(jobIndex, 0, ...tempJob);
     await loadJobs(jobs);
+}
+
+async function getJobs(column, filter) {
+    return await getDBTable(BUSINESS_SCHEMA, JOBS_TABLE, column, filter);
+}
+
+async function getTasks(column, filter) {
+    return await getDBTable(BUSINESS_SCHEMA, TASKS_TABLE, column, filter);
+}
+
+async function getDBTable(schema, table, column, filter) {
+    const response = await getDBEntrees(schema, table, column || "id", filter || "*", settings);
+    if ((!response) || (response.error) || (response.length === 0)) return [];
+    return response;
+}
+
+async function checkOutItemForEditing(itemID, stationName, stationID) {
+    const currentEditingResponse = await getDBEntrees(BUSINESS_SCHEMA, STATIONS_TABLE, "editing", itemID, settings);
+    if ((!currentEditingResponse) || (currentEditingResponse.error) || (currentEditingResponse.length === 0)) {
+        await updateDBEntry(BUSINESS_SCHEMA, STATIONS_TABLE, {id: stationID, editing: itemID}, settings);
+
+        // const stationIDResponse = await getDBEntrees(BUSINESS_SCHEMA, STATIONS_TABLE, "id", stationID, settings);
+
+        return String(stationName);
+    }
+    return String(currentEditingResponse[0].name);
+}
+
+async function getStationID() {
+    const stationIDResponse = await getDBEntrees(BUSINESS_SCHEMA, STATIONS_TABLE, "name", stationName, settings);
+    if ((!stationIDResponse) || (stationIDResponse.error) || stationIDResponse.length === 0) {
+        return "";
+    }
+    else {
+        return stationIDResponse[0].id;
+    }
 }
 
 async function updateEstimateDateAndStartDate(jobs, tasksResponse) {
