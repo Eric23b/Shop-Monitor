@@ -157,11 +157,8 @@ categorySelect.addEventListener("change", updateCategoryItems);
 
 // Send Button Click
 sendButton.addEventListener('click', async (event) => {
-    // if (isDev) {
-    //     console.log('is dev');
-        event.preventDefault();
-    // }
-    
+    event.preventDefault();
+
     if (!formFilled()) {
         // event.preventDefault();
         return;
@@ -244,12 +241,9 @@ sendButton.addEventListener('click', async (event) => {
             break;
     }
 
-    // if (isDev) {
-    //     console.log('is dev');
-    //     const a = document.createElement('a');
-    //     a.href = "/success.html";
-    //     a.click();
-    // }
+    // const a = document.createElement('a');
+    // a.href = "/success.html";
+    // a.click();
 
     if (sendEmail) {
         submitButton.click();
