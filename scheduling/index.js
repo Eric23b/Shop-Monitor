@@ -124,9 +124,8 @@ addNewJobBtn.addEventListener('click', async () => {
             await insertDBEntry(BUSINESS_SCHEMA, JOBS_TABLE, newJob, settings);
             await loadJobs();
         },
-        async (oldJob) => {
-            await loadJobs();
-        }
+        null,
+        null
     );
 });
 
@@ -407,7 +406,15 @@ async function editJob(job) {
         },
         async (oldJob) => {
             // await loadJobs(jobs);
-        }
+        },
+        // Delete click
+        async (id) => {
+            // if (whoIsEditingJob == stationName) {
+            //     await updateDBEntry(BUSINESS_SCHEMA, STATIONS_TABLE, {id: stationID, editing: ""}, settings);
+            // }
+            await deleteDBEntry(BUSINESS_SCHEMA, JOBS_TABLE, id, settings);
+            await loadJobs();
+        },
     );
 }
 

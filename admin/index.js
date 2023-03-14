@@ -397,9 +397,8 @@ addJobButton.addEventListener('click', async () => {
             await insertDBEntry(BUSINESS_SCHEMA, JOBS_TABLE, newJob, settings);
             await loadJobsTable();
         },
-        async (oldJob) => {
-            await loadJobsTable();
-        }
+        null,
+        null
     );
 });
 

@@ -556,7 +556,7 @@ export function showContextMenu(clickEvent, optionsArray, callback, options) {
     if (modalWindow.childElementCount === 0) body.removeChild(modalBackground);
 }
 
-export function showJobDialog(job, jobs, allTasks, OKCallback, cancelCallback, whoIsEditingTitle, options) {
+export function showJobDialog(job, jobs, allTasks, OKCallback, cancelCallback, deleteCallback, whoIsEditingTitle, options) {
     const originalJob = JSON.parse(JSON.stringify(job));
 
     const isNewJob = job === null;
@@ -685,8 +685,21 @@ export function showJobDialog(job, jobs, allTasks, OKCallback, cancelCallback, w
         if (cancelCallback) cancelCallback(originalJob);
         body.removeChild(modalBackground);
     });
+
+    // Delete callback
+    const deleteButton = getButton("Delete", () => {
+        showYesNoDialog(`Delete job?`, () => {
+            if (deleteCallback) deleteCallback(job.id);
+            body.removeChild(modalBackground);
+        });
+    });
+    deleteButton.onmouseenter = () => {
+        deleteButton.style.backgroundColor = "var(--no)";
+    }
+    deleteButton.style.marginRight = "auto";
+
     // Button container
-    const buttonContainer = getButtonContainer(cancelBtn, OKBtn);
+    const buttonContainer = getButtonContainer(deleteCallback ? deleteButton : "", cancelBtn, OKBtn);
 
     modalWindow.append(currentEditorLabel, jobNameLabel, jobShipDateLabel, jobActiveLabel, jobNoteLabel, sequenceLabel, modalButtonContainer, buttonContainer);
     modalBackground.appendChild(modalWindow);

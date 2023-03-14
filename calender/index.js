@@ -265,9 +265,8 @@ async function addNewJob(date) {
                 jumpToDate(newJob.shipDate);
             });
         },
-        async (oldJob) => {
-            // loadCalendar();
-        },
+        null,
+        null,
         "",
         {date}
     );
@@ -539,6 +538,14 @@ async function addJobsToCalendar() {
                         if (whoIsEditingJob == stationName) {
                             await updateDBEntry(BUSINESS_SCHEMA, STATIONS_TABLE, {id: stationID, editing: ""}, settings);
                         }
+                    },
+                    // Delete click
+                    async (id) => {
+                        if (whoIsEditingJob == stationName) {
+                            await updateDBEntry(BUSINESS_SCHEMA, STATIONS_TABLE, {id: stationID, editing: ""}, settings);
+                        }
+                        await deleteDBEntry(BUSINESS_SCHEMA, JOBS_TABLE, id, settings);
+                        loadCalendar();
                     },
                     (whoIsEditingJob == stationName) ? "" : whoIsEditingJob
                 );
@@ -844,7 +851,7 @@ function jumpToDate(date) {
         dateElement.classList.remove('yes-background');
         // dateElement.style.backgroundColor = "var(--background_color)";
     }, 1000);
-};
+}
 
 async function getPermissions() {
     const userInfo = await getUserInfo(settings);
