@@ -1795,8 +1795,6 @@ export async function showLoadingDialog(doneCallback, text) {
     
     await doneCallback();
 
-    showWaitingCursor(modalBackground);
-
     body.removeChild(modalBackground);
 }
 
@@ -1824,6 +1822,10 @@ export function showYesNoDialog(message, yesCallback, noCallback) {
     body.appendChild(modalBackground);
     
     // modalYesButton.focus();
+}
+
+export function waitingCursor(waiting) {
+    document.querySelector('body').style.cursor = waiting ? "wait" : 'default';
 }
 
 export function dialogIsOpen () {
