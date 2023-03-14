@@ -475,7 +475,7 @@ addUserBtn.addEventListener('click', async () => {
                                 showAlertDialog(returnMessage.error);
                             } 
                             else {
-                                showAlertDialog(`${returnMessage.message}.`);
+                                showAlertDialog(`${returnMessage.message}.\n${userName}'s database authorization is: ${btoa(userName + ":" + password)}`);
                             }
                             await loadUsersTable();
                         }, null, "text", "password");
@@ -1757,6 +1757,7 @@ async function loadUsersTable() {
                 }
             );
         }
+
         appendChildren(row, [userName, role, password, deleteTD]);
         usersTable.appendChild(row);
     };
