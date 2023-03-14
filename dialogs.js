@@ -704,6 +704,8 @@ export function showJobDialog(job, jobs, allTasks, OKCallback, cancelCallback, d
     modalWindow.append(currentEditorLabel, jobNameLabel, jobShipDateLabel, jobActiveLabel, jobNoteLabel, sequenceLabel, modalButtonContainer, buttonContainer);
     modalBackground.appendChild(modalWindow);
     body.appendChild(modalBackground);
+
+    jobNameInput.focus();
 }
 
 async function loadSequences(sequences, sequenceContainer, allTasks, updateSequencesCallback) {
