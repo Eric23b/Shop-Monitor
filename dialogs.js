@@ -8,11 +8,6 @@ import {
     formatDateToCA,
 } from "./date-utilities.js";
 
-import {
-    isDev,
-    isProd,
-} from "./build.js";
-
 
 // Add to main Style Sheet
 const styles = `
@@ -945,17 +940,12 @@ function showAddTaskFromTextDialog(sequences, allTasks, OKCallback, cancelCallba
     sequenceTextLabel.style.cssText = blockInputLabelStyles;
     sequenceTextLabel.appendChild(textArea);
 
-    if (isDev) {
-        textArea.value = `Job Labor   53 hours 47 minutes
-                        Cutting   10 hours 0 minutes
-                        Banding 10 hours 0 minutes
-                        Assembly 10 hours 0 minutes
-                        Finishing 10 hours 0 minutes
-                        Packaging    10 hours 0 minutes`;
-    }
-    else {
-        textArea.value = "";
-    }
+    // textArea.value = `Job Labor   53 hours 47 minutes
+    //                   Cutting   10 hours 0 minutes
+    //                   Banding 10 hours 0 minutes
+    //                   Assembly 10 hours 0 minutes
+    //                   Finishing 10 hours 0 minutes
+    //                   Packaging    10 hours 0 minutes`;
 
     const modalOKButton = getButton("OK", () => {
         const sequenceName = sequenceNameInput.value;
