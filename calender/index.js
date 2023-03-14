@@ -73,6 +73,7 @@ import {
     showJobCardDialog,
     showCalendarEventDialog,
     dialogIsOpen,
+    waitingCursor,
 } from "../dialogs.js";
 
 const log = console.log;
@@ -509,18 +510,11 @@ async function addJobsToCalendar() {
 
             // Click
             jobElement.onclick = async (event) => {
-                console.log(event);
-                // ⏳
-                startWaitingCursor(bodyElement, jobElement);
-                
                 let jobsResponse;
                 let tasksResponse;
                 let stationID;
                 [jobsResponse, tasksResponse, stationID] = await Promise.all([getJobs(), getTasks(), getStationID()]);
                 const whoIsEditingJob = await checkOutItemForEditing(job.id, stationName, stationID);
-                
-                // ⌛
-                stopWaitingCursor(bodyElement, jobElement);
 
                 showJobDialog(job, jobsResponse, tasksResponse,
                     // OK click
@@ -547,7 +541,7 @@ async function addJobsToCalendar() {
                         await deleteDBEntry(BUSINESS_SCHEMA, JOBS_TABLE, id, settings);
                         loadCalendar();
                     },
-                    (whoIsEditingJob == stationName) ? "" : whoIsEditingJob
+                    ((whoIsEditingJob == stationName) ? "" : whoIsEditingJob)
                 );
             }
             jobElement.oncontextmenu = async (event) => {
@@ -910,10 +904,10 @@ function removeAllElementsWithClassName(className) {
     }
 }
 
-function startWaitingCursor() {
-    for (const element of arguments) element.style.cursor = "wait";
-}
+// function startWaitingCursor() {
+//     for (const element of arguments) element.style.cursor = "wait";
+// }
 
-function stopWaitingCursor() {
-    for (const element of arguments) element.style.cursor = "default";
-}
+// function stopWaitingCursor() {
+//     for (const element of arguments) element.style.cursor = "default";
+// }
