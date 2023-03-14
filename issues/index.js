@@ -33,8 +33,6 @@ import {
     showCalendarEventDialog,
 } from "../dialogs.js";
 
-const isDev = false;
-
 const settings = {
     url: "",
     authorization: ""
