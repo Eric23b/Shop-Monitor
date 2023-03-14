@@ -375,18 +375,18 @@ calenderContainer.ondrop = async (event) => {
 // FUNCTIONS
 
 async function loadCalendar() {
-    startWaitingCursor(document.querySelector('body'));
+    // startWaitingCursor(document.querySelector('body'));
     buildCalender();
     await addJobsToCalendar();
     await addEventsToCalendar();
-    stopWaitingCursor(document.querySelector('body'));
+    // stopWaitingCursor(document.querySelector('body'));
 }
 
 async function loadJobsAndEvents() {
-    startWaitingCursor(document.querySelector('body'));
+    // startWaitingCursor(document.querySelector('body'));
     await addJobsToCalendar();
     await addEventsToCalendar();
-    stopWaitingCursor(document.querySelector('body'));
+    // stopWaitingCursor(document.querySelector('body'));
 }
 
 function buildCalender() {
