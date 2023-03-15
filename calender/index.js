@@ -683,7 +683,7 @@ async function addEventsToCalendar() {
         if (calenderEvent.isMultiDayEvent) eventTitle.style.width = "100%";
         eventTitle.style.backgroundColor = `var(--color-${calenderEvent.color || 1})`;
 
-        // if (canEditCalendar) {
+        if (canEditCalendar) {
             eventTitle.style.cursor = 'pointer';
             eventTitle.onclick = async () => {
                 showCalendarEventDialog(calenderEvent, 
@@ -711,7 +711,7 @@ async function addEventsToCalendar() {
                     });
                 });
             });
-        // }
+        }
         
         const eventContainer = document.querySelector(`.date-${calenderEvent.date} .day-events-container`);
         if (!eventContainer) return;
