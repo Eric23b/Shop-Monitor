@@ -178,6 +178,7 @@ body *{
     min-height: 8vw;
     /* height: 100%; */
     padding-bottom: 0.5em;
+    overflow: hidden;
     border-right: 1px solid var(--border_color);
     border-bottom: 1px solid var(--border_color);
     font-size: clamp(0.25em, 1.5vw, 1.125em);
@@ -185,6 +186,7 @@ body *{
 }
 .day:hover{
     background-color: var(--background_hover_color);
+    overflow: visible;
 }
 .day-header-container{
     display: flex;
@@ -222,10 +224,10 @@ body *{
     justify-content: flex-end;
     align-items: center;
     gap: 2px;
-    background: transparent;
     padding: 0 1px 1px 1px;
     margin: 0 2px 0 2px;
     pointer-events: none;
+    background: transparent;
 }
 .day-event{
     margin: 0;
