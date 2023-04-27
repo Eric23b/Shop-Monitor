@@ -662,7 +662,7 @@ function getShopTaskByID(taskID, tasks) {
 }
 
 /**
-* No active jobs, no jobs without sequences and no completed jobs
+* No inactive jobs, no jobs without sequences and no completed jobs
 */
 function cleanupAndCopyJobs(jobs) {
     const jobsCopy = [];
