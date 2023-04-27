@@ -495,7 +495,11 @@ async function updateEstimateDateAndStartDate(jobs, tasksResponse) {
     sortDown(jobsCopy, 'index');
 
     // Add total minutes to shopTasks
-    shopTasks.forEach((task) => {task.totalMinutes = (Number(task.hours) * 60) + Number(task.minutes)});
+    shopTasks.forEach((task) => {
+        task.totalMinutes = (Number(task.hours) * 60) + Number(task.minutes);
+        task.hours = Number(task.hours);
+        task.minutes = Number(task.minutes);
+    });
 
     // // Added scaledMinutes to job tasks
     AddedScaledMinutesToJobTasks(jobsCopy, shopTasks);
