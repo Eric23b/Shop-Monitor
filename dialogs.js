@@ -351,7 +351,6 @@ const jobTimingDatesContainerStyles = `
     align-items: center;
     border: 1px solid var(--border_color);`;
 const dateTimingDatesStyles = `
-    width: 70px;
     border: 1px solid var(--border_color);
     text-align: center;`;
 const jobTimingTimesContainerStyles = `
@@ -1485,6 +1484,7 @@ export function showJobTaskTimingDialog(jobs, shopTasks, calendarEvents) {
 
 
     // Dates header
+    const widthOfDayDiv = 70;
     datesContainer.style.cssText = jobTimingDatesContainerStyles;
     const earliestDate = getCorrectDate(findEarliestDate(jobsCopy));
     const latestDate = getCorrectDate(findLatestDate(jobsCopy));
@@ -1496,6 +1496,7 @@ export function showJobTaskTimingDialog(jobs, shopTasks, calendarEvents) {
         const dateElement = document.createElement('div');
         dateElement.textContent = getShortDateText(date.date);
         dateElement.style.cssText = dateTimingDatesStyles;
+        dateElement.style.width = `${widthOfDayDiv}px`;
         dateElement.classList.add('dialogs-disable-select');
         if (date.dateSkipped) dateElement.style.borderLeftColor = `var(--no)`;
         if (date.dateSkipped) dateElement.style.borderLeftWidth = `5px`;
@@ -1515,7 +1516,7 @@ export function showJobTaskTimingDialog(jobs, shopTasks, calendarEvents) {
             for (let lineIndex = 1; lineIndex < numberOfVerticalLines; lineIndex++) {
                 const line = document.createElement('div');
                 line.style.cssText = jobTimingVerticalLinesStyles;
-                line.style.left = `${(lineIndex * 70) - 1}px`;
+                line.style.left = `${(lineIndex * widthOfDayDiv) - 1}px`;
                 timesContainer.appendChild(line);
             }
 
@@ -1528,8 +1529,14 @@ export function showJobTaskTimingDialog(jobs, shopTasks, calendarEvents) {
                 const taskElement = document.createElement('div');
                 taskElement.textContent = (task.completed ? "✓" : "") + task.name;
                 taskElement.style.cssText = jobTimingTimesStyles;
-                taskElement.style.width = `${Math.abs(task.end - task.start) / 7}px`;
-                taskElement.style.left = `${task.start / 7}px`;
+                // Width of task div
+                const totalTaskDuration = Math.abs(task.end - task.start);
+                const totalTaskInDays = (totalTaskDuration / 60) / 8;
+                const taskDivWidth = totalTaskInDays * widthOfDayDiv;
+                taskElement.style.width = `${taskDivWidth}px`;
+                // Task position (left)
+                const taskStartInDays = (task.start / 60) / 8;
+                taskElement.style.left = `${taskStartInDays * widthOfDayDiv}px`;
                 if (task.completed) {
                     taskElement.style.color = `var(--color`;
                     taskElement.style.backgroundColor = `var(--background_color)`;
@@ -1540,8 +1547,8 @@ export function showJobTaskTimingDialog(jobs, shopTasks, calendarEvents) {
                 timesContainer.appendChild(taskElement);
 
                 // Tooltip
-                const currentShipDateText = `Current Ship Date:\n${job.shipDate}\n`
-                const currentEstimatedDateText = `Estimated Ship Date:\n${job.estimatedDate}\n`
+                const currentShipDateText = `Current Ship Date:\n${job.shipDate}\n`;
+                const currentEstimatedDateText = `Estimated Ship Date:\n${job.estimatedDate}\n`;
                 const taskTime = `${task.hours}:${String(task.minutes).length === 1 ? "0" + task.minutes : task.minutes} hours`;
                 const taskCompletedText = `${task.completed ? "✓ Completed" : ""}`
                 const tooltipText = `${job.name}\n` +
