@@ -209,7 +209,7 @@ const eventsContainer = `
     align-items: center;
     gap: 1px;
     margin-top: auto;
-    background: transparent;`
+    background: transparent;`;
 const eventTitleStyles = `
     width: 100%;
     overflow: visible;
@@ -320,7 +320,7 @@ const jobTimingMainContainerStyles = `
     display: flex;
     flex-direction: row;
     flex-wrap: nowrap;
-    width: max-content`;
+    width: max-content;`;
 const jobTimingNamesContainerStyles = `
     display: flex;
     flex-direction: column;
@@ -395,7 +395,7 @@ const jobCardCheckboxLabelStyles = `
     justify-content: flex-start;
     align-items: center;
     align-content: center;
-    gap: 0.25rem`;
+    gap: 0.25rem;`;
 const jobCardCheckboxStyles = `
     order: -1;`;
 
