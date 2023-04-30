@@ -115,13 +115,9 @@ window.onkeydown = (event) => {
 addNewJobBtn.addEventListener('click', async () => {
     jobsResponse = await getJobs("id", "*");
     if (jobsResponse.length == 0) return;
-    // const jobsResponse = await getDBEntrees(BUSINESS_SCHEMA, JOBS_TABLE, "id", "*", settings);
-    // if ((!jobsResponse) || (jobsResponse.error)) return;
 
     tasksResponse = await getTasks("id", "*");
     if (tasksResponse.length == 0) return;
-    // const tasksResponse = await getDBEntrees(BUSINESS_SCHEMA, TASKS_TABLE, "id", "*", settings);
-    // if ((!tasksResponse) || (tasksResponse.error)) return;
 
     showJobDialog(null, jobsResponse, tasksResponse, 
         async (newJob) => {
@@ -141,8 +137,6 @@ async function loadJobs(jobs, sortByIndex) {
     if (jobs == null) {
         jobs = await getJobs("__createdtime__", "*");
         if (jobs.length == 0) return;
-        // jobs = await getDBEntrees(BUSINESS_SCHEMA, JOBS_TABLE, "__createdtime__", "*", settings);
-        // if ((!jobs) || (jobs.error)) return;
 
         sortDown(jobs, "shipDate");
         
@@ -157,8 +151,6 @@ async function loadJobs(jobs, sortByIndex) {
 
     const tasksResponse = await getTasks("active", true);
     if (tasksResponse.length == 0) return;
-    // const tasksResponse = await getDBEntrees(BUSINESS_SCHEMA, TASKS_TABLE, "active", true, settings);
-    // if ((!tasksResponse) || (tasksResponse.error)) return;
 
     await updateEstimateDateAndStartDate(jobs, tasksResponse);
 
@@ -595,11 +587,9 @@ async function updateEstimateDateAndStartDate(jobs, tasksResponse) {
     jobNameDaysFromNowArray.forEach((jobTask) => {
         const startDate = getToday();
         incWorkDay(startDate, jobTask.daysFromNowStart, closedDates);
-        // jobTask.startDate = startDate.toLocaleDateString('en-CA');
         jobTask.startDate = formatDateToCA(startDate);
         const endDate = getToday();
         incWorkDay(endDate, jobTask.daysFromNowEnd, closedDates);
-        // jobTask.shipDate = endDate.toLocaleDateString('en-CA');
         jobTask.shipDate = formatDateToCA(endDate);
     });
 
